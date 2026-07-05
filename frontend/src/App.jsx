@@ -38,6 +38,7 @@ export default function App() {
   // Customization drawers
   const [customizingItem, setCustomizingItem] = useState(null);
   const [selectedAddon, setSelectedAddon] = useState("Regular Portion");
+  const [activeGroceryForecast, setActiveGroceryForecast] = useState(null);
 
   // Dispute triage states
   const [triageMerchant, setTriageMerchant] = useState("merchant_1");
