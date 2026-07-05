@@ -2,37 +2,11 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 export default function App() {
-  const [theme, setTheme] = useState('dark');
-  const [consumerSubTab, setConsumerSubTab] = useState('food'); // 'food' (Zomato) vs 'grocery' (Instamart)
-  const [selectedUsp, setSelectedUsp] = useState('tobit'); // active ML USP card details
-  const [selectedCuisine, setSelectedCuisine] = useState(null); // Active cuisine category filter
-  const [promoSlide, setPromoSlide] = useState(0); // Active sliding promo banner
-  const [activeGroceryForecast, setActiveGroceryForecast] = useState(null); // Active item for Tobit modal
+  const [activeView, setActiveView] = useState('realtime'); // 'realtime' (Dual-Pane) vs 'security' (Sybil-Guard)
+  const [consumerSubTab, setConsumerSubTab] = useState('food'); // 'food' vs 'grocery'
+  const [selectedUsp, setSelectedUsp] = useState('tobit'); // active deep dive math info
   
-  // Customization Sheet state
-  const [customizingItem, setCustomizingItem] = useState(null);
-  const [selectedAddon, setSelectedAddon] = useState("Regular Portion");
-  
-  // Real-time Countdown for Resale
-  const [rescueTimer, setRescueTimer] = useState(299); // 4 mins 59 secs
-
-  // Animated rider position on GPS tracking line (0% to 100%)
-  const [riderProgress, setRiderProgress] = useState(0);
-
-  // Backend config
-  const [backendUrl, setBackendUrl] = useState(import.meta.env.VITE_BACKEND_URL || "http://localhost:7860");
-  const [isBackendConnected, setIsBackendConnected] = useState(false);
-
-  // Cart & Order state
-  const [cart, setCart] = useState([]);
-  const [activeOrder, setActiveOrder] = useState(null);
-  const [rescueOffers, setRescueOffers] = useState([]);
-  const [arbitrageMessage, setArbitrageMessage] = useState("");
-  const [securityLogs, setSecurityLogs] = useState([
-    { time: "01:10:12", event: "Anti-Arbitrage Guard initialized on subnet 192.168.1.*" }
-  ]);
-  
-  // 1. Tobit Forecaster State
+  // Interactive inputs & telemetry states
   const [censoringRate, setCensoringRate] = useState(0.40);
   const [forecastOutput, setForecastOutput] = useState({
     censoring_rate: 0.40,
@@ -43,7 +17,7 @@ export default function App() {
   });
   const [isLoadingForecast, setIsLoadingForecast] = useState(false);
 
-  // 2. ETA Smoother State
+  // ETA Jitter state
   const [etaHistory, setEtaHistory] = useState([
     { step: 1, raw: 15.0, smooth: 15.0 },
     { step: 2, raw: 15.2, smooth: 15.1 },
@@ -53,19 +27,26 @@ export default function App() {
   ]);
   const [stormSurge, setStormSurge] = useState(false);
 
-  // 3. Dispute Triage State
+  // Cart & Order tracking states
+  const [cart, setCart] = useState([]);
+  const [activeOrder, setActiveOrder] = useState(null);
+  const [rescueOffers, setRescueOffers] = useState([]);
+  const [arbitrageMessage, setArbitrageMessage] = useState("");
+  const [riderProgress, setRiderProgress] = useState(0);
+  const [rescueTimer, setRescueTimer] = useState(299);
+  
+  // Customization drawers
+  const [customizingItem, setCustomizingItem] = useState(null);
+  const [selectedAddon, setSelectedAddon] = useState("Regular Portion");
+
+  // Dispute triage states
   const [triageMerchant, setTriageMerchant] = useState("merchant_1");
   const [triageType, setTriageType] = useState("cold_food");
   const [triageText, setTriageText] = useState("Burger was cold and soggy on arrival.");
   const [triageItems, setTriageItems] = useState("burger, fries");
   const [triageResult, setTriageResult] = useState(null);
 
-  // 4. Dispatch Route Batcher State
-  const [batchOrders, setBatchOrders] = useState([
-    {"order_id": "O_1", "lat": 12.9730, "lng": 77.5960, "t_prep": 5, "cuisine": "Biryani"},
-    {"order_id": "O_2", "lat": 12.9745, "lng": 77.5975, "t_prep": 8, "cuisine": "Pizza"},
-    {"order_id": "O_3", "lat": 12.9710, "lng": 77.5920, "t_prep": 6, "cuisine": "Dessert"}
-  ]);
+  // Route Batcher results
   const [batchResults, setBatchResults] = useState({
     total_batches: 1,
     batches: [
@@ -79,45 +60,40 @@ export default function App() {
     ]
   });
 
-  // Promotional Banner Carousel Content with beautiful food image backgrounds
+  // Terminal state for Security Console
+  const [terminalInput, setTerminalInput] = useState("");
+  const [securityLogs, setSecurityLogs] = useState([
+    { time: "14:10:02", event: "SYSTEM BOOT SEQUENCE INITIATED...", type: "info" },
+    { time: "14:10:05", event: "SYSTEM SYBIL-GUARD V4.2 CORE ONLINE.", type: "info" },
+    { time: "14:10:12", event: "Anti-Arbitrage Guard active on subnet 192.168.1.*", type: "success" }
+  ]);
+
+  const [promoSlide, setPromoSlide] = useState(0);
+  const [backendUrl] = useState(import.meta.env.VITE_BACKEND_URL || "http://localhost:7860");
+  const [isBackendConnected, setIsBackendConnected] = useState(false);
+
+  // Mock databases
   const promoBanners = [
     {
       title: "Zomato Food Rescue",
-      desc: "Save cancelled meals at 50% discount. Co-location arbitrage checks active.",
+      desc: "Save cancelled meals at 50% discount. Thermal index tracking active.",
       img: "https://images.unsplash.com/photo-1543353071-10c8ba85a904?q=80&w=400&auto=format&fit=crop",
       badge: "Waste Mitigation Active"
     },
     {
       title: "Instamart Fresh Greens",
-      desc: "10-minute deliveries. Stockout forecasting powered by Tobit MLE algorithms.",
+      desc: "Deliveries in 10 mins. Stockout forecasting powered by Tobit MLE.",
       img: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?q=80&w=400&auto=format&fit=crop",
       badge: "Stockout Imputation Active"
-    },
-    {
-      title: "Monsoon ETA Grid",
-      desc: "Suppresses clock jitter during rain surges using a Gated Random Forest.",
-      img: "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=400&auto=format&fit=crop",
-      badge: "ETA Smoother Engaged"
     }
   ];
 
-  // Mind categories with high-quality food visuals
   const mindCategories = [
     { name: "Biryani", img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=150&auto=format&fit=crop&q=60" },
     { name: "Burgers", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=150&auto=format&fit=crop&q=60" },
-    { name: "Pizzas", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=150&auto=format&fit=crop&q=60" },
-    { name: "Desserts", img: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=150&auto=format&fit=crop&q=60" }
+    { name: "Pizzas", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=150&auto=format&fit=crop&q=60" }
   ];
 
-  // Instamart simulated categories
-  const groceryCategories = [
-    { name: "Dairy & Bread", icon: "🥛" },
-    { name: "Fruits & Veggies", icon: "🍌" },
-    { name: "Snacks & Munchies", icon: "🍿" },
-    { name: "Atta & Rice", icon: "🌾" }
-  ];
-
-  // Premium mock restaurants
   const mockRestaurants = [
     {
       id: "merchant_1",
@@ -126,7 +102,6 @@ export default function App() {
       rating: 4.6,
       distance: "1.4 km",
       time: "22 mins",
-      costForTwo: "₹400",
       image: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=300&auto=format&fit=crop&q=60",
       menu: [
         { id: "m1_1", name: "Butter Chicken", price: 280 },
@@ -140,53 +115,37 @@ export default function App() {
       rating: 4.4,
       distance: "2.1 km",
       time: "18 mins",
-      costForTwo: "₹500",
       image: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=300&auto=format&fit=crop&q=60",
       menu: [
-        { id: "m2_1", name: "Margherita Pizza", price: 220 },
-        { id: "m2_2", name: "Pepperoni Pizza", price: 320 }
+        { id: "m2_1", name: "Margherita Pizza", price: 220 }
       ]
     }
   ];
 
-  // Instamart grocery database
   const mockGroceries = [
     {
       id: "g1",
       name: "Fresh Toned Milk 1L",
       brand: "Amul Taaza",
       price: 66,
-      stock: 0, // Out of stock
-      category: "Dairy & Bread",
-      image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&auto=format&fit=crop&q=60",
+      stock: 0,
       latent_demand: 48.2,
-      restock_suggestion: 55
+      restock_suggestion: 55,
+      image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&auto=format&fit=crop&q=60"
     },
     {
       id: "g2",
       name: "Organic Bananas 1 Dozen",
       brand: "Fresh Produce",
       price: 60,
-      stock: 0, // Out of stock
-      category: "Fruits & Veggies",
-      image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200&auto=format&fit=crop&q=60",
+      stock: 0,
       latent_demand: 82.5,
-      restock_suggestion: 90
-    },
-    {
-      id: "g3",
-      name: "Whole Wheat Bread 400g",
-      brand: "English Oven",
-      price: 50,
-      stock: 3, // Low stock
-      category: "Dairy & Bread",
-      image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&auto=format&fit=crop&q=60",
-      latent_demand: 35.8,
-      restock_suggestion: 40
+      restock_suggestion: 90,
+      image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200&auto=format&fit=crop&q=60"
     }
   ];
 
-  // Auto-cycles the promotional banner carousel
+  // Auto-carousel timer
   useEffect(() => {
     const timer = setInterval(() => {
       setPromoSlide(prev => (prev + 1) % promoBanners.length);
@@ -194,56 +153,44 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Animates GPS delivery tracker rider position
+  // Animated rider track loop
   useEffect(() => {
     let interval;
     if (activeOrder) {
       interval = setInterval(() => {
         setRiderProgress(prev => (prev >= 100 ? 0 : prev + 2));
       }, 300);
-    } else {
-      setRiderProgress(0);
     }
     return () => clearInterval(interval);
   }, [activeOrder]);
 
-  // Food Rescue countdown decrementor
+  // Food rescue timer countdown
   useEffect(() => {
-    let timerInterval;
+    let interval;
     if (rescueOffers.length > 0) {
-      timerInterval = setInterval(() => {
+      interval = setInterval(() => {
         setRescueTimer(prev => (prev <= 0 ? 299 : prev - 1));
       }, 1000);
-    } else {
-      setRescueTimer(299);
     }
-    return () => clearInterval(timerInterval);
+    return () => clearInterval(interval);
   }, [rescueOffers]);
 
-  // Format countdown text (MM:SS)
+  // Check API status
+  useEffect(() => {
+    fetch(`${backendUrl}/`)
+      .then(res => {
+        if (res.ok) setIsBackendConnected(true);
+      })
+      .catch(() => setIsBackendConnected(false));
+  }, [backendUrl]);
+
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
     const s = (secs % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
-  // Ping backend on mount to check if Space API is online
-  useEffect(() => {
-    fetch(`${backendUrl}/`)
-      .then(res => {
-        if(res.ok) setIsBackendConnected(true);
-      })
-      .catch(() => {
-        setIsBackendConnected(false);
-      });
-  }, [backendUrl]);
-
-  // Set theme class on body
-  useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  // Tobit Simulator trigger
+  // Tobit Forecast execution
   const runForecast = async (rateVal) => {
     const activeRate = rateVal !== undefined ? rateVal : censoringRate;
     setIsLoadingForecast(true);
@@ -265,33 +212,29 @@ export default function App() {
           lift_pct: lift * 100,
           converged: true
         });
-      }, 500);
+      }, 400);
     } finally {
       setIsLoadingForecast(false);
     }
   };
 
-  // Trigger ETA next step
+  // Add telemetry point
   const simulateETAStep = () => {
     const nextStep = etaHistory.length + 1;
     let rawDelta = (Math.random() - 0.5) * 1.5;
-    
-    if (nextStep === 6 || stormSurge) {
+    if (stormSurge) {
       rawDelta = (Math.random() * 8.0) + 4.0;
     }
-
     const prevRow = etaHistory[etaHistory.length - 1];
     const newRaw = Math.max(5.0, prevRow.raw + rawDelta);
-    
-    let newSmooth = prevRow.smooth;
     const isJump = Math.abs(newRaw - prevRow.raw) > 3.0;
     const alpha = isJump ? 0.15 : 0.70;
-    newSmooth = prevRow.smooth + (newRaw - prevRow.smooth) * alpha;
+    const newSmooth = prevRow.smooth + (newRaw - prevRow.smooth) * alpha;
 
     setEtaHistory(prev => [...prev, { step: nextStep, raw: newRaw, smooth: newSmooth }]);
   };
 
-  // Trigger Food Rescue Claim (Sybil check)
+  // Zomato Resale claim with Sybil checking
   const handleRescueClaim = async (offer) => {
     const timestamp = new Date().toLocaleTimeString();
     try {
@@ -311,88 +254,33 @@ export default function App() {
       if (data.arbitrage_alert_triggered) {
         setArbitrageMessage(`Arbitrage Blocked: ${data.exclusion_reasons.join(', ')}`);
         setSecurityLogs(prev => [
-          { time: timestamp, event: `ALERT: Flagged buy-back from co-located IP 192.168.1.15` },
-          { time: timestamp, event: `RULE COMPLIANCE: Order ${offer.order_id} excluded from user resale catalog.` },
+          { time: timestamp, event: `ALERT: Flagged buy-back from co-located IP 192.168.1.15`, type: 'error' },
+          { time: timestamp, event: `RULE ENFORCED: Resale offer ${offer.order_id} removed.`, type: 'info' },
           ...prev
         ]);
         setRescueOffers([]);
-      } else {
-        setArbitrageMessage("Genuine claim approved.");
       }
     } catch (err) {
       setArbitrageMessage("Arbitrage Blocked: CO_LOCATION_PROXIMITY_ALERT, SHARED_IP_SUBNET_ALERT");
       setSecurityLogs(prev => [
-        { time: timestamp, event: `ALERT: Blocked self-buyback exploit (Co-Location distance: 11 meters)` },
-        { time: timestamp, event: `RULE COMPLIANCE: IP subnet 192.168.1.* matches cancel origin.` },
+        { time: timestamp, event: `ALERT: Blocked self-buyback exploit (Co-Location distance: 11 meters)`, type: 'error' },
+        { time: timestamp, event: `RULE COMPLIANCE: IP subnet 192.168.1.* matches cancel origin.`, type: 'info' },
         ...prev
       ]);
       setRescueOffers([]);
     }
   };
 
-  // Run dispute triage refund
-  const handleTriageRefund = async () => {
-    try {
-      const response = await fetch(`${backendUrl}/triage-refund`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          merchant_id: triageMerchant,
-          user_refund_ratio: 0.05,
-          user_tenure_days: 120,
-          user_historical_orders: 15,
-          user_auto_refunds_30d: 1,
-          delivery_duration_min: 24.0,
-          refund_amount_ratio: 0.6,
-          has_duplicate_hash: false,
-          complaint_type: triageType,
-          complaint_text: triageText,
-          items_list: triageItems.split(',').map(s => s.trim())
-        })
-      });
-      const data = await response.json();
-      setTriageResult(data);
-    } catch (err) {
-      const exceeded = triageMerchant === "merchant_1";
-      setTriageResult({
-        decision: exceeded ? "VERIFICATION_REQUIRED" : "AUTO_REFUND",
-        fraud_probability: exceeded ? 0.35 : 0.08,
-        reason: exceeded ? "EXCEEDED_USER_AUTO_REFUND_LIMIT" : "AUTO_REFUND_APPROVED_PEER_SIGNAL"
-      });
-    }
+  const addToCart = (item, restName, restId) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.id === item.id);
+      if (existing) {
+        return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+      }
+      return [...prev, { ...item, restaurantName: restName, restaurantId: restId, quantity: 1 }];
+    });
   };
 
-  // Run route optimization
-  const handleOptimizeBatch = async () => {
-    try {
-      const response = await fetch(`${backendUrl}/optimize-dispatch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          store_lat: 12.9716,
-          store_lng: 77.5946,
-          orders: batchOrders
-        })
-      });
-      const data = await response.json();
-      setBatchResults(data);
-    } catch (err) {
-      setBatchResults({
-        total_batches: 1,
-        batches: [
-          {
-            batch_id: "B_01",
-            orders: ["O_1", "O_2", "O_3"],
-            optimized_route: ["Store", "O_1", "O_2", "O_3"],
-            max_delay_min: 11.2,
-            sla_breached: false
-          }
-        ]
-      });
-    }
-  };
-
-  // Add customized items to cart
   const handleConfirmCustomization = () => {
     if (!customizingItem) return;
     const finalItem = {
@@ -400,25 +288,10 @@ export default function App() {
       name: `${customizingItem.item.name} (${selectedAddon})`,
       price: customizingItem.item.price + (selectedAddon.includes("Large") ? 60 : 0)
     };
-
-    setCart(prev => {
-      const existing = prev.find(i => i.id === finalItem.id && i.name === finalItem.name);
-      if (existing) {
-        return prev.map(i => (i.id === finalItem.id && i.name === finalItem.name) ? { ...i, quantity: i.quantity + 1 } : i);
-      }
-      return [...prev, { ...finalItem, restaurantName: customizingItem.restName, restaurantId: customizingItem.restId, quantity: 1 }];
-    });
-
+    addToCart(finalItem, customizingItem.restName, customizingItem.restId);
     setCustomizingItem(null);
   };
 
-  // Open customization sheet
-  const triggerAddToCart = (item, restName, restId) => {
-    setCustomizingItem({ item, restName, restId });
-    setSelectedAddon("Regular Portion");
-  };
-
-  // Place active order
   const handlePlaceOrder = () => {
     if (cart.length === 0) return;
     const ordId = `ORD_${Math.floor(Math.random() * 900) + 100}`;
@@ -431,7 +304,6 @@ export default function App() {
     setArbitrageMessage("");
   };
 
-  // Cancel order to push it into the resale offer pool
   const cancelActiveOrder = () => {
     if (!activeOrder) return;
     const itemsLabel = activeOrder.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
@@ -451,746 +323,851 @@ export default function App() {
     ]);
     
     setSecurityLogs(prev => [
-      { time: timeNow, event: `CANCEL: Order ${activeOrder.order_id} aborted by user.` },
-      { time: timeNow, event: `RESCUE QUEUE: Initialized cooling thermal curve (SQI=94/100).` },
+      { time: timeNow, event: `CANCEL: Order ${activeOrder.order_id} aborted by user.`, type: 'info' },
+      { time: timeNow, event: `RESCUE QUEUE: Initialized cooling thermal curve (SQI=94/100).`, type: 'info' },
       ...prev
     ]);
     
     setActiveOrder(null);
   };
 
-  const getCartTotal = () => cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+  const runTerminalCommand = (e) => {
+    if (e.key === 'Enter' && terminalInput.trim()) {
+      const timeNow = new Date().toLocaleTimeString();
+      const input = terminalInput.trim().toLowerCase();
+      let outcome = { time: timeNow, event: `Executing: ${terminalInput}`, type: 'info' };
+      let response = { time: timeNow, event: `Command not recognized. Try 'run-imputer', 'clear-logs', or 'monsoon-grid'.`, type: 'error' };
 
-  // Filter restaurants based on category
-  const filteredRestaurants = selectedCuisine
-    ? mockRestaurants.filter(rest => rest.cuisine.toLowerCase().includes(selectedCuisine.toLowerCase().replace("s", "")))
-    : mockRestaurants;
+      if (input === 'clear-logs' || input === 'clear') {
+        setSecurityLogs([]);
+        setTerminalInput("");
+        return;
+      }
+      if (input.includes('lock-subnet')) {
+        response = { time: timeNow, event: `SECURITY POLICY INSTALLED: Subnet range restricted.`, type: 'success' };
+      } else if (input === 'run-imputer') {
+        runForecast(censoringRate);
+        response = { time: timeNow, event: `TOBIT SOLVER FIT: Parameter convergence recovered successfully.`, type: 'success' };
+      } else if (input === 'monsoon-grid' || input === 'storm-surge') {
+        setStormSurge(prev => !prev);
+        response = { time: timeNow, event: `WEATHER TRIGGER: Monsoon anomaly model state set to: ${!stormSurge ? 'ACTIVE' : 'OFF'}`, type: 'success' };
+      }
+
+      setSecurityLogs(prev => [response, outcome, ...prev]);
+      setTerminalInput("");
+    }
+  };
 
   return (
-    <div>
-      <div className="background-overlay" />
-
-      {/* Navigation header */}
-      <nav className="navbar">
-        <div className="nav-brand">
-          <span>HyperFlow</span>
-          <span className="badge badge-primary" style={{ marginLeft: '0.75rem', fontSize: '0.65rem' }}>
-            ML Core v1.0
-          </span>
-          <span 
-            className={`badge ${isBackendConnected ? 'badge-success' : 'badge-danger'}`} 
-            style={{ marginLeft: '0.5rem', fontSize: '0.65rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+    <div className="bg-background text-on-surface font-body-md overflow-hidden min-h-screen">
+      {/* Top Navigation Bar */}
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-[rgba(10,10,15,0.75)] backdrop-blur-[20px] border-b border-surface-variant">
+        <div className="flex items-center gap-md">
+          <span className="font-headline-sm text-headline-sm font-bold text-on-surface">HyperFlow</span>
+          <div className="h-4 w-[1px] bg-surface-variant mx-sm"></div>
+          <span className="font-mono-label text-mono-label text-primary-container">CORE V1.0</span>
+        </div>
+        <div className="flex items-center gap-md">
+          <button 
+            className={`px-md py-xs rounded-full font-mono-label text-mono-label transition-all active:scale-95 duration-200 ${
+              activeView === 'realtime' ? 'bg-zomato-red text-white' : 'text-secondary hover:bg-surface-container-high'
+            }`}
+            onClick={() => setActiveView('realtime')}
           >
-            <span className="pulsing-dot" style={{ 
-              display: 'inline-block', 
-              width: '6px', 
-              height: '6px', 
-              borderRadius: '50%', 
-              background: isBackendConnected ? 'var(--success-color)' : 'var(--error-color)' 
-            }}></span>
-            {isBackendConnected ? 'API Online' : 'Local Fallback'}
-          </span>
-        </div>
-
-        <div className="nav-actions">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(0,0,0,0.15)', padding: '0.35rem 0.75rem', borderRadius: '4px', fontSize: '0.8rem', border: '1px solid var(--card-border)' }}>
-            <span>📍</span>
-            <span style={{ fontWeight: 600 }}>Indiranagar, Bengaluru</span>
-          </div>
-
-          <button className="theme-toggle" onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}>
-            {theme === 'dark' ? 'LIGHT' : 'DARK'}
+            Order Food & Monitor
           </button>
-        </div>
-      </nav>
-
-      {/* Unified side-by-side workspace */}
-      <main className="dashboard-container">
-        
-        <div className="unified-layout">
-          
-          {/* LEFT: Simulated Smartphone UI */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Interactive Mobile Client
+          <button 
+            className={`px-md py-xs rounded-full font-mono-label text-mono-label transition-all active:scale-95 duration-200 ${
+              activeView === 'security' ? 'bg-zomato-red text-white' : 'text-secondary hover:bg-surface-container-high'
+            }`}
+            onClick={() => setActiveView('security')}
+          >
+            Operations & Security
+          </button>
+          <div className="flex items-center gap-sm ml-lg border-l border-surface-variant pl-lg">
+            <span className="material-symbols-outlined cursor-pointer hover:text-primary" onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}>
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </span>
-            
-            <div className="phone-simulator">
-              {/* Phone Status Bar */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 1.25rem', background: '#111115', fontSize: '0.7rem', color: '#888', borderBottom: '1px solid #1f1f25' }}>
-                <span>HyperFlow OS</span>
-                <span style={{ display: 'flex', gap: '0.3rem' }}>
-                  {stormSurge && <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>⛈️ Storm Active</span>}
-                  <span>📶 5G</span>
-                  <span>94% 🔋</span>
-                </span>
-              </div>
+            <img alt="Operator Portrait" className="w-8 h-8 rounded-full border border-surface-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByD_66IQXZw8HY8qefpO2M4iEA6Factgnob6YOX0XU7ISF1my7bnzFf625TnJXUcsA0yOIsFu1qEPbI9IhUr-moX_Biup0vU_bcQ8uhTWTjA3MFy1rjbodjmpVCShM4y_GxnK8hKXYFTF3gd_jKnmcbON9nyUBwiJrQxLN5gyqaY8ZXZz_S1-8jhTAQBP1qsQWQGgreOIT2RWSaBZJxIr5FN6OwfOrcQkJUbGT4QrmjH3a-MC6RYVGeH66Ar4HAbtn2oF2aj4bPR0" />
+          </div>
+        </div>
+      </header>
 
-              {/* Scrollable phone screen container */}
-              <div className="phone-screen">
-                
-                {/* Search box */}
-                <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(255,255,255,0.06)', borderRadius: '8px', padding: '0.6rem 0.85rem', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span style={{ fontSize: '0.9rem' }}>🔍</span>
-                  <span style={{ fontSize: '0.8rem', color: '#666' }}>Search dishes, fresh fruits, or resale deals...</span>
-                </div>
-
-                {/* Micro-carousel for ML-themed offers using high-end food backdrops */}
-                <div style={{ 
-                  position: 'relative', 
-                  minHeight: '130px', 
-                  borderRadius: '12px', 
-                  backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.75)), url(${promoBanners[promoSlide].img})`, 
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  padding: '1rem', 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  justifyContent: 'center', 
-                  overflow: 'hidden',
-                  border: '1px solid rgba(255,255,255,0.15)'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ background: 'rgba(226,55,68,0.85)', color: '#fff', fontSize: '0.55rem', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: 600 }}>
-                      {promoBanners[promoSlide].badge}
-                    </span>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      {promoBanners.map((_, idx) => (
-                        <div 
-                          key={idx}
-                          style={{ width: '5px', height: '5px', borderRadius: '50%', background: idx === promoSlide ? '#fff' : 'rgba(255,255,255,0.4)' }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <h4 style={{ color: '#fff', fontSize: '0.95rem', marginTop: '0.5rem', fontWeight: 700 }}>
-                    {promoBanners[promoSlide].title}
-                  </h4>
-                  <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.75rem', marginTop: '0.2rem', lineHeight: '1.2' }}>
-                    {promoBanners[promoSlide].desc}
-                  </p>
-                </div>
-
-                {/* Sub-tab selection inside phone */}
-                <div style={{ display: 'flex', gap: '0.5rem', background: '#18181c', padding: '0.25rem', borderRadius: '8px' }}>
-                  <button 
-                    style={{ flex: 1, border: 'none', background: consumerSubTab === 'food' ? 'var(--accent-color)' : 'transparent', color: '#fff', padding: '0.5rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
-                    onClick={() => setConsumerSubTab('food')}
-                  >
-                    Zomato Food
-                  </button>
-                  <button 
-                    style={{ flex: 1, border: 'none', background: consumerSubTab === 'grocery' ? 'var(--accent-color)' : 'transparent', color: '#fff', padding: '0.5rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
-                    onClick={() => setConsumerSubTab('grocery')}
-                  >
-                    Instamart Store
-                  </button>
-                </div>
-
-                {/* Storm surge toggle inside simulator */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.6rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.75rem' }}>
-                  <span>⛈️ Toggle Monsoon Storm Grid</span>
-                  <button 
-                    style={{ background: stormSurge ? 'var(--success-color)' : '#333', border: 'none', color: '#fff', padding: '0.25rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600 }}
-                    onClick={() => {
-                      setStormSurge(prev => !prev);
-                      simulateETAStep();
-                    }}
-                  >
-                    {stormSurge ? "ACTIVE" : "OFF"}
-                  </button>
-                </div>
-
-                {consumerSubTab === 'food' ? (
-                  <>
-                    {/* Cuisines scrolling list */}
-                    <div>
-                      <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
-                        {mindCategories.map((c, idx) => {
-                          const isActive = selectedCuisine === c.name;
-                          return (
-                            <div 
-                              key={idx} 
-                              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', flexShrink: 0, cursor: 'pointer' }}
-                              onClick={() => setSelectedCuisine(prev => prev === c.name ? null : c.name)}
-                            >
-                              <div 
-                                style={{ 
-                                  width: '50px', 
-                                  height: '50px', 
-                                  borderRadius: '50%', 
-                                  backgroundImage: `url(${c.img})`, 
-                                  backgroundSize: 'cover', 
-                                  backgroundPosition: 'center', 
-                                  border: isActive ? '2px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.1)'
-                                }}
-                              />
-                              <span style={{ fontSize: '0.65rem', color: isActive ? 'var(--accent-color)' : '#999' }}>{c.name}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Restaurants lists */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      {filteredRestaurants.map(rest => (
-                        <div key={rest.id} className="food-card" style={{ background: '#1a1a20' }}>
-                          <div className="food-img" style={{ backgroundImage: `url(${rest.image})`, height: '90px' }} />
-                          <div className="food-details" style={{ padding: '0.6rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#fff' }}>{rest.name}</span>
-                              <span style={{ fontSize: '0.7rem', color: 'var(--success-color)', fontWeight: 600 }}>★ {rest.rating}</span>
-                            </div>
-                            <div style={{ fontSize: '0.65rem', color: '#888', margin: '0.15rem 0' }}>{rest.cuisine}</div>
-                            <div style={{ fontSize: '0.65rem', color: '#666', marginBottom: '0.5rem' }}>{rest.distance} | {rest.time}</div>
-                            
-                            <div style={{ display: 'flex', gap: '0.4rem', borderTop: '1px solid #282830', paddingTop: '0.4rem' }}>
-                              {rest.menu.map(item => (
-                                <button
-                                  key={item.id}
-                                  style={{ flex: 1, background: '#25252e', border: '1px solid #333', color: '#e4e1e7', padding: '0.3rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
-                                  onClick={() => triggerAddToCart(item, rest.name, rest.id)}
-                                >
-                                  <span>+ {item.name.split(' ')[0]}</span>
-                                  <span style={{ color: 'var(--accent-color)' }}>{item.price}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Instamart category grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', background: '#1a1a20', padding: '0.6rem', borderRadius: '8px' }}>
-                      {groceryCategories.map((cat, idx) => (
-                        <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem' }}>
-                          <span style={{ fontSize: '1.25rem', background: '#25252e', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {cat.icon}
-                          </span>
-                          <span style={{ fontSize: '0.55rem', color: '#aaa', textAlign: 'center', display: 'block', height: '14px', overflow: 'hidden' }}>{cat.name.split(' ')[0]}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Instamart Grocery shelves */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      {mockGroceries.map(item => (
-                        <div 
-                          key={item.id} 
-                          className="food-card" 
-                          style={{ 
-                            background: '#1a1a20',
-                            border: item.stock === 0 ? '1px solid rgba(255,180,171,0.2)' : '1px solid var(--card-border)' 
-                          }}
-                        >
-                          <div style={{ display: 'flex', padding: '0.5rem', gap: '0.75rem' }}>
-                            <div style={{ width: '60px', height: '60px', borderRadius: '6px', backgroundImage: `url(${item.image})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '0.65rem', color: '#666' }}>{item.brand}</div>
-                              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fff' }}>{item.name}</div>
-                              
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-color)' }}>INR {item.price}</span>
-                                {item.stock === 0 ? (
-                                  <span className="badge badge-danger" style={{ fontSize: '0.55rem' }}>Out of Stock</span>
-                                ) : (
-                                  <span className="badge badge-success" style={{ fontSize: '0.55rem' }}>In Stock ({item.stock})</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div style={{ borderTop: '1px solid #282830', padding: '0.4rem', display: 'flex', gap: '0.4rem', background: '#1c1c24' }}>
-                            {item.stock > 0 ? (
-                              <button 
-                                style={{ flex: 1, background: 'var(--accent-color)', border: 'none', color: '#fff', fontSize: '0.7rem', padding: '0.35rem', borderRadius: '4px', fontWeight: 600, cursor: 'pointer' }}
-                                onClick={() => addToCart({ id: item.id, name: item.name, price: item.price }, "Instamart Store", "instamart_01")}
-                              >
-                                Add to Cart
-                              </button>
-                            ) : (
-                              <button 
-                                style={{ flex: 1, background: 'transparent', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', fontSize: '0.7rem', padding: '0.35rem', borderRadius: '4px', fontWeight: 600, cursor: 'pointer' }}
-                                onClick={() => {
-                                  setActiveGroceryForecast(item);
-                                  setSelectedUsp('tobit');
-                                  runForecast(censoringRate);
-                                }}
-                              >
-                                Impute Latent Demand (Run Tobit MLE)
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                {/* Simulated Order Cart inside phone */}
-                {cart.length > 0 && (
-                  <div style={{ background: '#1c1c24', border: '1px solid var(--card-border)', borderRadius: '10px', padding: '0.75rem', marginTop: '0.5rem' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', marginBottom: '0.4rem' }}>Mobile Cart Checkout</div>
-                    {cart.map(item => (
-                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: '#aaa', marginBottom: '0.2rem' }}>
-                        <span>{item.quantity}x {item.name.substring(0,18)}...</span>
-                        <span>INR {item.price * item.quantity}</span>
-                      </div>
-                    ))}
-                    <button 
-                      style={{ width: '100%', background: 'var(--success-color)', border: 'none', color: '#fff', fontSize: '0.75rem', padding: '0.45rem', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', marginTop: '0.5rem' }}
-                      onClick={handlePlaceOrder}
-                    >
-                      Place Order (INR {getCartTotal()})
-                    </button>
-                  </div>
-                )}
-
-                {/* Live GPS Route Tracker Map Panel inside phone */}
-                {activeOrder && (
-                  <div style={{ background: '#1c1c24', border: '1px solid var(--card-border)', borderRadius: '10px', padding: '0.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-color)' }}>Order {activeOrder.order_id} Active</span>
-                      <span style={{ fontSize: '0.65rem', color: '#888' }}>Status: Prep</span>
-                    </div>
-
-                    {/* Miniature GPS delivery road tracker */}
-                    <div style={{ position: 'relative', height: '6px', background: '#333', borderRadius: '3px', margin: '1rem 0 0.5rem' }}>
-                      <div style={{ position: 'absolute', left: 0, top: '-3px', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>🏠</div>
-                      <div style={{ position: 'absolute', right: 0, top: '-3px', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--success-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>🍔</div>
-                      
-                      {/* Rider dot moving along the road */}
-                      <div style={{ 
-                        position: 'absolute', 
-                        left: `${riderProgress}%`, 
-                        top: '-7px', 
-                        fontSize: '12px', 
-                        transition: 'left 0.3s linear',
-                        transform: 'translateX(-50%)'
-                      }}>
-                        🏍️
-                      </div>
-                    </div>
-                    
-                    <p style={{ fontSize: '0.6rem', color: '#aaa', marginTop: '0.2rem', textAlign: 'center' }}>Gated ETA algorithm actively calibrating displays.</p>
-                    <button 
-                      style={{ width: '100%', border: '1px solid var(--error-color)', background: 'transparent', color: 'var(--error-color)', fontSize: '0.7rem', padding: '0.35rem', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem', fontWeight: 600 }}
-                      onClick={cancelActiveOrder}
-                    >
-                      Cancel Order (Resell Cancellation)
-                    </button>
-                  </div>
-                )}
-
-                {/* Zomato Food Rescue Queue inside phone */}
-                {rescueOffers.length > 0 && (
-                  <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid var(--success-color)', borderRadius: '10px', padding: '0.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--success-color)' }}>Zomato Food Rescue Offer</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-                        ⏳ {formatTime(rescueTimer)}
-                      </span>
-                    </div>
-                    {rescueOffers.map(o => (
-                      <div key={o.order_id} style={{ fontSize: '0.65rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', fontWeight: 600 }}>
-                          <span>{o.items}</span>
-                          <span style={{ color: 'var(--success-color)' }}>INR {o.rescue_price_inr}</span>
-                        </div>
-                        <div style={{ color: '#888', marginTop: '0.15rem' }}>Original: <del>INR {o.original_price_inr}</del> (50% off)</div>
-                        <div style={{ color: 'var(--accent-color)', fontSize: '0.6rem', marginTop: '0.25rem' }}>SQI Thermal Quality: {o.sensory_quality_index}/100</div>
-                        <button 
-                          style={{ width: '100%', background: 'var(--success-color)', border: 'none', color: '#fff', fontSize: '0.7rem', padding: '0.35rem', borderRadius: '4px', fontWeight: 600, cursor: 'pointer', marginTop: '0.5rem' }}
-                          onClick={() => {
-                            setSelectedUsp('resale');
-                            handleRescueClaim(o);
-                          }}
-                        >
-                          Claim Resale
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {arbitrageMessage && (
-                  <div className="alert-box alert-danger" style={{ fontSize: '0.65rem', padding: '0.5rem', margin: 0 }}>
-                    {arbitrageMessage}
-                  </div>
-                )}
-
-              </div>
+      {/* Main Container Layout */}
+      <main className="pt-16 flex h-[calc(100vh-64px)] overflow-hidden">
+        
+        {/* Navigation Sidebar */}
+        <nav className="w-64 h-full bg-surface-dim border-r border-surface-variant flex flex-col py-md flex-shrink-0">
+          <div className="px-md mb-lg">
+            <p className="font-headline-sm text-headline-sm text-on-surface">Operator Console</p>
+            <p className="font-mono-label text-mono-label text-secondary opacity-60">SYSTEM ADMIN</p>
+          </div>
+          <div className="flex flex-col gap-xs flex-grow">
+            <button 
+              className={`flex items-center gap-md px-md py-sm w-full text-left transition-all ${
+                activeView === 'realtime' ? 'text-primary border-r-4 border-primary bg-surface-container-high' : 'text-on-secondary-container hover:bg-surface-container-highest'
+              }`}
+              onClick={() => setActiveView('realtime')}
+            >
+              <span className="material-symbols-outlined">monitoring</span>
+              <span className="font-mono-label text-mono-label">Real-time Monitor</span>
+            </button>
+            <button 
+              className={`flex items-center gap-md px-md py-sm w-full text-left transition-all ${
+                activeView === 'security' ? 'text-primary border-r-4 border-primary bg-surface-container-high' : 'text-on-secondary-container hover:bg-surface-container-highest'
+              }`}
+              onClick={() => setActiveView('security')}
+            >
+              <span className="material-symbols-outlined">terminal</span>
+              <span className="font-mono-label text-mono-label">Security Logs</span>
+            </button>
+            <div className="px-md mt-4 opacity-50">
+              <span className="text-[10px] font-mono-label text-secondary uppercase">ML Deep Dives</span>
             </div>
+            <button 
+              className={`flex items-center gap-md px-md py-2 w-full text-left text-xs ${selectedUsp === 'tobit' ? 'text-primary' : 'text-secondary'}`}
+              onClick={() => setSelectedUsp('tobit')}
+            >
+              <span>Q1: Censored Tobit MLE</span>
+            </button>
+            <button 
+              className={`flex items-center gap-md px-md py-2 w-full text-left text-xs ${selectedUsp === 'eta' ? 'text-primary' : 'text-secondary'}`}
+              onClick={() => setSelectedUsp('eta')}
+            >
+              <span>Q2: ETA Jitter Smoother</span>
+            </button>
+            <button 
+              className={`flex items-center gap-md px-md py-2 w-full text-left text-xs ${selectedUsp === 'resale' ? 'text-primary' : 'text-secondary'}`}
+              onClick={() => setSelectedUsp('resale')}
+            >
+              <span>Q3: CORO Resale Filter</span>
+            </button>
           </div>
 
-          {/* RIGHT: Live Operations Control Room Dashboard */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            
-            {/* Real-time Telemetry Dashboard Header */}
-            <div className="glass-card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-color)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
-                  Antigravity Operations Telemetry Console
-                </h2>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <span className="badge badge-success">MLE v1.0.0</span>
-                  <span className="badge badge-primary">Dynamic Mode</span>
-                </div>
-              </div>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem', lineHeight: '1.4' }}>
-                Select an out-of-stock item, toggle storm surges, or trigger cancellations inside the <strong>Mock Smartphone</strong> on the left. The modules below will compute predictions and update logs in real-time.
-              </p>
-            </div>
+          <div className="px-md mb-xl mt-auto">
+            <button className="w-full bg-surface-container-highest border border-surface-variant py-md rounded-lg font-mono-label text-mono-label text-on-surface hover:bg-surface-variant transition-colors">
+              DEPLOY UPDATE
+            </button>
+          </div>
+        </nav>
 
-            {/* 4-Quadrant Control Room Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem' }}>
+        {/* Content Panel Area */}
+        <div className="flex-grow flex flex-col p-container-margin gap-lg overflow-y-auto bg-surface-container-lowest">
+          
+          {activeView === 'realtime' ? (
+            /* VIEW 1: Dual-Pane Real-Time Simulator */
+            <div className="flex gap-xl flex-grow overflow-hidden">
               
-              {/* Quadrant 1: Censored Demand Imputation */}
-              <div className={`glass-card ${selectedUsp === 'tobit' ? 'active' : ''}`} onClick={() => setSelectedUsp('tobit')} style={{ cursor: 'pointer' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', margin: 0 }}>Q1: Tobit Latent Demand Solver</h3>
-                  <span className="badge badge-success">{(forecastOutput.lift_pct).toFixed(1)}% Lift</span>
-                </div>
-                
-                {activeGroceryForecast ? (
-                  <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem', borderRadius: '6px', fontSize: '0.75rem', marginBottom: '1rem', border: '1px solid rgba(16,185,129,0.2)' }}>
-                    <span>Target: <strong>{activeGroceryForecast.brand} {activeGroceryForecast.name}</strong></span>
-                    <div style={{ marginTop: '0.25rem', color: 'var(--success-color)' }}>Imputed Demand: <strong>{activeGroceryForecast.latent_demand} units</strong></div>
-                    <div style={{ color: 'var(--text-secondary)' }}>Recommended restock: <strong>{activeGroceryForecast.restock_suggestion} units</strong></div>
+              {/* Left Smartphone Simulator */}
+              <section className="flex flex-col items-center flex-shrink-0">
+                <div className="phone-frame glass-panel inner-glow flex flex-col overflow-hidden relative">
+                  
+                  {/* Warning banner triggered dynamically by monsoon surge */}
+                  <div className={`bg-zomato-red text-white text-[10px] py-1 px-4 text-center font-bold tracking-widest z-50 transition-all ${
+                    stormSurge ? 'block animate-pulse' : 'hidden'
+                  }`}>
+                    STORM SURGE: ACTIVE • DELIVERY TIMES DYNAMICALLY CALIBRATED
                   </div>
-                ) : (
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                    Tip: Click "Impute Latent Demand" on an out-of-stock Instamart item inside the phone.
-                  </p>
-                )}
 
-                <div className="form-group">
-                  <label className="form-label" style={{ fontSize: '0.7rem' }}>Simulation Censoring Rate: {(censoringRate * 100).toFixed(0)}%</label>
-                  <input 
-                    type="range" 
-                    min="0.1" 
-                    max="0.8" 
-                    step="0.05"
-                    value={censoringRate}
-                    onChange={e => {
-                      setCensoringRate(parseFloat(e.target.value));
-                      runForecast(parseFloat(e.target.value));
-                    }}
-                    style={{ width: '100%', accentColor: 'var(--accent-color)' }}
-                  />
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem', marginTop: '0.75rem' }}>
-                  <div style={{ background: 'rgba(0,0,0,0.1)', padding: '0.4rem', borderRadius: '4px' }}>
-                    <span style={{ color: 'var(--text-secondary)' }}>OLS WMAPE:</span>
-                    <div style={{ fontWeight: 600 }}>{(forecastOutput.ols_wmape * 100).toFixed(1)}%</div>
+                  {/* Status Bar */}
+                  <div className="h-10 px-6 flex justify-between items-end pb-1 text-on-surface text-[12px] font-bold z-10 bg-black/40">
+                    <span>9:41</span>
+                    <div className="flex gap-1.5 items-center">
+                      <span className="material-symbols-outlined text-[14px]">signal_cellular_4_bar</span>
+                      <span className="material-symbols-outlined text-[14px]">wifi</span>
+                      <span className="material-symbols-outlined text-[18px]">battery_full</span>
+                    </div>
                   </div>
-                  <div style={{ background: 'rgba(0,0,0,0.1)', padding: '0.4rem', borderRadius: '4px' }}>
-                    <span style={{ color: 'var(--success-color)' }}>Tobit WMAPE:</span>
-                    <div style={{ fontWeight: 600, color: 'var(--success-color)' }}>{(forecastOutput.tobit_wmape * 100).toFixed(1)}%</div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Quadrant 2: ETA Jitter Smoother */}
-              <div className={`glass-card ${selectedUsp === 'eta' ? 'active' : ''}`} onClick={() => setSelectedUsp('eta')} style={{ cursor: 'pointer' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', margin: 0 }}>Q2: Monsoon ETA Jitter Smoother</h3>
-                  <span className="badge badge-success">81.4% Jitter Blocked</span>
-                </div>
-
-                {/* Plot graph */}
-                <div className="eta-graph-container" style={{ height: '90px' }}>
-                  {etaHistory.slice(-7).map((h, idx) => {
-                    const leftPos = `${(idx / 6) * 90 + 5}%`;
-                    const rawBottom = `${(h.raw / 30) * 80}px`;
-                    const smoothBottom = `${(h.smooth / 30) * 80}px`;
+                  {/* App Container Screen */}
+                  <div className="flex-grow overflow-y-auto hide-scrollbar bg-[#0f0f14] relative">
                     
-                    return (
-                      <React.Fragment key={idx}>
-                        <div className="eta-point eta-raw-point" style={{ left: leftPos, bottom: rawBottom }} />
-                        <div className="eta-point eta-smooth-point" style={{ left: leftPos, bottom: smoothBottom }} />
-                      </React.Fragment>
-                    );
-                  })}
+                    {/* Search Field */}
+                    <div className="px-md py-sm sticky top-0 bg-[#0f0f14] z-20">
+                      <div className="bg-surface-container-high rounded-xl p-3 flex items-center gap-2 border border-surface-variant">
+                        <span className="material-symbols-outlined text-primary-container">search</span>
+                        <span className="text-secondary font-body-sm text-xs">Search "Biryani" or "Milk"</span>
+                      </div>
+                    </div>
+
+                    {/* Image-Based Promotional Carousel */}
+                    <div className="relative w-full h-36 overflow-hidden px-md mb-md">
+                      <div 
+                        className="flex h-full transition-transform duration-500 ease-in-out" 
+                        style={{ transform: `translateX(-${promoSlide * 100}%)`, width: '200%' }}
+                      >
+                        {promoBanners.map((slide, idx) => (
+                          <div key={idx} className="w-full h-full relative rounded-2xl overflow-hidden flex-shrink-0" style={{ paddingRight: '12px' }}>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 p-3 flex flex-col justify-end">
+                              <span className="bg-zomato-red text-white text-[9px] font-bold px-1.5 py-0.5 rounded w-max mb-1 uppercase">{slide.badge}</span>
+                              <h4 className="font-bold text-white text-sm">{slide.title}</h4>
+                              <p className="text-[10px] text-on-secondary-container leading-tight">{slide.desc}</p>
+                            </div>
+                            <img alt={slide.title} className="w-full h-full object-cover" src={slide.img} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* App Tabs Selection */}
+                    <div className="flex border-b border-surface-variant px-md gap-lg mb-md">
+                      <button 
+                        className={`pb-2 font-bold text-body-sm ${consumerSubTab === 'food' ? 'border-b-2 border-zomato-red text-zomato-red' : 'text-secondary'}`}
+                        onClick={() => setConsumerSubTab('food')}
+                      >
+                        Food
+                      </button>
+                      <button 
+                        className={`pb-2 font-bold text-body-sm ${consumerSubTab === 'grocery' ? 'border-b-2 border-zomato-red text-zomato-red' : 'text-secondary'}`}
+                        onClick={() => setConsumerSubTab('grocery')}
+                      >
+                        Instamart Store
+                      </button>
+                    </div>
+
+                    {consumerSubTab === 'food' ? (
+                      <>
+                        {/* Popular items horizontal categories scroll */}
+                        <div className="px-md mb-md">
+                          <div className="flex gap-sm overflow-x-auto hide-scrollbar">
+                            {mindCategories.map((c, idx) => (
+                              <div key={idx} className="flex flex-col items-center gap-1 flex-shrink-0" onClick={() => setSelectedCuisine(c.name)}>
+                                <div className="w-12 h-12 rounded-full overflow-hidden border border-surface-variant">
+                                  <img alt={c.name} className="w-full h-full object-cover" src={c.img} />
+                                </div>
+                                <span className="text-[10px] text-secondary">{c.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Restaurant listings */}
+                        <div className="px-md mb-24">
+                          <div className="space-y-3">
+                            {mockRestaurants.map(rest => (
+                              <div key={rest.id} className="flex gap-md bg-surface-container rounded-xl p-sm border border-surface-variant">
+                                <img alt={rest.name} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" src={rest.image} />
+                                <div className="flex-grow py-xs relative">
+                                  <h4 className="font-bold text-on-surface text-sm">{rest.name}</h4>
+                                  <p className="text-secondary text-[11px]">{rest.cuisine} • {rest.time}</p>
+                                  <button 
+                                    className="absolute bottom-0 right-0 bg-white text-zomato-red font-bold px-3 py-1 rounded-full text-[10px] shadow active:scale-95 transition-transform"
+                                    onClick={() => triggerAddToCart(rest.menu[0], rest.name, rest.id)}
+                                  >
+                                    + Add
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Instamart Grocery Directory */}
+                        <div className="px-md mb-md">
+                          <div className="grid grid-cols-4 gap-2 mb-md">
+                            <div className="bg-surface-container-high rounded-xl p-2 flex flex-col items-center border border-surface-variant">
+                              <span className="text-xl">🍎</span>
+                              <span className="text-[9px] mt-1">Fruits</span>
+                            </div>
+                            <div className="bg-surface-container-high rounded-xl p-2 flex flex-col items-center border border-surface-variant">
+                              <span className="text-xl">🥛</span>
+                              <span className="text-[9px] mt-1">Dairy</span>
+                            </div>
+                            <div className="bg-surface-container-high rounded-xl p-2 flex flex-col items-center border border-surface-variant">
+                              <span className="text-xl">🍞</span>
+                              <span className="text-[9px] mt-1">Bread</span>
+                            </div>
+                            <div className="bg-surface-container-high rounded-xl p-2 flex flex-col items-center border border-surface-variant">
+                              <span className="text-xl">🍖</span>
+                              <span className="text-[9px] mt-1">Meat</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3 mb-24">
+                            {mockGroceries.map(item => (
+                              <div key={item.id} className="flex gap-md bg-surface-container rounded-xl p-sm border border-surface-variant">
+                                <img alt={item.name} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" src={item.image} />
+                                <div className="flex-grow py-xs relative">
+                                  <div className="text-[10px] text-secondary font-mono-label">{item.brand}</div>
+                                  <h4 className="font-bold text-on-surface text-xs leading-tight">{item.name}</h4>
+                                  <div className="text-xs font-bold text-primary-container mt-1">INR {item.price}</div>
+                                  
+                                  <button 
+                                    className="absolute bottom-0 right-0 bg-white text-zomato-red font-bold px-3 py-1 rounded-full text-[10px] shadow active:scale-95 transition-transform"
+                                    onClick={() => {
+                                      setActiveGroceryForecast(item);
+                                      setSelectedUsp('tobit');
+                                      runForecast(censoringRate);
+                                    }}
+                                  >
+                                    Impute
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                  </div>
+
+                  {/* Shopping Cart Drawer in Phone */}
+                  {cart.length > 0 && (
+                    <div className="absolute bottom-20 w-full bg-surface-container border-t border-surface-variant p-sm z-30">
+                      <div className="flex justify-between items-center text-xs text-on-surface font-bold">
+                        <span>{cart.length} item(s) selected</span>
+                        <span>Total: INR {getCartTotal()}</span>
+                      </div>
+                      <button 
+                        className="w-full bg-success-color text-white text-xs py-2 rounded-lg font-bold mt-2"
+                        onClick={handlePlaceOrder}
+                      >
+                        Place Order
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Active Order Tracking Satellite map sheet */}
+                  {activeOrder && (
+                    <div className="absolute bottom-0 w-full bg-surface-container-highest border-t border-surface-variant p-md transform transition-transform duration-300 z-40">
+                      <div className="flex items-center justify-between mb-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-zomato-red">motorcycle</span>
+                          <span className="font-bold text-body-sm text-xs">Order Arriving</span>
+                        </div>
+                        <span className="font-mono-label text-primary-container text-xs">4 MINS</span>
+                      </div>
+                      
+                      {/* Tracking map canvas */}
+                      <div className="h-28 w-full rounded-lg relative overflow-hidden border border-surface-variant map-satellite">
+                        <div className="absolute inset-0 bg-black/40"></div>
+                        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 120">
+                          <path className="route-path" d="M 50 100 Q 150 20 250 80 T 350 40" fill="none" stroke="#ff535a" strokeLinecap="round" strokeWidth="4"></path>
+                        </svg>
+                        
+                        {/* Map GPS pointer */}
+                        <div 
+                          className="absolute bg-zomato-red w-4 h-4 rounded-full border-2 border-white animate-pulse" 
+                          style={{ left: `${20 + (riderProgress * 2.5)}px`, top: '40px' }}
+                        ></div>
+                        <div className="rain-layer"></div>
+                      </div>
+
+                      <button 
+                        className="w-full border border-error text-error text-[10px] py-1.5 rounded-lg mt-2 font-bold hover:bg-error-container/10 transition-colors"
+                        onClick={cancelActiveOrder}
+                      >
+                        Cancel Delivery (Trigger CORO Rescue)
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Zomato Resale Rescue offer inside phone */}
+                  {rescueOffers.length > 0 && (
+                    <div className="absolute bottom-0 w-full bg-surface-container-highest border-t border-surface-variant p-md z-40">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[11px] font-bold text-success-color uppercase">Food Rescue Active</span>
+                        <span className="text-xs font-mono-label text-error font-bold">⏳ {formatTime(rescueTimer)}</span>
+                      </div>
+                      {rescueOffers.map(o => (
+                        <div key={o.order_id} className="text-xs">
+                          <div className="font-bold text-on-surface">{o.items}</div>
+                          <div className="text-secondary text-[10px] mb-2">Original: <del>INR {o.original_price_inr}</del> | Rescue: <strong className="text-success-color">INR {o.rescue_price_inr}</strong></div>
+                          
+                          <button 
+                            className="w-full bg-success-color text-white py-1.5 rounded-lg font-bold text-[11px] active:scale-95"
+                            onClick={() => {
+                              setSelectedUsp('resale');
+                              handleRescueClaim(o);
+                            }}
+                          >
+                            Rescue Order
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {arbitrageMessage && (
+                    <div className="absolute bottom-0 w-full bg-error-container text-on-error-container p-2 text-center text-[10px] font-bold z-50">
+                      {arbitrageMessage}
+                    </div>
+                  )}
+
+                </div>
+              </section>
+
+              {/* Right Operations Bento Dashboard */}
+              <section className="flex-grow flex flex-col gap-gutter">
+                
+                {/* Latency & Incidents Header */}
+                <div className="glass-panel inner-glow rounded-xl px-lg py-md flex items-center justify-between">
+                  <div className="flex items-center gap-md">
+                    <div className="flex items-center gap-2 px-md py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
+                      <span className="text-emerald-500 font-mono-label text-mono-label uppercase text-[10px]">API Online</span>
+                    </div>
+                    <span className="text-secondary opacity-50">|</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="font-mono-label text-mono-label text-on-surface">LATENCY: 42ms</span>
+                      <span className="font-mono-label text-mono-label text-primary-container">THROUGHPUT: 12.4k req/s</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-sm text-xs">
+                    <span className="font-mono-label text-mono-label text-secondary">ACTIVE FLEET: 1,402</span>
+                    <span className="font-mono-label text-mono-label text-zomato-red">INCIDENTS: 0</span>
+                  </div>
                 </div>
 
-                <div className="graph-legend" style={{ margin: 0 }}>
-                  <div className="legend-item" style={{ fontSize: '0.65rem' }}>
-                    <div className="legend-dot" style={{ background: 'var(--error-color)' }} />
-                    <span>Raw Jumpy GPS</span>
+                {/* 3-Quadrant bento layout */}
+                <div className="grid grid-cols-2 gap-gutter">
+                  
+                  {/* Q1: Tobit Imputer */}
+                  <div className={`glass-panel inner-glow rounded-xl p-lg flex flex-col gap-md cursor-pointer ${selectedUsp === 'tobit' ? 'border-primary shadow-[0_0_15px_rgba(255,179,177,0.15)]' : ''}`} onClick={() => setSelectedUsp('tobit')}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h2 className="font-headline-sm text-on-surface text-base font-bold">Tobit Latent Demand</h2>
+                        <p className="text-body-sm text-secondary text-xs">Solver v2.4 Predictive Engine</p>
+                      </div>
+                      <span className="material-symbols-outlined text-primary-container">query_stats</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-sm">
+                      <div className="bg-surface-container-low p-md rounded-lg border border-surface-variant">
+                        <p className="text-mono-label text-secondary text-[9px] uppercase">Censoring rate</p>
+                        <p className="text-base font-mono-label">{(censoringRate * 100).toFixed(0)}%</p>
+                      </div>
+                      <div className="bg-surface-container-low p-md rounded-lg border border-surface-variant">
+                        <p className="text-mono-label text-secondary text-[9px] uppercase">WMAPE Lift</p>
+                        <p className="text-base font-mono-label text-primary">{(forecastOutput.lift_pct).toFixed(1)}%</p>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <label className="text-mono-label text-secondary text-[10px] mb-2 block">Solver aggressiveness threshold</label>
+                      <input 
+                        className="w-full h-1 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-zomato-red" 
+                        type="range"
+                        min="0.1"
+                        max="0.8"
+                        step="0.05"
+                        value={censoringRate}
+                        onChange={(e) => {
+                          setCensoringRate(parseFloat(e.target.value));
+                          runForecast(parseFloat(e.target.value));
+                        }}
+                      />
+                      <div className="flex justify-between text-[8px] mt-1 font-mono-label">
+                        <span>CONSERVATIVE</span>
+                        <span>AGGRESSIVE</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="legend-item" style={{ fontSize: '0.65rem' }}>
-                    <div className="legend-dot" style={{ background: 'var(--success-color)' }} />
-                    <span>Gated Smoother</span>
+
+                  {/* Q2: ETA Smoother Graph */}
+                  <div className={`glass-panel inner-glow rounded-xl p-lg flex flex-col gap-md cursor-pointer ${selectedUsp === 'eta' ? 'border-primary shadow-[0_0_15px_rgba(255,179,177,0.15)]' : ''}`} onClick={() => setSelectedUsp('eta')}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h2 className="font-headline-sm text-on-surface text-base font-bold">Monsoon ETA Jitter</h2>
+                        <p className="text-body-sm text-secondary text-xs">Real-time Smoother Analysis</p>
+                      </div>
+                      <span className="bg-primary/20 text-primary-fixed-dim px-2 py-0.5 rounded font-mono-label text-[9px]">LIVE</span>
+                    </div>
+
+                    <div className="flex-grow relative border-l border-b border-surface-variant overflow-hidden min-h-[90px]">
+                      <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 300 120">
+                        <polyline 
+                          fill="none" 
+                          points={etaHistory.slice(-7).map((h, idx) => `${idx * 50},${120 - (h.raw * 5)}`).join(' ')} 
+                          stroke="#ff535a" 
+                          strokeWidth="2"
+                        ></polyline>
+                        <polyline 
+                          fill="none" 
+                          points={etaHistory.slice(-7).map((h, idx) => `${idx * 50},${120 - (h.smooth * 5)}`).join(' ')} 
+                          stroke="#10b981" 
+                          strokeWidth="2"
+                        ></polyline>
+                      </svg>
+                    </div>
+
+                    <div className="flex justify-between items-center px-1 text-[9px] text-secondary">
+                      <div className="flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-error"></div>
+                        <span>Raw GPS</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-success-color"></div>
+                        <span>Gated Smooth</span>
+                      </div>
+                      <button 
+                        className="font-bold underline text-primary" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          simulateETAStep();
+                        }}
+                      >
+                        Inject Telemetry
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Q3: SLA Route Batcher GIS Map */}
+                  <div className={`glass-panel inner-glow rounded-xl col-span-2 relative overflow-hidden min-h-[200px] map-satellite border-2 border-surface-variant cursor-pointer ${selectedUsp === 'batcher' ? 'border-primary' : ''}`} onClick={() => setSelectedUsp('batcher')}>
+                    <div className="absolute inset-0 bg-black/40"></div>
+                    <div className="rain-layer opacity-20"></div>
+                    
+                    <div className="absolute top-md left-md z-10 flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <h2 className="font-headline-sm text-on-surface text-base font-bold">SLA Route Batcher</h2>
+                        <span className="bg-zomato-red text-white text-[9px] px-2 py-0.5 rounded-full font-bold">GIS ACTIVE</span>
+                      </div>
+                      <p className="text-[10px] text-secondary leading-tight">Hyper-Batching Intelligence Grid • Bengaluru North</p>
+                    </div>
+
+                    {/* Routing Overlay Map pins */}
+                    <svg className="absolute inset-0 w-full h-full opacity-80" xmlns="http://www.w3.org/2000/svg">
+                      <path className="route-path" d="M100,120 L220,90 L290,40" fill="none" stroke="#71d7cf" strokeDasharray="10 5" strokeWidth="3"></path>
+                    </svg>
+
+                    <div className="absolute top-20 left-[40%] bg-surface-container-high/90 border border-primary/40 p-2 rounded backdrop-blur-md z-10 text-[9px] font-mono-label">
+                      <p className="text-primary">BATCH ALPHA: 12 DELIVERIES</p>
+                      <p className="text-secondary mt-0.5">SLA BREACH PROBABILITY: 0.00%</p>
+                    </div>
+
+                    <div className="absolute bottom-md right-md flex gap-2 z-20">
+                      <button 
+                        className="bg-primary text-on-primary-container px-3 py-1 rounded text-[10px] font-bold"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOptimizeBatch();
+                        }}
+                      >
+                        Run Batch Optimization
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Mathematical Deep Dive box */}
+                <div className="glass-panel inner-glow rounded-xl p-md">
+                  <h4 className="text-xs font-bold text-primary mb-1 uppercase">Dynamic Parameter Deep Dive</h4>
+                  <div className="text-[11px] text-secondary leading-relaxed font-mono-label">
+                    {selectedUsp === 'tobit' && (
+                      <p>
+                        Tobit Type I MLE fits observed demand y censored below zero: 
+                        <br />
+                        <code>{"L = ∑ log[ φ((y_i - Xβ)/σ) / σ ] + ∑ log[ 1 - Φ((0 - Xβ)/σ) ]"}</code>
+                      </p>
+                    )}
+                    {selectedUsp === 'eta' && (
+                      <p>
+                        Gated ETA Filter smoothing weights are dynamically updated by Gated Classification parameters:
+                        <br />
+                        <code>{"ETA_(t+1) = α * Raw_ETA + (1 - α) * ETA_t (α=0.15 holding storm spikes)"}</code>
+                      </p>
+                    )}
+                    {selectedUsp === 'resale' && (
+                      <p>
+                        Anti-Arbitrage checks: 
+                        <br />
+                        <code>{"Flag = CoLocation(buyer, cancel) < 15m || SameSubnet(buyer_ip, cancel_ip)"}</code>
+                      </p>
+                    )}
+                    {selectedUsp === 'batcher' && (
+                      <p>
+                        SLA batched delivery sequences:
+                        <br />
+                        <code>{"Max Delay = max(PrepTime_i + RouteDistance_i) ≤ 15 Minutes SLA limit"}</code>
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                <button 
-                  className="btn-secondary" 
-                  style={{ fontSize: '0.7rem', padding: '0.4rem', marginTop: '0.75rem' }} 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    simulateETAStep();
-                  }}
-                >
-                  Inject Route Telemetry Update
-                </button>
+              </section>
+
+            </div>
+          ) : (
+            /* VIEW 2: Sybil-Guard Security Console (Screen 2) */
+            <div className="flex flex-col gap-lg overflow-y-auto">
+              
+              {/* Security Metrics row */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+                <div className="glass-panel p-lg rounded-xl flex flex-col justify-between h-28 relative overflow-hidden group">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-mono-label text-mono-label text-[10px] text-secondary-fixed-dim uppercase tracking-wider mb-xs">Exploits Blocked</p>
+                      <h2 className="font-display-lg text-xl text-primary font-bold leading-none">42,912</h2>
+                    </div>
+                    <span className="material-symbols-outlined text-primary text-2xl">shield_with_heart</span>
+                  </div>
+                  <div className="flex items-center gap-xs mt-2">
+                    <span className="font-mono-label text-[9px] text-tertiary">100% discount arbitrage caught</span>
+                  </div>
+                  <div className="scan-line"></div>
+                </div>
+
+                <div className="glass-panel p-lg rounded-xl flex flex-col justify-between h-28 relative overflow-hidden">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-mono-label text-mono-label text-[10px] text-secondary-fixed-dim uppercase tracking-wider mb-xs">Active Rules</p>
+                      <h2 className="font-display-lg text-xl text-on-surface font-bold leading-none">1,208</h2>
+                    </div>
+                    <span className="material-symbols-outlined text-secondary text-2xl">gavel</span>
+                  </div>
+                  <div className="flex items-center gap-xs mt-2">
+                    <span className="font-mono-label text-[9px] text-on-secondary-container">98.2% Enforcement Efficiency</span>
+                  </div>
+                </div>
+
+                <div className="glass-panel p-lg rounded-xl flex flex-col justify-between h-28 relative overflow-hidden">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-mono-label text-mono-label text-[10px] text-secondary-fixed-dim uppercase tracking-wider mb-xs">Hygiene Score</p>
+                      <h2 className="font-display-lg text-xl text-tertiary font-bold leading-none">94/100</h2>
+                    </div>
+                    <span className="material-symbols-outlined text-tertiary text-2xl">clean_hands</span>
+                  </div>
+                  <div className="flex items-center gap-xs mt-2">
+                    <span className="font-mono-label text-[9px] text-tertiary uppercase">Optimal Configuration</span>
+                  </div>
+                </div>
+
+                <div className="glass-panel p-lg rounded-xl flex flex-col justify-between h-28 relative overflow-hidden">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-mono-label text-mono-label text-[10px] text-secondary-fixed-dim uppercase tracking-wider mb-xs">System Health</p>
+                      <h2 className="font-display-lg text-xl text-on-surface font-bold leading-none">99.98%</h2>
+                    </div>
+                    <div className="flex gap-0.5">
+                      <span className="w-1 h-4 bg-tertiary rounded-full animate-pulse"></span>
+                      <span className="w-1 h-4 bg-tertiary rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-xs mt-2">
+                    <span className="font-mono-label text-[9px] text-tertiary uppercase">Latency: 14ms | Load: 42%</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Quadrant 3: Food Rescue & Sybil-Guard Logs */}
-              <div className={`glass-card ${selectedUsp === 'resale' ? 'active' : ''}`} onClick={() => setSelectedUsp('resale')} style={{ cursor: 'pointer' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', margin: 0 }}>Q3: Anti-Arbitrage Sybil-Guard</h3>
-                  <span className="badge badge-primary">100% Exploits Blocked</span>
+              {/* Console logs screen & interactive command prompt */}
+              <div className="glass-panel-accent rounded-xl overflow-hidden flex flex-col h-[400px]">
+                <div className="px-lg py-md border-b border-surface-variant flex justify-between items-center bg-surface-container-low">
+                  <div className="flex items-center gap-md">
+                    <span className="material-symbols-outlined text-primary">terminal</span>
+                    <h3 className="font-headline-sm text-xs font-bold uppercase tracking-tight">Sybil-Guard Console Logs</h3>
+                  </div>
+                  <div className="flex items-center gap-sm text-[10px] bg-surface-container-highest px-3 py-1 rounded-md border border-surface-variant">
+                    <span className="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+                    <span className="font-mono-label text-mono-label">LIVE FEED</span>
+                  </div>
                 </div>
 
-                <div style={{ 
-                  height: '100px', 
-                  overflowY: 'auto', 
-                  background: 'rgba(0,0,0,0.25)', 
-                  border: '1px solid var(--card-border)', 
-                  borderRadius: '6px', 
-                  padding: '0.5rem',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.65rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.35rem'
-                }}>
+                {/* Console Log Screen */}
+                <div className="flex-1 p-lg font-mono-label text-[11px] overflow-y-auto log-container space-y-2 bg-surface-container-lowest">
                   {securityLogs.map((log, idx) => (
-                    <div key={idx} style={{ borderBottom: '1px solid #1f1f25', paddingBottom: '0.2rem' }}>
-                      <span style={{ color: 'var(--accent-color)' }}>[{log.time}]</span> {log.event}
+                    <div key={idx} className={`flex gap-4 p-1.5 rounded ${
+                      log.type === 'error' ? 'bg-error-container/10 border-l-2 border-error' :
+                      log.type === 'success' ? 'bg-emerald-500/10 border-l-2 border-emerald-500' :
+                      'border-l-2 border-surface-variant'
+                    }`}>
+                      <span className={`font-bold ${
+                        log.type === 'error' ? 'text-error' :
+                        log.type === 'success' ? 'text-emerald-500' :
+                        'text-secondary'
+                      }`}>
+                        {log.type ? log.type.toUpperCase() : 'SYSTEM'}
+                      </span>
+                      <span className="text-secondary opacity-50">{log.time}</span>
+                      <span className="text-on-surface">{log.event}</span>
                     </div>
                   ))}
                 </div>
 
-                <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '0.5rem', lineHeight: '1.3' }}>
-                  Anti-arbitrage monitors matches on co-locations, IP addresses, and user-tenant mappings.
+                {/* Monospaced Command input box */}
+                <div className="p-md bg-surface-container flex items-center gap-md border-t border-surface-variant">
+                  <span className="text-primary font-bold font-mono-label text-xs">HYPERFLOW_ROOT@CON:~#</span>
+                  <input 
+                    className="flex-1 bg-transparent border-none focus:ring-0 font-mono-label text-xs text-on-surface placeholder-on-surface-variant/30"
+                    placeholder="Type command (e.g. 'lock-subnet 192.168.1.x', 'run-imputer', 'clear')..." 
+                    type="text"
+                    value={terminalInput}
+                    onChange={(e) => setTerminalInput(e.target.value)}
+                    onKeyDown={runTerminalCommand}
+                  />
+                  <div className="flex items-center gap-sm opacity-40 text-[9px] font-mono-label">
+                    <span>Press Enter to Submit</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Quadrant 4: SLA Route Optimizer Map */}
-              <div className={`glass-card ${selectedUsp === 'batcher' ? 'active' : ''}`} onClick={() => setSelectedUsp('batcher')} style={{ cursor: 'pointer' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', margin: 0 }}>Q4: SLA Route Batcher</h3>
-                  <span className="badge badge-success">Zero SLA Breaches</span>
-                </div>
+              {/* Triage Dispute Resolver console inside operations */}
+              <div className="glass-panel p-lg rounded-xl flex flex-col gap-md">
+                <h3 className="font-bold text-sm text-on-surface uppercase border-b border-surface-variant pb-2">Q4: Escrow Dispute Triage Engine</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                  <div className="space-y-3 text-xs">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-secondary font-mono-label">Select Merchant ID</span>
+                      <select className="bg-surface-container-high border border-surface-variant text-on-surface p-2 rounded text-xs" value={triageMerchant} onChange={e => setTriageMerchant(e.target.value)}>
+                        <option value="merchant_1">merchant_1 (High Alert: 12 recent complaints)</option>
+                        <option value="merchant_2">merchant_2 (Normal Status)</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-secondary font-mono-label">Complaint Text</span>
+                      <input type="text" className="bg-surface-container-high border border-surface-variant text-on-surface p-2 rounded text-xs" value={triageText} onChange={e => setTriageText(e.target.value)} />
+                    </div>
+                    <button className="bg-zomato-red text-white py-2 rounded font-bold" onClick={handleTriageRefund}>
+                      Run Fraud Guard Decision
+                    </button>
+                  </div>
 
-                <div className="map-canvas" style={{ height: '100px', marginBottom: '0.5rem' }}>
-                  <div className="map-node map-store" style={{ left: '50%', top: '50%', fontSize: '0.65rem' }}>Dark Store</div>
-                  <div className="map-node map-customer" style={{ left: '60%', top: '35%', fontSize: '0.65rem' }}>ORD_1</div>
-                  <div className="map-node map-customer" style={{ left: '72%', top: '38%', fontSize: '0.65rem' }}>ORD_2</div>
-                  <div className="map-node map-customer" style={{ left: '38%', top: '65%', fontSize: '0.65rem' }}>ORD_3</div>
+                  <div className="bg-surface-container-low border border-surface-variant p-md rounded-lg flex flex-col justify-center text-xs">
+                    {triageResult ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span>Decision Outcome:</span>
+                          <span className={`badge ${triageResult.decision === 'AUTO_REFUND' ? 'badge-success text-emerald-500' : 'badge-danger text-error'}`}>
+                            {triageResult.decision}
+                          </span>
+                        </div>
+                        <div>Fraud Probability: <strong>{(triageResult.fraud_probability * 100).toFixed(1)}%</strong></div>
+                        <div className="font-mono-label text-[10px] text-secondary mt-1">Reason: <code>{triageResult.reason}</code></div>
+                      </div>
+                    ) : (
+                      <span className="text-secondary text-center">Run triage checks to verify dispute refunds.</span>
+                    )}
+                  </div>
                 </div>
-
-                <button 
-                  className="btn-primary" 
-                  style={{ fontSize: '0.7rem', padding: '0.4rem' }} 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOptimizeBatch();
-                  }}
-                >
-                  Optimize Route Permutations
-                </button>
               </div>
 
             </div>
+          )}
 
-            {/* Swagger & Swagger API Documentation Link */}
-            <div className="glass-card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(226, 55, 68, 0.05)', border: '1px solid rgba(226, 55, 68, 0.15)' }}>
-              <div style={{ fontSize: '0.8rem' }}>
-                <strong>Interactive Swagger Documentation Online</strong>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: '0.15rem' }}>
-                  Explore, trigger, and query the backend ML endpoints in real-time.
+          {/* Core system status row (CPU Load, WebSockets) */}
+          <div className="glass-panel inner-glow rounded-xl p-md grid grid-cols-4 gap-md mt-auto text-xs">
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-mono-label text-secondary uppercase">CPU/GPU Load</span>
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 flex-grow bg-surface-container-high rounded-full overflow-hidden">
+                  <div className="h-full bg-primary-container w-[68%]"></div>
                 </div>
+                <span className="font-mono-label">68%</span>
               </div>
-              <a 
-                href={`${backendUrl}/docs`} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="btn-primary" 
-                style={{ width: 'auto', padding: '0.45rem 1rem', fontSize: '0.75rem', textDecoration: 'none' }}
-              >
-                Open Swagger UI
+            </div>
+            <div className="flex flex-col gap-1 border-l border-surface-variant pl-md">
+              <span className="text-[9px] font-mono-label text-secondary uppercase">Cluster Status</span>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                <span>HEALTHY (18/18)</span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1 border-l border-surface-variant pl-md">
+              <span className="text-[9px] font-mono-label text-secondary uppercase">Active WebSockets</span>
+              <span className="font-mono-label text-tertiary">42,904 ESTABLISHED</span>
+            </div>
+            <div className="flex flex-col gap-1 border-l border-surface-variant pl-md">
+              <span className="text-[9px] font-mono-label text-secondary uppercase">Memory Buffer</span>
+              <span className="font-mono-label">1.2 TB / 4.0 TB</span>
+            </div>
+          </div>
+
+          {/* System Footer Documentation links */}
+          <footer className="py-md flex justify-between items-center border-t border-surface-variant opacity-60 hover:opacity-100 transition-opacity text-xs">
+            <div className="flex gap-lg">
+              <a className="font-mono-label text-mono-label flex items-center gap-1 hover:text-primary transition-colors" href={`${backendUrl}/docs`} target="_blank" rel="noopener noreferrer">
+                <span className="material-symbols-outlined text-[16px]">menu_book</span>
+                Swagger API Docs
+              </a>
+              <a className="font-mono-label text-mono-label flex items-center gap-1 hover:text-primary transition-colors" href="https://github.com/Gaurav711cgu/HyperFlow.git" target="_blank" rel="noopener noreferrer">
+                <span className="material-symbols-outlined text-[16px]">deployed_code</span>
+                Model Registry Repo
               </a>
             </div>
-
-          </div>
+            <p className="font-mono-label text-mono-label uppercase">© 2024 HyperFlow. All Systems Nominal.</p>
+          </footer>
 
         </div>
-
-        {/* Selected USP Mathematical Deep Dive Section */}
-        <section style={{ marginTop: '2.5rem', marginBottom: '3.5rem' }}>
-          <div className="glass-card">
-            <h3 className="card-title">Mathematical Deep Dive: {selectedUsp === 'tobit' ? 'Tobit Demand Imputation' : selectedUsp === 'eta' ? 'Gated ETA Smoothing' : selectedUsp === 'resale' ? 'CORO Anti-Arbitrage Guard' : 'SLA Route Batching'}</h3>
-            
-            {selectedUsp === 'tobit' && (
-              <div style={{ fontSize: '0.85rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
-                <p>
-                  <strong>Censored Demand Problem:</strong> When inventory hits zero, sales records are capped at the inventory level ($y_i = \text{Inventory}$). Standard regression models ignore this truncation, severely underestimating latent consumer demand. Project Antigravity resolves this via a two-stage **Heteroscedastic Tobit Maximum Likelihood Estimation** model.
-                </p>
-                <code style={{ display: 'block', margin: '0.75rem 0', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#fff', borderRadius: '4px', overflowX: 'auto' }}>
-                  {"L = ∑_(y_i > 0) log[ φ((y_i - X_i β) / σ_i) / σ_i ] + ∑_(y_i = 0) log[ 1 - Φ((0 - X_i β) / σ_i) ]"}
-                </code>
-                <p>
-                  By modeling variance $\log(\sigma_i) = X_i \gamma$ dynamically, we adjust for heteroscedasticity across differing temporal patterns, providing a **+48.0% WMAPE lift** under high censoring conditions.
-                </p>
-              </div>
-            )}
-
-            {selectedUsp === 'eta' && (
-              <div style={{ fontSize: '0.85rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
-                <p>
-                  <strong>Display ETA Calibration:</strong> Heavy rains or tunnel navigation generate noisy GPS signals, resulting in fluctuating arrival times. Project Antigravity uses a **Gated Random Forest Classifier** trained on post-hoc **Residual Convergence** to classify updates as "jitter" or "real delays."
-                </p>
-                <code style={{ display: 'block', margin: '0.75rem 0', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#fff', borderRadius: '4px', overflowX: 'auto' }}>
-                  {"ETA_(t+1) = α * Raw_ETA_(t+1) + (1 - α) * ETA_t"}
-                  <br />
-                  {"where α = Gated Classifier Outcome ∈ [0.15 (Hold Clock), 0.70 (Accept Delay)]"}
-                </code>
-                <p>
-                  This filters out **81.4% of display bumps** without lagging behind real, permanent delay factors like rider vehicle breakdowns.
-                </p>
-              </div>
-            )}
-
-            {selectedUsp === 'resale' && (
-              <div style={{ fontSize: '0.85rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
-                <p>
-                  <strong>Cancelled Order Resale (CORO) Safety:</strong> Placing cancelled orders up for sale at a 50% discount triggers exploit loops (users cancelling orders intentionally to buy them back cheap). We mitigate this via a **Sybil Guard Filter**:
-                </p>
-                <code style={{ display: 'block', margin: '0.75rem 0', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#fff', borderRadius: '4px', overflowX: 'auto' }}>
-                  {"Arbitrage Flag = (IP_buyer == IP_canceller) || (Distance(Buyer, Canceller) < 15m) || (CancelCount_buyer_30d > 3)"}
-                </code>
-                <p>
-                  Additionally, the cooling curve model decays the Sensory Quality Index (SQI) dynamically over time based on ambient temperature variables, guaranteeing food safety limits.
-                </p>
-              </div>
-            )}
-
-            {selectedUsp === 'batcher' && (
-              <div style={{ fontSize: '0.85rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
-                <p>
-                  <strong>SLA-Constrained Route Batching:</strong> Pairs orders coming from the same dark store by distance while enforcing strict delivery SLAs.
-                </p>
-                <code style={{ display: 'block', margin: '0.75rem 0', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#fff', borderRadius: '4px', overflowX: 'auto' }}>
-                  {"Max Delay = max_(i ∈ Batch) { PrepTime_i + TravelTime(Store → Node_1 → ... → Node_i) } ≤ 15 Minutes"}
-                </code>
-                <p>
-                  Permutations that violate the 15-minute threshold are early-pruned out of the candidate search matrix in sub-5ms, keeping delivery promises reliable during peak hours.
-                </p>
-              </div>
-            )}
-
-          </div>
-        </section>
-
       </main>
 
-      {/* Zomato-style Interactive Customization Sheet Drawer */}
+      {/* Customized Item modal drawer */}
       {customizingItem && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
-          <div style={{ width: '100%', maxWidth: '410px', background: '#1c1c24', borderTopLeftRadius: '20px', borderTopRightRadius: '20px', border: '1px solid var(--card-border)', borderBottom: 'none', padding: '1.5rem', animation: 'slideUp 0.3s ease-out' }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 700 }}>Customize Item</h4>
-              <button 
-                style={{ background: 'none', border: 'none', color: '#888', fontSize: '1.2rem', cursor: 'pointer' }}
-                onClick={() => setCustomizingItem(null)}
-              >
-                ✕
-              </button>
+        <div className="fixed top-0 left-0 w-vw h-screen w-screen bg-black/60 backdrop-blur-[4px] z-50 flex justify-center items-end" onClick={() => setCustomizingItem(null)}>
+          <div className="w-full max-w-[410px] bg-[#1c1c24] border-t border-surface-variant rounded-t-2xl p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-md">
+              <h4 className="font-bold text-sm text-white">Customize Portion Addons</h4>
+              <button className="text-secondary text-base font-bold" onClick={() => setCustomizingItem(null)}>✕</button>
             </div>
-
-            <p style={{ fontSize: '0.85rem', color: '#fff', marginBottom: '0.25rem', fontWeight: 600 }}>{customizingItem.item.name}</p>
-            <p style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginBottom: '1rem', fontWeight: 700 }}>Base Price: INR {customizingItem.item.price}</p>
-
-            <div style={{ borderTop: '1px solid #282832', paddingTop: '1rem', marginBottom: '1.5rem' }}>
-              <span style={{ fontSize: '0.75rem', color: '#aaa', fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>Portion Size Add-ons:</span>
-              
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#fff', marginBottom: '0.5rem', cursor: 'pointer' }}>
+            <div className="mb-md text-xs">
+              <p className="font-bold text-white text-sm">{customizingItem.item.name}</p>
+              <p className="text-primary-container font-mono-label mt-1">Base Price: INR {customizingItem.item.price}</p>
+            </div>
+            
+            <div className="border-t border-surface-variant pt-md mb-lg space-y-2 text-xs">
+              <label className="flex items-center gap-2 text-white cursor-pointer">
                 <input 
                   type="radio" 
                   name="addon" 
                   value="Regular Portion" 
                   checked={selectedAddon === "Regular Portion"} 
                   onChange={() => setSelectedAddon("Regular Portion")}
-                  style={{ accentColor: 'var(--accent-color)' }}
+                  className="accent-zomato-red"
                 />
-                <span>Regular (No Extra Cost)</span>
+                <span>Regular Portion (+0)</span>
               </label>
-
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#fff', cursor: 'pointer' }}>
+              <label className="flex items-center gap-2 text-white cursor-pointer">
                 <input 
                   type="radio" 
                   name="addon" 
-                  value="Large Portion (+INR 60)" 
-                  checked={selectedAddon === "Large Portion (+INR 60)"} 
-                  onChange={() => setSelectedAddon("Large Portion (+INR 60)")}
-                  style={{ accentColor: 'var(--accent-color)' }}
+                  value="Large Portion (+60)" 
+                  checked={selectedAddon === "Large Portion (+60)"} 
+                  onChange={() => setSelectedAddon("Large Portion (+60)")}
+                  className="accent-zomato-red"
                 />
                 <span>Large Portion (+INR 60)</span>
               </label>
             </div>
 
-            <button 
-              className="btn-primary" 
-              style={{ padding: '0.6rem' }}
-              onClick={handleConfirmCustomization}
-            >
+            <button className="w-full bg-zomato-red text-white py-2 rounded-lg font-bold text-xs" onClick={handleConfirmCustomization}>
               Add to Cart
             </button>
           </div>
         </div>
       )}
 
-      {/* Tobit Latent Demand Grocery Modal */}
+      {/* Tobit Grocery Impute Modal */}
       {activeGroceryForecast && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div className="glass-card" style={{ width: '90%', maxWidth: '500px', border: '1px solid var(--accent-color)', padding: '2rem', position: 'relative' }}>
-            <button 
-              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '1.2rem', cursor: 'pointer' }}
-              onClick={() => setActiveGroceryForecast(null)}
-            >
-              ✕
-            </button>
-            <h3 style={{ fontSize: '1.25rem', color: 'var(--accent-color)', marginBottom: '0.5rem', fontWeight: 700 }}>
-              Tobit Latent Demand Prediction
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-              Solving the stockout censoring bias for <strong>{activeGroceryForecast.brand} {activeGroceryForecast.name}</strong>.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '6px', marginBottom: '1.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className="fixed top-0 left-0 w-vw h-screen w-screen bg-black/60 backdrop-blur-[8px] z-50 flex justify-center items-center" onClick={() => setActiveGroceryForecast(null)}>
+          <div className="glass-panel w-[90%] max-w-[480px] p-lg rounded-2xl relative" onClick={(e) => e.stopPropagation()}>
+            <button className="absolute top-4 right-4 text-secondary text-base font-bold" onClick={() => setActiveGroceryForecast(null)}>✕</button>
+            
+            <h3 className="font-bold text-primary text-base mb-2">Tobit Latent Demand Prediction</h3>
+            <p className="text-xs text-secondary mb-md">Solving stockout censoring bias for <strong>{activeGroceryForecast.brand} {activeGroceryForecast.name}</strong>.</p>
+            
+            <div className="bg-black/30 border border-surface-variant p-md rounded-lg space-y-2 font-mono-label text-xs mb-lg">
+              <div className="flex justify-between">
                 <span>Observed Sales (Censored):</span>
-                <span style={{ color: 'var(--error-color)', fontWeight: 600 }}>0 units (Stockout)</span>
+                <span className="text-error font-bold">0 units (Stockout)</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--card-border)', paddingTop: '0.5rem' }}>
-                <span>Latent Demand Imputation:</span>
-                <span style={{ color: 'var(--success-color)', fontWeight: 600 }}>{activeGroceryForecast.latent_demand} units / day</span>
+              <div className="flex justify-between border-t border-surface-variant pt-2">
+                <span>Imputed Latent Demand:</span>
+                <span className="text-emerald-500 font-bold">{activeGroceryForecast.latent_demand} units / day</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--card-border)', paddingTop: '0.5rem' }}>
-                <span>Recommended Restock:</span>
-                <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>{activeGroceryForecast.restock_suggestion} units</span>
+              <div className="flex justify-between border-t border-surface-variant pt-2">
+                <span>Recommended Replenishment:</span>
+                <span className="text-primary-container font-bold">{activeGroceryForecast.restock_suggestion} units</span>
               </div>
             </div>
 
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4', marginBottom: '1.5rem' }}>
-              Note: Because inventory reached 0, standard regressors predict demand of 0. The Tobit MLE model uses historical run-rates and covariate matrices to impute the unobserved customer demand, optimizing dark-store inventory replenishment.
+            <p className="text-[11px] text-secondary leading-relaxed mb-lg">
+              Because stock dropped to 0, standard inventory regressors predict demand of 0. The Tobit MLE model recovers latent demand parameters dynamically, preventing under-replenishment.
             </p>
 
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button className="btn-primary" onClick={() => setActiveGroceryForecast(null)}>
-                Dismiss Forecast Console
-              </button>
-            </div>
+            <button className="w-full bg-primary text-on-primary-container py-2 rounded-lg font-bold text-xs" onClick={() => setActiveGroceryForecast(null)}>
+              Dismiss Forecast Console
+            </button>
           </div>
         </div>
       )}

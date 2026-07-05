@@ -1,10 +1,104 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>HyperFlow | Operations Dashboard</title>
+    <!-- Tailwind CSS CDN with plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Geist:wght@600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Material Design Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+    <!-- Tailwind Config injected from Stitch -->
+    <script>
+      window.tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+              "error": "#ffb4ab",
+              "inverse-surface": "#e4e1e9",
+              "on-secondary-container": "#b9b7c4",
+              "surface-variant": "#35343a",
+              "primary-fixed": "#ffdad8",
+              "tertiary": "#71d7cf",
+              "surface-dim": "#131318",
+              "surface-container-high": "#2a292f",
+              "tertiary-container": "#32a099",
+              "on-tertiary-fixed-variant": "#00504c",
+              "on-error-container": "#ffdad6",
+              "primary-fixed-dim": "#ffb3b1",
+              "on-tertiary-container": "#00302d",
+              "on-surface": "#e4e1e9",
+              "outline-variant": "#5b403f",
+              "on-primary-fixed": "#410007",
+              "on-background": "#e4e1e9",
+              "tertiary-fixed": "#8ef4eb",
+              "surface-container-lowest": "#0e0e13",
+              "on-primary-fixed-variant": "#92001c",
+              "primary-container": "#ff535a",
+              "surface-tint": "#ffb3b1",
+              "primary": "#ffb3b1",
+              "on-secondary": "#302f3a",
+              "surface-bright": "#39383e",
+              "on-secondary-fixed": "#1b1b25",
+              "outline": "#ab8987",
+              "surface": "#131318",
+              "inverse-primary": "#bb162c",
+              "on-primary-container": "#5b000e",
+              "background": "#131318",
+              "on-primary": "#680011",
+              "surface-container-low": "#1b1b20",
+              "tertiary-fixed-dim": "#71d7cf",
+              "surface-container-highest": "#35343a",
+              "surface-container": "#1f1f25",
+              "secondary-fixed-dim": "#c7c5d3",
+              "on-tertiary-fixed": "#00201e",
+              "on-surface-variant": "#e4bebc",
+              "on-secondary-fixed-variant": "#464651",
+              "secondary-container": "#494853",
+              "error-container": "#93000a",
+              "secondary": "#c7c5d3",
+              "on-error": "#690005",
+              "secondary-fixed": "#e3e1ef",
+              "on-tertiary": "#003734",
+              "inverse-on-surface": "#303036",
+              "zomato-red": "#e23744"
+            },
+            "borderRadius": {
+              "DEFAULT": "0.25rem",
+              "lg": "0.5rem",
+              "xl": "0.75rem",
+              "full": "9999px"
+            },
+            "spacing": {
+              "md": "16px",
+              "lg": "24px",
+              "sm": "8px",
+              "xs": "4px",
+              "unit": "4px",
+              "xl": "40px",
+              "container-margin": "32px",
+              "gutter": "20px"
+            },
+            "fontFamily": {
+              "mono-label": ["JetBrains Mono"],
+              "body-md": ["Inter"],
+              "headline-sm": ["Geist"],
+              "body-lg": ["Inter"],
+              "body-sm": ["Inter"],
+              "display-lg": ["Geist"],
+              "headline-md": ["Geist"]
+            }
+          }
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
