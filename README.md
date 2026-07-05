@@ -90,7 +90,23 @@ npm run dev
 
 ---
 
-## 5. Verification Traces & Live Simulation Logs
+## 5. High-Fidelity UI Dashboards & Simulator
+
+The system includes a dual-pane interactive operator console designed to run live simulations side-by-side with the client-facing application views.
+
+### A. Operations Control Dashboard (Real-time Monitor)
+The Operations tab displays a simulated mobile client rendering real-time food delivery maps with flow path transitions, rain overlays during simulated weather events, and essential categories next to a detailed operations metrics panel.
+
+![Operations Control Dashboard](docs/assets/operations_control.png)
+
+### B. Sybil-Guard Security Console (Operations & Security)
+The Security tab displays the Sybil-Guard monitoring panel which tracks active rule compliance, active connections, and parses live command inputs in real-time.
+
+![Sybil-Guard Security Console](docs/assets/sybil_guard.png)
+
+---
+
+## 6. Verification Traces & Live Simulation Logs
 
 To prove the execution validity of the hyperlocal models, the following are the real console traces captured from the active terminal:
 
@@ -144,7 +160,7 @@ dist/assets/index-xvT_iiH5.js   231.19 kB │ gzip: 70.55 kB
 
 ---
 
-## 6. Model Context Protocol (MCP) Server Setup
+## 7. Model Context Protocol (MCP) Server Setup
 To use these hyperlocal tools inside your Cursor or Claude Desktop environment, add this to your config:
 ```json
 {
@@ -161,7 +177,7 @@ This starts the stdio server (`mcp_server.py`) and exposes `get_instamart_foreca
 
 ---
 
-## 7. References & Engineering Literature Cited
+## 8. References & Engineering Literature Cited
 
 To ensure Project Antigravity aligns with actual operational systems, the codebase is modeled directly on public engineering publications from Swiggy, Zomato, and Blinkit:
 
