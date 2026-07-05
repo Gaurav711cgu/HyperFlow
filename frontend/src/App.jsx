@@ -52,7 +52,7 @@ function App() {
   const [currentSlide, setCurrentSlide] = useState(0);
   
   // Backend config
-  const [backendUrl, setBackendUrl] = useState("http://localhost:7860");
+  const [backendUrl, setBackendUrl] = useState(import.meta.env.VITE_BACKEND_URL || "http://localhost:7860");
   const [isBackendConnected, setIsBackendConnected] = useState(false);
 
   // Cart & Order state
