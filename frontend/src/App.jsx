@@ -4,8 +4,10 @@ import './App.css';
 export default function App() {
   const [theme, setTheme] = useState('dark');
   const [activeTab, setActiveTab] = useState('consumer'); // consumer vs control-room
+  const [consumerSubTab, setConsumerSubTab] = useState('food'); // 'food' (Zomato) vs 'grocery' (Instamart)
   const [selectedUsp, setSelectedUsp] = useState('tobit'); // active ML USP card details
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [activeGroceryForecast, setActiveGroceryForecast] = useState(null); // Active item for Tobit modal
   
   // Backend config
   const [backendUrl, setBackendUrl] = useState(import.meta.env.VITE_BACKEND_URL || "http://localhost:7860");
@@ -112,6 +114,61 @@ export default function App() {
         { id: "m3_1", name: "Belgian Chocolate Tub", price: 180 },
         { id: "m3_2", name: "Mango Sorbet Scoop", price: 110 }
       ]
+    }
+  ];
+
+  // Swiggy Instamart-style Grocery Mock Data
+  const mockGroceries = [
+    {
+      id: "g1",
+      name: "Fresh Toned Milk 1L",
+      brand: "Amul Taaza",
+      price: 66,
+      stock: 0, // Out of Stock
+      category: "Dairy & Bread",
+      image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=300&auto=format&fit=crop&q=60",
+      latent_demand: 48.2,
+      restock_suggestion: 55
+    },
+    {
+      id: "g2",
+      name: "Organic Bananas 1 Dozen",
+      brand: "Fresh Produce",
+      price: 60,
+      stock: 0, // Out of Stock
+      category: "Fruits & Vegetables",
+      image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=300&auto=format&fit=crop&q=60",
+      latent_demand: 82.5,
+      restock_suggestion: 90
+    },
+    {
+      id: "g3",
+      name: "Whole Wheat Brown Bread 400g",
+      brand: "English Oven",
+      price: 50,
+      stock: 2, // Low stock
+      category: "Dairy & Bread",
+      image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&auto=format&fit=crop&q=60",
+      latent_demand: 35.8,
+      restock_suggestion: 40
+    },
+    {
+      id: "g4",
+      name: "Chakki Atta 5kg",
+      brand: "Aashirvaad",
+      price: 260,
+      stock: 15, // In Stock
+      category: "Atta & Flours",
+      image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&auto=format&fit=crop&q=60"
+    },
+    {
+      id: "g5",
+      name: "Farm Eggs 6pcs",
+      brand: "Eggo",
+      price: 75,
+      stock: 18, // In Stock
+      category: "Dairy & Eggs",
+      image: "https://images.unsplash.com/photo-1516448424440-5dbf97779ced?w=300&auto=format&fit=crop&q=60"
     }
   ];
 
@@ -366,7 +423,7 @@ export default function App() {
 
         <div className="nav-actions">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(0,0,0,0.15)', padding: '0.35rem 0.75rem', borderRadius: '4px', fontSize: '0.8rem', border: '1px solid var(--card-border)' }}>
-            <span style={{ color: 'var(--accent-color)' }}>📍</span>
+            <span>📍</span>
             <span style={{ fontWeight: 600 }}>Indiranagar, Bengaluru</span>
           </div>
 
@@ -516,159 +573,244 @@ export default function App() {
 
         {/* Tab A: Consumer Food Ordering Page (Zomato/Swiggy UI) */}
         {activeTab === 'consumer' && (
-          <div className="panel panel-two-col">
+          <div>
             
-            {/* Left side: Mind category and restaurants */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              
-              {/* "What's on your mind?" */}
-              <div className="glass-card" style={{ padding: '1.25rem' }}>
-                <h3 className="card-title" style={{ border: 'none', marginBottom: '1rem' }}>What's on your mind?</h3>
-                <div style={{ display: 'flex', gap: '1.25rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-                  {mindCategories.map((c, idx) => (
-                    <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', flexShrink: 0, cursor: 'pointer' }}>
-                      <div 
-                        style={{ width: '70px', height: '70px', borderRadius: '50%', backgroundImage: `url(${c.img})`, backgroundSize: 'cover', backgroundPosition: 'center', border: '2px solid var(--card-border)' }}
-                      />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{c.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Restaurants list */}
-              <div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem', letterSpacing: '-0.01em' }}>
-                  Trending Restaurants near Indiranagar
-                </h3>
-                <div className="restaurant-grid">
-                  {mockRestaurants.map(rest => (
-                    <div key={rest.id} className="food-card">
-                      <div className="food-img" style={{ backgroundImage: `url(${rest.image})` }} />
-                      <div className="food-details">
-                        <div className="food-name">{rest.name}</div>
-                        <div className="food-meta">
-                          <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>Rating: {rest.rating}</span>
-                          <span>{rest.distance} | {rest.time}</span>
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                          {rest.cuisine} • {rest.costForTwo} for two
-                        </div>
-                        
-                        {/* Menu Add items */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid var(--card-border)', paddingTop: '0.5rem' }}>
-                          {rest.menu.map(item => (
-                            <button
-                              key={item.id}
-                              className="btn-secondary"
-                              style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
-                              onClick={() => addToCart(item, rest.name, rest.id)}
-                            >
-                              <span>{item.name}</span>
-                              <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>INR {item.price}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
+            {/* Sub-tab Selector for Zomato Food vs Swiggy Instamart */}
+            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--card-border)', paddingBottom: '1rem' }}>
+              <button 
+                className={`mode-btn ${consumerSubTab === 'food' ? 'active' : ''}`}
+                style={{ borderRadius: 'var(--radius-full)', padding: '0.6rem 1.75rem', background: consumerSubTab === 'food' ? 'var(--accent-color)' : 'rgba(0,0,0,0.15)', color: '#fff', border: '1px solid var(--card-border)' }}
+                onClick={() => setConsumerSubTab('food')}
+              >
+                Food Delivery (Zomato)
+              </button>
+              <button 
+                className={`mode-btn ${consumerSubTab === 'grocery' ? 'active' : ''}`}
+                style={{ borderRadius: 'var(--radius-full)', padding: '0.6rem 1.75rem', background: consumerSubTab === 'grocery' ? 'var(--accent-color)' : 'rgba(0,0,0,0.15)', color: '#fff', border: '1px solid var(--card-border)' }}
+                onClick={() => setConsumerSubTab('grocery')}
+              >
+                Instamart Groceries (Swiggy)
+              </button>
             </div>
 
-            {/* Right side: Cart, Active Tracker & Zomato Resale Card */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="panel panel-two-col">
               
-              {/* Shopping Cart */}
-              <div className="glass-card">
-                <h3 className="card-title">Your Cart</h3>
-                {cart.length === 0 ? (
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Cart is empty. Select menu items to place order.</p>
-                ) : (
-                  <div>
-                    {cart.map(item => (
-                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
-                        <span>{item.quantity}x {item.name} ({item.restaurantName})</span>
-                        <span>INR {item.price * item.quantity}</span>
+              {/* Left side: Mind category and restaurants OR Groceries directory */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                
+                {consumerSubTab === 'food' ? (
+                  <>
+                    {/* "What's on your mind?" */}
+                    <div className="glass-card" style={{ padding: '1.25rem' }}>
+                      <h3 className="card-title" style={{ border: 'none', marginBottom: '1rem' }}>What's on your mind?</h3>
+                      <div style={{ display: 'flex', gap: '1.25rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                        {mindCategories.map((c, idx) => (
+                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', flexShrink: 0, cursor: 'pointer' }}>
+                            <div 
+                              style={{ width: '70px', height: '70px', borderRadius: '50%', backgroundImage: `url(${c.img})`, backgroundSize: 'cover', backgroundPosition: 'center', border: '2px solid var(--card-border)' }}
+                            />
+                            <span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{c.name}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                    <div style={{ borderTop: '1px solid var(--card-border)', paddingTop: '0.75rem', marginTop: '0.75rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
-                      <span>Grand Total:</span>
-                      <span>INR {getCartTotal()}</span>
                     </div>
-                    <button className="btn-primary" onClick={handlePlaceOrder}>Place Fresh Order</button>
+
+                    {/* Restaurants list */}
+                    <div>
+                      <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem', letterSpacing: '-0.01em' }}>
+                        Trending Restaurants near Indiranagar
+                      </h3>
+                      <div className="restaurant-grid">
+                        {mockRestaurants.map(rest => (
+                          <div key={rest.id} className="food-card">
+                            <div className="food-img" style={{ backgroundImage: `url(${rest.image})` }} />
+                            <div className="food-details">
+                              <div className="food-name">{rest.name}</div>
+                              <div className="food-meta">
+                                <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>Rating: {rest.rating}</span>
+                                <span>{rest.distance} | {rest.time}</span>
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                                {rest.cuisine} • {rest.costForTwo} for two
+                              </div>
+                              
+                              {/* Menu Add items */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid var(--card-border)', paddingTop: '0.5rem' }}>
+                                {rest.menu.map(item => (
+                                  <button
+                                    key={item.id}
+                                    className="btn-secondary"
+                                    style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
+                                    onClick={() => addToCart(item, rest.name, rest.id)}
+                                  >
+                                    <span>{item.name}</span>
+                                    <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>INR {item.price}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Instamart Grocery Directory */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, letterSpacing: '-0.01em' }}>
+                          Instamart Instant Grocery Hub
+                        </h3>
+                        <span className="badge badge-primary">Tobit Stockout Estimator Active</span>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.25rem' }}>
+                        {mockGroceries.map(item => (
+                          <div 
+                            key={item.id} 
+                            className="food-card" 
+                            style={{ 
+                              border: item.stock === 0 ? '1px solid var(--error-color)' : '1px solid var(--card-border)',
+                              background: item.stock === 0 ? 'rgba(255, 180, 171, 0.03)' : 'var(--card-bg)'
+                            }}
+                          >
+                            <div className="food-img" style={{ backgroundImage: `url(${item.image})`, height: '120px' }} />
+                            <div className="food-details" style={{ padding: '0.85rem' }}>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{item.brand}</div>
+                              <div className="food-name" style={{ fontSize: '0.9rem', height: '36px', overflow: 'hidden', marginBottom: '0.5rem' }}>{item.name}</div>
+                              
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.95rem' }}>INR {item.price}</span>
+                                {item.stock === 0 ? (
+                                  <span className="badge badge-danger">Out of Stock</span>
+                                ) : item.stock <= 3 ? (
+                                  <span className="badge badge-warning">Low Stock ({item.stock})</span>
+                                ) : (
+                                  <span className="badge badge-success">In Stock ({item.stock})</span>
+                                )}
+                              </div>
+
+                              {item.stock > 0 ? (
+                                <button 
+                                  className="btn-primary" 
+                                  style={{ fontSize: '0.8rem', padding: '0.45rem' }}
+                                  onClick={() => addToCart({ id: item.id, name: item.name, price: item.price }, "Instamart Store", "instamart_01")}
+                                >
+                                  Add to Cart
+                                </button>
+                              ) : (
+                                <button 
+                                  className="btn-secondary" 
+                                  style={{ fontSize: '0.75rem', padding: '0.45rem', color: 'var(--accent-color)', borderColor: 'var(--accent-color)', fontWeight: 600 }}
+                                  onClick={() => setActiveGroceryForecast(item)}
+                                >
+                                  Impute Latent Demand
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+              </div>
+
+              {/* Right side: Cart, Active Tracker & Zomato Resale Card */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                
+                {/* Shopping Cart */}
+                <div className="glass-card">
+                  <h3 className="card-title">Your Cart</h3>
+                  {cart.length === 0 ? (
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Cart is empty. Select items to place order.</p>
+                  ) : (
+                    <div>
+                      {cart.map(item => (
+                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+                          <span>{item.quantity}x {item.name} ({item.restaurantName || "Instamart"})</span>
+                          <span>INR {item.price * item.quantity}</span>
+                        </div>
+                      ))}
+                      <div style={{ borderTop: '1px solid var(--card-border)', paddingTop: '0.75rem', marginTop: '0.75rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+                        <span>Grand Total:</span>
+                        <span>INR {getCartTotal()}</span>
+                      </div>
+                      <button className="btn-primary" onClick={handlePlaceOrder}>Place Order</button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Simulated Delivery tracker with "Cancel" trigger to demonstrate Zomato Food Rescue */}
+                {activeOrder && (
+                  <div className="glass-card" style={{ border: '1px solid var(--accent-color)' }}>
+                    <h3 className="card-title" style={{ color: 'var(--accent-color)' }}>Active Delivery Tracker</h3>
+                    <div style={{ fontSize: '0.85rem' }}>
+                      <p>Order <strong>{activeOrder.order_id}</strong> is assigned to rider.</p>
+                      <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Status: <strong>{activeOrder.status}</strong></p>
+                      
+                      <div style={{ background: 'rgba(226,55,68,0.05)', border: '1px solid rgba(226,55,68,0.15)', borderRadius: '4px', padding: '0.75rem', margin: '0.75rem 0' }}>
+                        <span style={{ fontWeight: 600 }}>Interviewer Tip:</span> Click Cancel to simulate food waste cancellation. This pushes it to the Zomato Food Rescue queue and tests our Anti-Arbitrage shields!
+                      </div>
+
+                      <button 
+                        className="btn-secondary" 
+                        style={{ borderColor: 'var(--error-color)', color: 'var(--error-color)' }}
+                        onClick={cancelActiveOrder}
+                      >
+                        Cancel Order (Simulate Waste)
+                      </button>
+                    </div>
                   </div>
                 )}
+
+                {/* Zomato Food Rescue dynamic offers */}
+                {rescueOffers.length > 0 && (
+                  <div className="glass-card" style={{ border: '1px solid var(--success-color)' }}>
+                    <h3 className="card-title" style={{ color: 'var(--success-color)' }}>Zomato Food Rescue Queue</h3>
+                    
+                    {rescueOffers.map(o => (
+                      <div key={o.order_id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(0,0,0,0.15)', padding: '0.75rem', borderRadius: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: '0.9rem' }}>
+                          <span>{o.items}</span>
+                          <span style={{ color: 'var(--success-color)' }}>INR {o.rescue_price_inr}</span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          Original: <del>INR {o.original_price_inr}</del> (50% off)
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          Restaurant: <strong>{o.restaurant_name}</strong>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          Sensory Quality (SQI): <strong style={{ color: 'var(--accent-color)' }}>{o.sensory_quality_index}/100</strong> (Decaying)
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                          <button 
+                            className="btn-primary" 
+                            style={{ background: 'var(--success-color)', fontSize: '0.8rem', padding: '0.4rem' }}
+                            onClick={() => handleRescueClaim(o)}
+                          >
+                            Claim Resale
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Arbitrage alerts (Sybil checks output) */}
+                {arbitrageMessage && (
+                  <div className={`alert-box ${arbitrageMessage.includes('ALERT') ? 'alert-danger' : 'alert-success'}`}>
+                    {arbitrageMessage}
+                  </div>
+                )}
+
               </div>
 
-              {/* Simulated Delivery tracker with "Cancel" trigger to demonstrate Zomato Food Rescue */}
-              {activeOrder && (
-                <div className="glass-card" style={{ border: '1px solid var(--accent-color)' }}>
-                  <h3 className="card-title" style={{ color: 'var(--accent-color)' }}>Active Delivery Tracker</h3>
-                  <div style={{ fontSize: '0.85rem' }}>
-                    <p>Order <strong>{activeOrder.order_id}</strong> is assigned to rider.</p>
-                    <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Status: <strong>{activeOrder.status}</strong></p>
-                    
-                    <div style={{ background: 'rgba(232,113,42,0.05)', border: '1px solid rgba(232,113,42,0.15)', borderRadius: '4px', padding: '0.75rem', margin: '0.75rem 0' }}>
-                      <span style={{ fontWeight: 600 }}>Interviewer Tip:</span> Click Cancel to simulate food waste cancellation. This pushes it to the Zomato Food Rescue queue and tests our Anti-Arbitrage shields!
-                    </div>
-
-                    <button 
-                      className="btn-secondary" 
-                      style={{ borderColor: 'var(--error-color)', color: 'var(--error-color)' }}
-                      onClick={cancelActiveOrder}
-                    >
-                      Cancel Order (Simulate Waste)
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Zomato Food Rescue dynamic offers */}
-              {rescueOffers.length > 0 && (
-                <div className="glass-card" style={{ border: '1px solid var(--success-color)' }}>
-                  <h3 className="card-title" style={{ color: 'var(--success-color)' }}>Zomato Food Rescue Queue</h3>
-                  
-                  {rescueOffers.map(o => (
-                    <div key={o.order_id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(0,0,0,0.15)', padding: '0.75rem', borderRadius: '6px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: '0.9rem' }}>
-                        <span>{o.items}</span>
-                        <span style={{ color: 'var(--success-color)' }}>INR {o.rescue_price_inr}</span>
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        Original: <del>INR {o.original_price_inr}</del> (50% off)
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        Restaurant: <strong>{o.restaurant_name}</strong>
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        Sensory Quality (SQI): <strong style={{ color: 'var(--accent-color)' }}>{o.sensory_quality_index}/100</strong> (Decaying)
-                      </div>
-
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                        <button 
-                          className="btn-primary" 
-                          style={{ background: 'var(--success-color)', fontSize: '0.8rem', padding: '0.4rem' }}
-                          onClick={() => handleRescueClaim(o)}
-                        >
-                          Claim Resale
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Arbitrage alerts (Sybil checks output) */}
-              {arbitrageMessage && (
-                <div className={`alert-box ${arbitrageMessage.includes('ALERT') ? 'alert-danger' : 'alert-success'}`}>
-                  {arbitrageMessage}
-                </div>
-              )}
-
             </div>
-
           </div>
         )}
 
@@ -896,6 +1038,50 @@ export default function App() {
         </section>
 
       </main>
+
+      {/* Tobit Latent Demand Grocery Modal */}
+      {activeGroceryForecast && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div className="glass-card" style={{ width: '90%', maxWidth: '500px', border: '1px solid var(--accent-color)', padding: '2rem', position: 'relative' }}>
+            <button 
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '1.2rem', cursor: 'pointer' }}
+              onClick={() => setActiveGroceryForecast(null)}
+            >
+              ✕
+            </button>
+            <h3 style={{ fontSize: '1.25rem', color: 'var(--accent-color)', marginBottom: '0.5rem', fontWeight: 700 }}>
+              Tobit Latent Demand Prediction
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+              Solving the stockout censoring bias for <strong>{activeGroceryForecast.brand} {activeGroceryForecast.name}</strong>.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '6px', marginBottom: '1.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Observed Sales (Censored):</span>
+                <span style={{ color: 'var(--error-color)', fontWeight: 600 }}>0 units (Stockout)</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--card-border)', paddingTop: '0.5rem' }}>
+                <span>Latent Demand Imputation:</span>
+                <span style={{ color: 'var(--success-color)', fontWeight: 600 }}>{activeGroceryForecast.latent_demand} units / day</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--card-border)', paddingTop: '0.5rem' }}>
+                <span>Recommended Restock:</span>
+                <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>{activeGroceryForecast.restock_suggestion} units</span>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4', marginBottom: '1.5rem' }}>
+              Note: Because inventory reached 0, standard regressors predict demand of 0. The Tobit MLE model uses historical run-rates and covariate matrices to impute the unobserved customer demand, optimizing dark-store inventory replenishment.
+            </p>
+
+            <button className="btn-primary" onClick={() => setActiveGroceryForecast(null)}>
+              Dismiss Forecast Console
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

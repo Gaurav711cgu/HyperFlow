@@ -2,17 +2,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Colors from Stitch Design MD */
-  --bg-primary: #131318;
-  --bg-secondary: #1b1b20; /* surface-container-low */
-  --card-bg: rgba(31, 31, 37, 0.65); /* surface-container with opacity */
-  --card-bg-hover: rgba(53, 52, 58, 0.8); /* surface-container-highest */
-  --card-border: rgba(166, 139, 127, 0.15); /* outline with opacity */
-  --text-primary: #e4e1e9; /* on-surface */
-  --text-secondary: #dec0b3; /* on-surface-variant */
-  --accent-color: #e8712a; /* primary-container */
-  --accent-glow: rgba(232, 113, 42, 0.2);
-  --success-color: #10b981;
+  /* Colors from Stitch Design MD: Nocturnal Epicure */
+  --bg-primary: #131317;
+  --bg-secondary: #1b1b1f; /* surface-container-low */
+  --card-bg: rgba(31, 31, 35, 0.65); /* surface-container with opacity */
+  --card-bg-hover: rgba(53, 52, 57, 0.8); /* surface-container-highest */
+  --card-border: rgba(171, 137, 135, 0.15); /* outline with opacity */
+  --text-primary: #e4e1e7; /* on-surface */
+  --text-secondary: #e4bebc; /* on-surface-variant */
+  --accent-color: #e23744; /* Zomato Red */
+  --accent-glow: rgba(226, 55, 68, 0.2);
+  --success-color: #10b981; /* Mint Green */
   --error-color: #ffb4ab; /* error */
   --error-container: #93000a;
   
