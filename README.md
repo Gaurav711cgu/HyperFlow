@@ -1,3 +1,12 @@
+---
+title: HyperFlow
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+app_port: 7860
+---
+
 # Project Antigravity: Production-Grade Hyperlocal ML Operations Engine
 **Designed for Senior ML / AI Engineer Portfolios | Targeted at Swiggy Instamart, Zomato, and Blinkit Roles**
 
