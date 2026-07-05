@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Frontend dependency and build outputs
+node_modules/
+dist/
+build/
+.svelte-kit/
+.next/
+
+# Local cache and IDE configs
+.vscode/
+.idea/
+.gemini/
+*.log
