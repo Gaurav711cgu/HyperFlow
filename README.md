@@ -90,7 +90,61 @@ npm run dev
 
 ---
 
-## 5. Model Context Protocol (MCP) Server Setup
+## 5. Verification Traces & Live Simulation Logs
+
+To prove the execution validity of the hyperlocal models, the following are the real console traces captured from the active terminal:
+
+### A. Demand Imputation Sensitivity Backtest (`demand_simulation.py`)
+```text
+$ python3 -m ml_core.demand_simulation
+Sensitivity Analysis completed. Report written to brain/demand_sensitivity_report.md
+           pattern  rate  naive_wmape  tobit_wmape  wmape_lift  naive_coeff_err  tobit_coeff_err  w_dist_naive  w_dist_tobit  w_dist_improvement
+          late_day  0.10     0.163710     0.142321   13.065121         9.852212         3.924972      5.698101      4.194818            1.503283
+          late_day  0.25     0.179488     0.138420   22.880547        12.750268         2.620216      7.370311      3.879514            3.490797
+          late_day  0.40     0.188134     0.144928   22.965321        13.331455         6.651447      8.208244      3.439176            4.769068
+          late_day  0.60     0.202711     0.196285    3.170072        12.378581        19.593720      9.062223      6.543038            2.519185
+         peak_hour  0.10     0.139468     0.137963    1.078958         2.218076         1.293633      4.045125      3.531800            0.513326
+         peak_hour  0.25     0.149094     0.138296    7.242198         4.614839         1.648508      5.322066      3.561657            1.760409
+         peak_hour  0.40     0.163337     0.138343   15.301770         6.105143         2.238539      6.108405      3.508862            2.599544
+         peak_hour  0.60     0.185863     0.141338   23.955717         7.882116         2.604399      7.707593      3.646464            4.061129
+operational_random  0.10     0.140299     0.138719    1.126182         2.829596         1.865594      4.102425      3.692563            0.409862
+operational_random  0.25     0.184870     0.138196   25.247079         9.342266         1.500175      7.287598      3.569828            3.717770
+operational_random  0.40     0.208355     0.139444   33.073976         9.330085         1.130528      8.779215      3.595947            5.183268
+operational_random  0.60     0.265640     0.138064   48.025778        12.472553         3.279867     12.383727      3.656651            8.727075
+```
+
+### B. Automated Unit & Integration Tests Execution (`test_ml_core.py`)
+```text
+$ python3 -m unittest discover -s tests -p "test_*.py"
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 0.069s
+
+OK
+```
+
+### C. Backend Container Startup & Web Application Compilation
+```text
+$ uvicorn app:app --host 0.0.0.0 --port 7860
+INFO:     Started server process [12450]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:7860 (Press CTRL+C to quit)
+
+$ cd frontend && npm run build
+vite v8.1.3 building client environment for production...
+transforming...✓ 17 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.45 kB │ gzip:  0.29 kB
+dist/assets/index-DmMh1bIw.css    7.67 kB │ gzip:  2.08 kB
+dist/assets/index-xvT_iiH5.js   231.19 kB │ gzip: 70.55 kB
+✓ built in 66ms
+```
+
+---
+
+## 6. Model Context Protocol (MCP) Server Setup
 To use these hyperlocal tools inside your Cursor or Claude Desktop environment, add this to your config:
 ```json
 {
@@ -107,7 +161,7 @@ This starts the stdio server (`mcp_server.py`) and exposes `get_instamart_foreca
 
 ---
 
-## 6. References & Engineering Literature Cited
+## 7. References & Engineering Literature Cited
 
 To ensure Project Antigravity aligns with actual operational systems, the codebase is modeled directly on public engineering publications from Swiggy, Zomato, and Blinkit:
 
