@@ -22,13 +22,14 @@
 }
 
 .phone-frame {
-    width: 410px;
-    height: 760px;
-    border: 12px solid #1f1f25;
-    border-radius: 48px;
+    width: 370px;
+    height: 650px;
+    border: 10px solid #1f1f25;
+    border-radius: 40px;
     overflow: hidden;
     position: relative;
     box-shadow: 0 0 40px rgba(0,0,0,0.5);
+    flex-shrink: 0;
 }
 
 .hide-scrollbar::-webkit-scrollbar { display: none; }

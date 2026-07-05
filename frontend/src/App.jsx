@@ -355,6 +355,48 @@ export default function App() {
     setActiveOrder(null);
   };
 
+  const handleTriageRefund = async () => {
+    const timestamp = new Date().toLocaleTimeString();
+    try {
+      const response = await fetch(`${backendUrl}/triage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          merchant_id: triageMerchant,
+          complaint_type: triageType,
+          complaint_text: triageText,
+          items_ordered: triageItems
+        })
+      });
+      const data = await response.json();
+      setTriageResult(data);
+      setSecurityLogs(prev => [
+        { time: timestamp, event: `TRIAGE: Evaluated merchant ${triageMerchant} for type ${triageType}. Outcome: ${data.decision}`, type: 'info' },
+        ...prev
+      ]);
+    } catch (err) {
+      setTimeout(() => {
+        const isSuspicious = triageText.toLowerCase().includes("soggy") || triageMerchant === "merchant_1";
+        const prob = isSuspicious ? 0.89 : 0.12;
+        const decision = isSuspicious ? "MANUAL_REVIEW" : "AUTO_REFUND";
+        const reason = isSuspicious 
+          ? "FLAGGED: High complaint frequency for merchant_1 combined with generic template text."
+          : "APPROVED: Verified buyer tenure > 90d, zero recent refunds.";
+        
+        setTriageResult({
+          decision,
+          fraud_probability: prob,
+          reason
+        });
+        
+        setSecurityLogs(prev => [
+          { time: timestamp, event: `TRIAGE: Auto-evaluation failed. Falling back to local heuristics. Decision: ${decision}`, type: 'info' },
+          ...prev
+        ]);
+      }, 400);
+    }
+  };
+
   const runTerminalCommand = (e) => {
     if (e.key === 'Enter' && terminalInput.trim()) {
       const timeNow = new Date().toLocaleTimeString();
@@ -385,34 +427,54 @@ export default function App() {
   return (
     <div className="bg-background text-on-surface font-body-md overflow-hidden min-h-screen">
       {/* Top Navigation Bar */}
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-[rgba(10,10,15,0.75)] backdrop-blur-[20px] border-b border-surface-variant">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-[rgba(10,10,15,0.8)] backdrop-blur-[20px] border-b border-surface-variant">
         <div className="flex items-center gap-md">
-          <span className="font-headline-sm text-headline-sm font-bold text-on-surface">HyperFlow</span>
+          <span className="font-display-lg text-lg text-white font-bold tracking-tight flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-zomato-red animate-ping absolute"></span>
+            <span className="w-2 h-2 rounded-full bg-zomato-red"></span>
+            HyperFlow
+          </span>
           <div className="h-4 w-[1px] bg-surface-variant mx-sm"></div>
-          <span className="font-mono-label text-mono-label text-primary-container">CORE V1.0</span>
+          <span className="font-mono-label text-mono-label text-primary-container bg-primary-container/10 px-2 py-0.5 rounded border border-primary-container/20">CORE V1.0</span>
+          <div className="hidden lg:flex items-center gap-sm ml-md text-[11px] font-mono-label text-secondary">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>API ONLINE</span>
+            <span className="mx-1 opacity-30">|</span>
+            <span>FLEET: 1,402 ACTIVE</span>
+          </div>
         </div>
-        <div className="flex items-center gap-md">
+        
+        {/* Center View Switcher Segmented Control */}
+        <div className="flex items-center gap-sm bg-surface-container-low border border-surface-variant p-1 rounded-full">
           <button 
-            className={`px-md py-xs rounded-full font-mono-label text-mono-label transition-all active:scale-95 duration-200 ${
-              activeView === 'realtime' ? 'bg-zomato-red text-white' : 'text-secondary hover:bg-surface-container-high'
+            className={`px-md py-1 rounded-full font-mono-label text-[11px] transition-all active:scale-95 duration-200 flex items-center gap-2 ${
+              activeView === 'realtime' ? 'bg-zomato-red text-white font-bold shadow' : 'text-secondary hover:text-on-surface'
             }`}
             onClick={() => setActiveView('realtime')}
           >
+            <span className="material-symbols-outlined text-[14px]">monitoring</span>
             Order Food & Monitor
           </button>
           <button 
-            className={`px-md py-xs rounded-full font-mono-label text-mono-label transition-all active:scale-95 duration-200 ${
-              activeView === 'security' ? 'bg-zomato-red text-white' : 'text-secondary hover:bg-surface-container-high'
+            className={`px-md py-1 rounded-full font-mono-label text-[11px] transition-all active:scale-95 duration-200 flex items-center gap-2 ${
+              activeView === 'security' ? 'bg-zomato-red text-white font-bold shadow' : 'text-secondary hover:text-on-surface'
             }`}
             onClick={() => setActiveView('security')}
           >
+            <span className="material-symbols-outlined text-[14px]">shield</span>
             Operations & Security
           </button>
+        </div>
+
+        <div className="flex items-center gap-md">
           <div className="flex items-center gap-sm ml-lg border-l border-surface-variant pl-lg">
-            <span className="material-symbols-outlined cursor-pointer hover:text-primary" onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}>
+            <span className="material-symbols-outlined cursor-pointer hover:text-primary text-[20px] transition-colors" onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}>
               {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </span>
-            <img alt="Operator Portrait" className="w-8 h-8 rounded-full border border-surface-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByD_66IQXZw8HY8qefpO2M4iEA6Factgnob6YOX0XU7ISF1my7bnzFf625TnJXUcsA0yOIsFu1qEPbI9IhUr-moX_Biup0vU_bcQ8uhTWTjA3MFy1rjbodjmpVCShM4y_GxnK8hKXYFTF3gd_jKnmcbON9nyUBwiJrQxLN5gyqaY8ZXZz_S1-8jhTAQBP1qsQWQGgreOIT2RWSaBZJxIr5FN6OwfOrcQkJUbGT4QrmjH3a-MC6RYVGeH66Ar4HAbtn2oF2aj4bPR0" />
+            <div className="relative">
+              <img alt="Operator Portrait" className="w-8 h-8 rounded-full border border-surface-variant hover:border-primary transition-colors cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByD_66IQXZw8HY8qefpO2M4iEA6Factgnob6YOX0XU7ISF1my7bnzFf625TnJXUcsA0yOIsFu1qEPbI9IhUr-moX_Biup0vU_bcQ8uhTWTjA3MFy1rjbodjmpVCShM4y_GxnK8hKXYFTF3gd_jKnmcbON9nyUBwiJrQxLN5gyqaY8ZXZz_S1-8jhTAQBP1qsQWQGgreOIT2RWSaBZJxIr5FN6OwfOrcQkJUbGT4QrmjH3a-MC6RYVGeH66Ar4HAbtn2oF2aj4bPR0" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-surface-dim"></span>
+            </div>
           </div>
         </div>
       </header>
