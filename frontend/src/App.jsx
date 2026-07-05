@@ -73,6 +73,7 @@ export default function App() {
   const [backendUrl] = useState(import.meta.env.VITE_BACKEND_URL || "http://localhost:7860");
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [theme, setTheme] = useState('dark');
+  const [selectedCuisine, setSelectedCuisine] = useState(null);
 
   // Sync theme with body data-attribute and html dark class for Tailwind
   useEffect(() => {
@@ -201,6 +202,17 @@ export default function App() {
     const s = (secs % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
+
+  const triggerAddToCart = (item, restName, restId) => {
+    setCustomizingItem({ item, restName, restId });
+    setSelectedAddon("Regular Portion");
+  };
+
+  const getCartTotal = () => cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+
+  const filteredRestaurants = selectedCuisine
+    ? mockRestaurants.filter(rest => rest.cuisine.toLowerCase().includes(selectedCuisine.toLowerCase().replace("s", "")))
+    : mockRestaurants;
 
   // Tobit Forecast execution
   const runForecast = async (rateVal) => {
@@ -543,7 +555,11 @@ export default function App() {
                         <div className="px-md mb-md">
                           <div className="flex gap-sm overflow-x-auto hide-scrollbar">
                             {mindCategories.map((c, idx) => (
-                              <div key={idx} className="flex flex-col items-center gap-1 flex-shrink-0" onClick={() => setSelectedCuisine(c.name)}>
+                              <div 
+                                key={idx} 
+                                className={`flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer p-1 rounded-lg transition-all ${selectedCuisine === c.name ? 'bg-surface-variant scale-105' : 'hover:scale-105'}`} 
+                                onClick={() => setSelectedCuisine(prev => prev === c.name ? null : c.name)}
+                              >
                                 <div className="w-12 h-12 rounded-full overflow-hidden border border-surface-variant">
                                   <img alt={c.name} className="w-full h-full object-cover" src={c.img} />
                                 </div>
@@ -556,7 +572,7 @@ export default function App() {
                         {/* Restaurant listings */}
                         <div className="px-md mb-24">
                           <div className="space-y-3">
-                            {mockRestaurants.map(rest => (
+                            {filteredRestaurants.map(rest => (
                               <div key={rest.id} className="flex gap-md bg-surface-container rounded-xl p-sm border border-surface-variant">
                                 <img alt={rest.name} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" src={rest.image} />
                                 <div className="flex-grow py-xs relative">
