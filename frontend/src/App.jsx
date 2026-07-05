@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 export default function App() {
@@ -9,6 +9,16 @@ export default function App() {
   const [promoSlide, setPromoSlide] = useState(0); // Active sliding promo banner
   const [activeGroceryForecast, setActiveGroceryForecast] = useState(null); // Active item for Tobit modal
   
+  // Customization Sheet state
+  const [customizingItem, setCustomizingItem] = useState(null);
+  const [selectedAddon, setSelectedAddon] = useState("Regular Portion");
+  
+  // Real-time Countdown for Resale
+  const [rescueTimer, setRescueTimer] = useState(299); // 4 mins 59 secs
+
+  // Animated rider position on GPS tracking line (0% to 100%)
+  const [riderProgress, setRiderProgress] = useState(0);
+
   // Backend config
   const [backendUrl, setBackendUrl] = useState(import.meta.env.VITE_BACKEND_URL || "http://localhost:7860");
   const [isBackendConnected, setIsBackendConnected] = useState(false);
@@ -69,24 +79,24 @@ export default function App() {
     ]
   });
 
-  // Promotional Banner Carousel Content
+  // Promotional Banner Carousel Content with beautiful food image backgrounds
   const promoBanners = [
     {
       title: "Zomato Food Rescue",
-      desc: "Get cancelled meals at a flat 50% discount. Weather-calibrated thermal indexes.",
-      bg: "linear-gradient(135deg, #e23744 0%, #a61c28 100%)",
+      desc: "Save cancelled meals at 50% discount. Co-location arbitrage checks active.",
+      img: "https://images.unsplash.com/photo-1543353071-10c8ba85a904?q=80&w=400&auto=format&fit=crop",
       badge: "Waste Mitigation Active"
     },
     {
-      title: "Instamart Midnight Rush",
-      desc: "Groceries delivered in 10 mins. Restocks managed by Tobit MLE forecasting.",
-      bg: "linear-gradient(135deg, #1b1b1f 0%, #2e2e38 100%)",
-      badge: "Inventory Imputation Active"
+      title: "Instamart Fresh Greens",
+      desc: "10-minute deliveries. Stockout forecasting powered by Tobit MLE algorithms.",
+      img: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?q=80&w=400&auto=format&fit=crop",
+      badge: "Stockout Imputation Active"
     },
     {
-      title: "Storm-Surge Safety Grid",
-      desc: "ETA calculations calibrated by Gated Random Forest to suppress telemetry spikes.",
-      bg: "linear-gradient(135deg, #059669 0%, #064e3b 100%)",
+      title: "Monsoon ETA Grid",
+      desc: "Suppresses clock jitter during rain surges using a Gated Random Forest.",
+      img: "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=400&auto=format&fit=crop",
       badge: "ETA Smoother Engaged"
     }
   ];
@@ -97,6 +107,14 @@ export default function App() {
     { name: "Burgers", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=150&auto=format&fit=crop&q=60" },
     { name: "Pizzas", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=150&auto=format&fit=crop&q=60" },
     { name: "Desserts", img: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=150&auto=format&fit=crop&q=60" }
+  ];
+
+  // Instamart simulated categories
+  const groceryCategories = [
+    { name: "Dairy & Bread", icon: "🥛" },
+    { name: "Fruits & Veggies", icon: "🍌" },
+    { name: "Snacks & Munchies", icon: "🍿" },
+    { name: "Atta & Rice", icon: "🌾" }
   ];
 
   // Premium mock restaurants
@@ -131,14 +149,14 @@ export default function App() {
     }
   ];
 
-  // Swiggy Instamart-style Grocery Mock Data
+  // Instamart grocery database
   const mockGroceries = [
     {
       id: "g1",
       name: "Fresh Toned Milk 1L",
       brand: "Amul Taaza",
       price: 66,
-      stock: 0, // Out of Stock
+      stock: 0, // Out of stock
       category: "Dairy & Bread",
       image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&auto=format&fit=crop&q=60",
       latent_demand: 48.2,
@@ -149,8 +167,8 @@ export default function App() {
       name: "Organic Bananas 1 Dozen",
       brand: "Fresh Produce",
       price: 60,
-      stock: 0, // Out of Stock
-      category: "Fruits & Vegetables",
+      stock: 0, // Out of stock
+      category: "Fruits & Veggies",
       image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200&auto=format&fit=crop&q=60",
       latent_demand: 82.5,
       restock_suggestion: 90
@@ -175,6 +193,39 @@ export default function App() {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  // Animates GPS delivery tracker rider position
+  useEffect(() => {
+    let interval;
+    if (activeOrder) {
+      interval = setInterval(() => {
+        setRiderProgress(prev => (prev >= 100 ? 0 : prev + 2));
+      }, 300);
+    } else {
+      setRiderProgress(0);
+    }
+    return () => clearInterval(interval);
+  }, [activeOrder]);
+
+  // Food Rescue countdown decrementor
+  useEffect(() => {
+    let timerInterval;
+    if (rescueOffers.length > 0) {
+      timerInterval = setInterval(() => {
+        setRescueTimer(prev => (prev <= 0 ? 299 : prev - 1));
+      }, 1000);
+    } else {
+      setRescueTimer(299);
+    }
+    return () => clearInterval(timerInterval);
+  }, [rescueOffers]);
+
+  // Format countdown text (MM:SS)
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
 
   // Ping backend on mount to check if Space API is online
   useEffect(() => {
@@ -226,13 +277,12 @@ export default function App() {
     let rawDelta = (Math.random() - 0.5) * 1.5;
     
     if (nextStep === 6 || stormSurge) {
-      rawDelta = (Math.random() * 8.0) + 4.0; // massive jumpy GPS anomalies
+      rawDelta = (Math.random() * 8.0) + 4.0;
     }
 
     const prevRow = etaHistory[etaHistory.length - 1];
     const newRaw = Math.max(5.0, prevRow.raw + rawDelta);
     
-    // Gated classification logic simulation
     let newSmooth = prevRow.smooth;
     const isJump = Math.abs(newRaw - prevRow.raw) > 3.0;
     const alpha = isJump ? 0.15 : 0.70;
@@ -249,7 +299,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          buyer_lat: 12.9716, // Co-located coordinates (flagged as arbitrage)
+          buyer_lat: 12.9716,
           buyer_lng: 77.5946,
           buyer_ip: "192.168.1.15",
           cancelling_lat: 12.9717,
@@ -342,15 +392,30 @@ export default function App() {
     }
   };
 
-  // Add items to cart
-  const addToCart = (item, restName, restId) => {
+  // Add customized items to cart
+  const handleConfirmCustomization = () => {
+    if (!customizingItem) return;
+    const finalItem = {
+      ...customizingItem.item,
+      name: `${customizingItem.item.name} (${selectedAddon})`,
+      price: customizingItem.item.price + (selectedAddon.includes("Large") ? 60 : 0)
+    };
+
     setCart(prev => {
-      const existing = prev.find(i => i.id === item.id);
+      const existing = prev.find(i => i.id === finalItem.id && i.name === finalItem.name);
       if (existing) {
-        return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+        return prev.map(i => (i.id === finalItem.id && i.name === finalItem.name) ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      return [...prev, { ...item, restaurantName: restName, restaurantId: restId, quantity: 1 }];
+      return [...prev, { ...finalItem, restaurantName: customizingItem.restName, restaurantId: customizingItem.restId, quantity: 1 }];
     });
+
+    setCustomizingItem(null);
+  };
+
+  // Open customization sheet
+  const triggerAddToCart = (item, restName, restId) => {
+    setCustomizingItem({ item, restName, restId });
+    setSelectedAddon("Regular Portion");
   };
 
   // Place active order
@@ -470,21 +535,23 @@ export default function App() {
                   <span style={{ fontSize: '0.8rem', color: '#666' }}>Search dishes, fresh fruits, or resale deals...</span>
                 </div>
 
-                {/* Micro-carousel for ML-themed offers */}
+                {/* Micro-carousel for ML-themed offers using high-end food backdrops */}
                 <div style={{ 
                   position: 'relative', 
-                  minHeight: '110px', 
+                  minHeight: '130px', 
                   borderRadius: '12px', 
-                  background: promoBanners[promoSlide].bg, 
+                  backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.75)), url(${promoBanners[promoSlide].img})`, 
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
                   padding: '1rem', 
                   display: 'flex', 
                   flexDirection: 'column', 
                   justifyContent: 'center', 
                   overflow: 'hidden',
-                  border: '1px solid rgba(255,255,255,0.1)'
+                  border: '1px solid rgba(255,255,255,0.15)'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: '0.55rem', padding: '0.15rem 0.35rem', borderRadius: '4px', fontWeight: 600 }}>
+                    <span style={{ background: 'rgba(226,55,68,0.85)', color: '#fff', fontSize: '0.55rem', padding: '0.15rem 0.4rem', borderRadius: '4px', fontWeight: 600 }}>
                       {promoBanners[promoSlide].badge}
                     </span>
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
@@ -496,10 +563,10 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-                  <h4 style={{ color: '#fff', fontSize: '0.95rem', marginTop: '0.4rem', fontWeight: 700 }}>
+                  <h4 style={{ color: '#fff', fontSize: '0.95rem', marginTop: '0.5rem', fontWeight: 700 }}>
                     {promoBanners[promoSlide].title}
                   </h4>
-                  <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.75rem', marginTop: '0.15rem', lineHeight: '1.2' }}>
+                  <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.75rem', marginTop: '0.2rem', lineHeight: '1.2' }}>
                     {promoBanners[promoSlide].desc}
                   </p>
                 </div>
@@ -583,7 +650,7 @@ export default function App() {
                                 <button
                                   key={item.id}
                                   style={{ flex: 1, background: '#25252e', border: '1px solid #333', color: '#e4e1e7', padding: '0.3rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
-                                  onClick={() => addToCart(item, rest.name, rest.id)}
+                                  onClick={() => triggerAddToCart(item, rest.name, rest.id)}
                                 >
                                   <span>+ {item.name.split(' ')[0]}</span>
                                   <span style={{ color: 'var(--accent-color)' }}>{item.price}</span>
@@ -597,6 +664,18 @@ export default function App() {
                   </>
                 ) : (
                   <>
+                    {/* Instamart category grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', background: '#1a1a20', padding: '0.6rem', borderRadius: '8px' }}>
+                      {groceryCategories.map((cat, idx) => (
+                        <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem' }}>
+                          <span style={{ fontSize: '1.25rem', background: '#25252e', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {cat.icon}
+                          </span>
+                          <span style={{ fontSize: '0.55rem', color: '#aaa', textAlign: 'center', display: 'block', height: '14px', overflow: 'hidden' }}>{cat.name.split(' ')[0]}</span>
+                        </div>
+                      ))}
+                    </div>
+
                     {/* Instamart Grocery shelves */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       {mockGroceries.map(item => (
@@ -671,19 +750,38 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Active Tracker inside phone */}
+                {/* Live GPS Route Tracker Map Panel inside phone */}
                 {activeOrder && (
-                  <div style={{ background: 'rgba(226,55,68,0.1)', border: '1px solid var(--accent-color)', borderRadius: '10px', padding: '0.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ background: '#1c1c24', border: '1px solid var(--card-border)', borderRadius: '10px', padding: '0.75rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-color)' }}>Order {activeOrder.order_id} Active</span>
-                      <span className="pulsing-dot" style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-color)' }} />
+                      <span style={{ fontSize: '0.65rem', color: '#888' }}>Status: Prep</span>
                     </div>
-                    <p style={{ fontSize: '0.65rem', color: '#aaa', marginTop: '0.2rem' }}>ETA dynamically controlled by Gated RF.</p>
+
+                    {/* Miniature GPS delivery road tracker */}
+                    <div style={{ position: 'relative', height: '6px', background: '#333', borderRadius: '3px', margin: '1rem 0 0.5rem' }}>
+                      <div style={{ position: 'absolute', left: 0, top: '-3px', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>🏠</div>
+                      <div style={{ position: 'absolute', right: 0, top: '-3px', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--success-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px' }}>🍔</div>
+                      
+                      {/* Rider dot moving along the road */}
+                      <div style={{ 
+                        position: 'absolute', 
+                        left: `${riderProgress}%`, 
+                        top: '-7px', 
+                        fontSize: '12px', 
+                        transition: 'left 0.3s linear',
+                        transform: 'translateX(-50%)'
+                      }}>
+                        🏍️
+                      </div>
+                    </div>
+                    
+                    <p style={{ fontSize: '0.6rem', color: '#aaa', marginTop: '0.2rem', textAlign: 'center' }}>Gated ETA algorithm actively calibrating displays.</p>
                     <button 
-                      style={{ width: '100%', border: '1px solid var(--accent-color)', background: 'transparent', color: 'var(--accent-color)', fontSize: '0.7rem', padding: '0.35rem', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem', fontWeight: 600 }}
+                      style={{ width: '100%', border: '1px solid var(--error-color)', background: 'transparent', color: 'var(--error-color)', fontSize: '0.7rem', padding: '0.35rem', borderRadius: '4px', cursor: 'pointer', marginTop: '0.5rem', fontWeight: 600 }}
                       onClick={cancelActiveOrder}
                     >
-                      Cancel Order (Triggers CORO)
+                      Cancel Order (Resell Cancellation)
                     </button>
                   </div>
                 )}
@@ -691,7 +789,12 @@ export default function App() {
                 {/* Zomato Food Rescue Queue inside phone */}
                 {rescueOffers.length > 0 && (
                   <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid var(--success-color)', borderRadius: '10px', padding: '0.75rem' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--success-color)', marginBottom: '0.3rem' }}>Zomato Food Rescue Offer</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--success-color)' }}>Zomato Food Rescue Offer</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                        ⏳ {formatTime(rescueTimer)}
+                      </span>
+                    </div>
                     {rescueOffers.map(o => (
                       <div key={o.order_id} style={{ fontSize: '0.65rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', fontWeight: 600 }}>
@@ -787,7 +890,7 @@ export default function App() {
                     <div style={{ fontWeight: 600 }}>{(forecastOutput.ols_wmape * 100).toFixed(1)}%</div>
                   </div>
                   <div style={{ background: 'rgba(0,0,0,0.1)', padding: '0.4rem', borderRadius: '4px' }}>
-                    <span style={{ color: 'var(--text-secondary)', color: 'var(--success-color)' }}>Tobit WMAPE:</span>
+                    <span style={{ color: 'var(--success-color)' }}>Tobit WMAPE:</span>
                     <div style={{ fontWeight: 600, color: 'var(--success-color)' }}>{(forecastOutput.tobit_wmape * 100).toFixed(1)}%</div>
                   </div>
                 </div>
@@ -989,6 +1092,109 @@ export default function App() {
         </section>
 
       </main>
+
+      {/* Zomato-style Interactive Customization Sheet Drawer */}
+      {customizingItem && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
+          <div style={{ width: '100%', maxWidth: '410px', background: '#1c1c24', borderTopLeftRadius: '20px', borderTopRightRadius: '20px', border: '1px solid var(--card-border)', borderBottom: 'none', padding: '1.5rem', animation: 'slideUp 0.3s ease-out' }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 700 }}>Customize Item</h4>
+              <button 
+                style={{ background: 'none', border: 'none', color: '#888', fontSize: '1.2rem', cursor: 'pointer' }}
+                onClick={() => setCustomizingItem(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: '#fff', marginBottom: '0.25rem', fontWeight: 600 }}>{customizingItem.item.name}</p>
+            <p style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginBottom: '1rem', fontWeight: 700 }}>Base Price: INR {customizingItem.item.price}</p>
+
+            <div style={{ borderTop: '1px solid #282832', paddingTop: '1rem', marginBottom: '1.5rem' }}>
+              <span style={{ fontSize: '0.75rem', color: '#aaa', fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>Portion Size Add-ons:</span>
+              
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#fff', marginBottom: '0.5rem', cursor: 'pointer' }}>
+                <input 
+                  type="radio" 
+                  name="addon" 
+                  value="Regular Portion" 
+                  checked={selectedAddon === "Regular Portion"} 
+                  onChange={() => setSelectedAddon("Regular Portion")}
+                  style={{ accentColor: 'var(--accent-color)' }}
+                />
+                <span>Regular (No Extra Cost)</span>
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#fff', cursor: 'pointer' }}>
+                <input 
+                  type="radio" 
+                  name="addon" 
+                  value="Large Portion (+INR 60)" 
+                  checked={selectedAddon === "Large Portion (+INR 60)"} 
+                  onChange={() => setSelectedAddon("Large Portion (+INR 60)")}
+                  style={{ accentColor: 'var(--accent-color)' }}
+                />
+                <span>Large Portion (+INR 60)</span>
+              </label>
+            </div>
+
+            <button 
+              className="btn-primary" 
+              style={{ padding: '0.6rem' }}
+              onClick={handleConfirmCustomization}
+            >
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tobit Latent Demand Grocery Modal */}
+      {activeGroceryForecast && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div className="glass-card" style={{ width: '90%', maxWidth: '500px', border: '1px solid var(--accent-color)', padding: '2rem', position: 'relative' }}>
+            <button 
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '1.2rem', cursor: 'pointer' }}
+              onClick={() => setActiveGroceryForecast(null)}
+            >
+              ✕
+            </button>
+            <h3 style={{ fontSize: '1.25rem', color: 'var(--accent-color)', marginBottom: '0.5rem', fontWeight: 700 }}>
+              Tobit Latent Demand Prediction
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+              Solving the stockout censoring bias for <strong>{activeGroceryForecast.brand} {activeGroceryForecast.name}</strong>.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '6px', marginBottom: '1.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Observed Sales (Censored):</span>
+                <span style={{ color: 'var(--error-color)', fontWeight: 600 }}>0 units (Stockout)</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--card-border)', paddingTop: '0.5rem' }}>
+                <span>Latent Demand Imputation:</span>
+                <span style={{ color: 'var(--success-color)', fontWeight: 600 }}>{activeGroceryForecast.latent_demand} units / day</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--card-border)', paddingTop: '0.5rem' }}>
+                <span>Recommended Restock:</span>
+                <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>{activeGroceryForecast.restock_suggestion} units</span>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4', marginBottom: '1.5rem' }}>
+              Note: Because inventory reached 0, standard regressors predict demand of 0. The Tobit MLE model uses historical run-rates and covariate matrices to impute the unobserved customer demand, optimizing dark-store inventory replenishment.
+            </p>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn-primary" onClick={() => setActiveGroceryForecast(null)}>
+                Dismiss Forecast Console
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
