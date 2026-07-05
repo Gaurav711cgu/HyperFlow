@@ -8,6 +8,7 @@ export default function App() {
   const [selectedUsp, setSelectedUsp] = useState('tobit'); // active ML USP card details
   const [selectedCuisine, setSelectedCuisine] = useState(null); // Active cuisine category filter
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [promoSlide, setPromoSlide] = useState(0); // Active sliding promo banner
   const [activeGroceryForecast, setActiveGroceryForecast] = useState(null); // Active item for Tobit modal
   
   // Backend config
@@ -61,6 +62,28 @@ export default function App() {
     "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=1600&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?q=80&w=1600&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=1600&auto=format&fit=crop"
+  ];
+
+  // Promotional Banner Carousel Content
+  const promoBanners = [
+    {
+      title: "Zomato Food Rescue",
+      desc: "Claim cancelled meals near you at a flat 50% discount. 100% secure from discount arbitrage exploits.",
+      bg: "linear-gradient(135deg, #e23744 0%, #a61c28 100%)",
+      badge: "Waste Mitigation Active"
+    },
+    {
+      title: "Instamart Midnight Rush",
+      desc: "Groceries and late-night staples delivered in 10 minutes. Stockouts resolved by Tobit MLE demand predictions.",
+      bg: "linear-gradient(135deg, #1b1b1f 0%, #2e2e38 100%)",
+      badge: "Inventory Imputation Engaged"
+    },
+    {
+      title: "Storm-Surge Safety Grid",
+      desc: "Monsoon tracking engaged. Delivery clocks calibrated by Gated ETA Smoother to prevent visual jitter.",
+      bg: "linear-gradient(135deg, #059669 0%, #064e3b 100%)",
+      badge: "ETA Smoother Engaged"
+    }
   ];
 
   // Mind categories with high-quality food visuals
@@ -178,6 +201,14 @@ export default function App() {
     const timer = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % backgroundPhotos.length);
     }, 8000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Auto-cycles the promotional banner carousel
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPromoSlide(prev => (prev + 1) % promoBanners.length);
+    }, 5000);
     return () => clearInterval(timer);
   }, []);
 
@@ -616,6 +647,51 @@ export default function App() {
               >
                 Instamart Groceries (Swiggy)
               </button>
+            </div>
+
+            {/* Auto-sliding Promotional Banner Carousel */}
+            <div style={{ 
+              position: 'relative', 
+              height: '140px', 
+              borderRadius: 'var(--radius-lg)', 
+              background: promoBanners[promoSlide].bg, 
+              padding: '1.5rem', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'center', 
+              overflow: 'hidden', 
+              marginBottom: '2rem', 
+              transition: 'all 0.5s ease-in-out', 
+              border: '1px solid var(--card-border)' 
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <span className="badge" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: '0.65rem' }}>
+                  {promoBanners[promoSlide].badge}
+                </span>
+                {/* Slide dots */}
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  {promoBanners.map((_, idx) => (
+                    <div 
+                      key={idx}
+                      onClick={() => setPromoSlide(idx)}
+                      style={{ 
+                        width: '8px', 
+                        height: '8px', 
+                        borderRadius: '50%', 
+                        background: idx === promoSlide ? '#fff' : 'rgba(255,255,255,0.4)', 
+                        cursor: 'pointer',
+                        transition: 'background 0.3s ease'
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <h3 style={{ color: '#fff', fontSize: '1.25rem', marginTop: '0.5rem', fontWeight: 700, letterSpacing: '-0.01em' }}>
+                {promoBanners[promoSlide].title}
+              </h3>
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', marginTop: '0.25rem', maxWidth: '85%' }}>
+                {promoBanners[promoSlide].desc}
+              </p>
             </div>
 
             <div className="panel panel-two-col">
@@ -1134,9 +1210,11 @@ export default function App() {
               Note: Because inventory reached 0, standard regressors predict demand of 0. The Tobit MLE model uses historical run-rates and covariate matrices to impute the unobserved customer demand, optimizing dark-store inventory replenishment.
             </p>
 
-            <button className="btn-primary" onClick={() => setActiveGroceryForecast(null)}>
-              Dismiss Forecast Console
-            </button>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn-primary" onClick={() => setActiveGroceryForecast(null)}>
+                Dismiss Forecast Console
+              </button>
+            </div>
           </div>
         </div>
       )}
