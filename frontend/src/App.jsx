@@ -6,6 +6,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('consumer'); // consumer vs control-room
   const [consumerSubTab, setConsumerSubTab] = useState('food'); // 'food' (Zomato) vs 'grocery' (Instamart)
   const [selectedUsp, setSelectedUsp] = useState('tobit'); // active ML USP card details
+  const [selectedCuisine, setSelectedCuisine] = useState(null); // Active cuisine category filter
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeGroceryForecast, setActiveGroceryForecast] = useState(null); // Active item for Tobit modal
   
@@ -398,6 +399,17 @@ export default function App() {
 
   const getCartTotal = () => cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
 
+  // Filter restaurants based on selected category (North Indian, Biryani, Italian, Desserts)
+  const filteredRestaurants = selectedCuisine
+    ? mockRestaurants.filter(rest => {
+        const query = selectedCuisine.toLowerCase();
+        if (query === "burgers") return rest.cuisine.toLowerCase().includes("burger") || rest.name.toLowerCase().includes("burger");
+        if (query === "pizzas") return rest.cuisine.toLowerCase().includes("pizza");
+        if (query === "desserts") return rest.cuisine.toLowerCase().includes("dessert") || rest.cuisine.toLowerCase().includes("gelato");
+        return rest.cuisine.toLowerCase().includes(query.replace("s", ""));
+      })
+    : mockRestaurants;
+
   return (
     <div>
       {/* Background carousel */}
@@ -418,6 +430,19 @@ export default function App() {
           <span>HyperFlow</span>
           <span className="badge badge-primary" style={{ marginLeft: '0.75rem', fontSize: '0.65rem' }}>
             ML Core v1.0
+          </span>
+          <span 
+            className={`badge ${isBackendConnected ? 'badge-success' : 'badge-danger'}`} 
+            style={{ marginLeft: '0.5rem', fontSize: '0.65rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+          >
+            <span style={{ 
+              display: 'inline-block', 
+              width: '6px', 
+              height: '6px', 
+              borderRadius: '50%', 
+              background: isBackendConnected ? 'var(--success-color)' : 'var(--error-color)' 
+            }}></span>
+            {isBackendConnected ? 'API Online' : 'Local Fallback'}
           </span>
         </div>
 
@@ -604,54 +629,87 @@ export default function App() {
                     <div className="glass-card" style={{ padding: '1.25rem' }}>
                       <h3 className="card-title" style={{ border: 'none', marginBottom: '1rem' }}>What's on your mind?</h3>
                       <div style={{ display: 'flex', gap: '1.25rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-                        {mindCategories.map((c, idx) => (
-                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', flexShrink: 0, cursor: 'pointer' }}>
+                        {mindCategories.map((c, idx) => {
+                          const isActive = selectedCuisine === c.name;
+                          return (
                             <div 
-                              style={{ width: '70px', height: '70px', borderRadius: '50%', backgroundImage: `url(${c.img})`, backgroundSize: 'cover', backgroundPosition: 'center', border: '2px solid var(--card-border)' }}
-                            />
-                            <span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{c.name}</span>
-                          </div>
-                        ))}
+                              key={idx} 
+                              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', flexShrink: 0, cursor: 'pointer' }}
+                              onClick={() => setSelectedCuisine(prev => prev === c.name ? null : c.name)}
+                            >
+                              <div 
+                                style={{ 
+                                  width: '70px', 
+                                  height: '70px', 
+                                  borderRadius: '50%', 
+                                  backgroundImage: `url(${c.img})`, 
+                                  backgroundSize: 'cover', 
+                                  backgroundPosition: 'center', 
+                                  border: isActive ? '3px solid var(--accent-color)' : '2px solid var(--card-border)',
+                                  transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                                  transition: 'all 0.25s ease'
+                                }}
+                              />
+                              <span style={{ fontSize: '0.75rem', fontWeight: isActive ? 600 : 500, color: isActive ? 'var(--accent-color)' : 'var(--text-secondary)' }}>{c.name}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
                     {/* Restaurants list */}
                     <div>
-                      <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem', letterSpacing: '-0.01em' }}>
-                        Trending Restaurants near Indiranagar
-                      </h3>
-                      <div className="restaurant-grid">
-                        {mockRestaurants.map(rest => (
-                          <div key={rest.id} className="food-card">
-                            <div className="food-img" style={{ backgroundImage: `url(${rest.image})` }} />
-                            <div className="food-details">
-                              <div className="food-name">{rest.name}</div>
-                              <div className="food-meta">
-                                <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>Rating: {rest.rating}</span>
-                                <span>{rest.distance} | {rest.time}</span>
-                              </div>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                                {rest.cuisine} • {rest.costForTwo} for two
-                              </div>
-                              
-                              {/* Menu Add items */}
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid var(--card-border)', paddingTop: '0.5rem' }}>
-                                {rest.menu.map(item => (
-                                  <button
-                                    key={item.id}
-                                    className="btn-secondary"
-                                    style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
-                                    onClick={() => addToCart(item, rest.name, rest.id)}
-                                  >
-                                    <span>{item.name}</span>
-                                    <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>INR {item.price}</span>
-                                  </button>
-                                ))}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, letterSpacing: '-0.01em', margin: 0 }}>
+                          {selectedCuisine ? `Trending ${selectedCuisine} near Indiranagar` : "Trending Restaurants near Indiranagar"}
+                        </h3>
+                        {selectedCuisine && (
+                          <button 
+                            className="btn-secondary" 
+                            style={{ width: 'auto', padding: '0.25rem 0.75rem', fontSize: '0.75rem', borderColor: 'var(--accent-color)', color: 'var(--accent-color)', fontWeight: 600 }}
+                            onClick={() => setSelectedCuisine(null)}
+                          >
+                            Clear Filter
+                          </button>
+                        )}
+                      </div>
+
+                      {filteredRestaurants.length === 0 ? (
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>No restaurants found matching this category.</p>
+                      ) : (
+                        <div className="restaurant-grid">
+                          {filteredRestaurants.map(rest => (
+                            <div key={rest.id} className="food-card">
+                              <div className="food-img" style={{ backgroundImage: `url(${rest.image})` }} />
+                              <div className="food-details">
+                                <div className="food-name">{rest.name}</div>
+                                <div className="food-meta">
+                                  <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>Rating: {rest.rating}</span>
+                                  <span>{rest.distance} | {rest.time}</span>
+                                </div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                                  {rest.cuisine} • {rest.costForTwo} for two
+                                </div>
+                                
+                                {/* Menu Add items */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid var(--card-border)', paddingTop: '0.5rem' }}>
+                                  {rest.menu.map(item => (
+                                    <button
+                                      key={item.id}
+                                      className="btn-secondary"
+                                      style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
+                                      onClick={() => addToCart(item, rest.name, rest.id)}
+                                    >
+                                      <span>{item.name}</span>
+                                      <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>INR {item.price}</span>
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </>
                 ) : (
@@ -1004,6 +1062,7 @@ export default function App() {
           </h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
             All modules in the Antigravity Hyperlocal ML core are built directly upon published engineering principles from leading delivery organizations.
+            Interact with the backend APIs dynamically using the <a href={`${backendUrl}/docs`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-color)', fontWeight: 600, textDecoration: 'underline' }}>Swagger UI Documentation</a>.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
