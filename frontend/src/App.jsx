@@ -71,6 +71,17 @@ export default function App() {
   const [promoSlide, setPromoSlide] = useState(0);
   const [backendUrl] = useState(import.meta.env.VITE_BACKEND_URL || "http://localhost:7860");
   const [isBackendConnected, setIsBackendConnected] = useState(false);
+  const [theme, setTheme] = useState('dark');
+
+  // Sync theme with body data-attribute and html dark class for Tailwind
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   // Mock databases
   const promoBanners = [
