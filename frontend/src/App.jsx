@@ -684,19 +684,40 @@ export default function App() {
             </div>
             <button 
               className={`flex items-center gap-md px-md py-2 w-full text-left text-xs ${selectedUsp === 'tobit' ? 'text-primary' : 'text-secondary'}`}
-              onClick={() => setSelectedUsp('tobit')}
+              onClick={() => {
+                setSelectedUsp('tobit');
+                setActiveView('realtime');
+                setTimeout(() => {
+                  const el = document.getElementById('deep-dive-panel');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
             >
               <span>Q1: Censored Tobit MLE</span>
             </button>
             <button 
               className={`flex items-center gap-md px-md py-2 w-full text-left text-xs ${selectedUsp === 'eta' ? 'text-primary' : 'text-secondary'}`}
-              onClick={() => setSelectedUsp('eta')}
+              onClick={() => {
+                setSelectedUsp('eta');
+                setActiveView('realtime');
+                setTimeout(() => {
+                  const el = document.getElementById('deep-dive-panel');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
             >
               <span>Q2: ETA Jitter Smoother</span>
             </button>
             <button 
               className={`flex items-center gap-md px-md py-2 w-full text-left text-xs ${selectedUsp === 'resale' ? 'text-primary' : 'text-secondary'}`}
-              onClick={() => setSelectedUsp('resale')}
+              onClick={() => {
+                setSelectedUsp('resale');
+                setActiveView('realtime');
+                setTimeout(() => {
+                  const el = document.getElementById('deep-dive-panel');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
             >
               <span>Q3: CORO Resale Filter</span>
             </button>
@@ -1165,7 +1186,7 @@ export default function App() {
                 </div>
 
                 {/* Mathematical Deep Dive box */}
-                <div className="glass-panel inner-glow rounded-xl p-md">
+                <div id="deep-dive-panel" className="glass-panel inner-glow rounded-xl p-md">
                   <h4 className="text-xs font-bold text-primary mb-1 uppercase">Dynamic Parameter Deep Dive</h4>
                   <div className="text-[11px] text-secondary leading-relaxed font-mono-label">
                     {selectedUsp === 'tobit' && (
