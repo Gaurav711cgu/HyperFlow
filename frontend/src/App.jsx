@@ -1491,7 +1491,41 @@ export default function App() {
                     <p>
                       <strong>Solution</strong>: Stage-1 Heteroscedastic Tobit Type I MLE regressor imputes unobserved demand. Stage-2 Quantile LightGBM models forecast 5th/50th/95th quantiles.
                     </p>
-                    <div className="bg-black/30 border border-surface-variant p-md rounded-xl space-y-2 font-mono-label text-[11.5px]">
+                    
+                    {/* Inline SVG Chart */}
+                    <div className="mt-md bg-black/45 border border-surface-variant p-sm rounded-xl">
+                      <p className="font-mono-label text-[9px] text-secondary uppercase mb-2">WMAPE Bias Sensitivity (OLS vs Tobit)</p>
+                      <svg viewBox="0 0 340 100" className="w-full h-24 overflow-visible">
+                        <line x1="40" y1="20" x2="320" y2="20" stroke="#262626" strokeDasharray="2" />
+                        <line x1="40" y1="50" x2="320" y2="50" stroke="#262626" strokeDasharray="2" />
+                        <line x1="40" y1="80" x2="320" y2="80" stroke="#262626" strokeDasharray="2" />
+                        <line x1="40" y1="10" x2="40" y2="80" stroke="#444" strokeWidth="1" />
+                        <line x1="40" y1="80" x2="320" y2="80" stroke="#444" strokeWidth="1" />
+                        <text x="35" y="23" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">25%</text>
+                        <text x="35" y="53" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">15%</text>
+                        <text x="35" y="83" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">5%</text>
+                        <text x="40" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">10%</text>
+                        <text x="133" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">25%</text>
+                        <text x="226" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">40%</text>
+                        <text x="320" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">60%</text>
+                        <path d="M 40 38 L 133 24.5 L 226 17.6 L 320 0.5" fill="none" stroke="#ff535a" strokeWidth="1.5" />
+                        <circle cx="40" cy="38" r="2.5" fill="#ff535a" />
+                        <circle cx="133" cy="24.5" r="2.5" fill="#ff535a" />
+                        <circle cx="226" cy="17.6" r="2.5" fill="#ff535a" />
+                        <circle cx="320" cy="0.5" r="2.5" fill="#ff535a" />
+                        <path d="M 40 38.3 L 133 38.6 L 226 38.3 L 320 38.6" fill="none" stroke="#10b981" strokeWidth="1.5" />
+                        <circle cx="40" cy="38.3" r="2.5" fill="#10b981" />
+                        <circle cx="133" cy="38.6" r="2.5" fill="#10b981" />
+                        <circle cx="226" cy="38.3" r="2.5" fill="#10b981" />
+                        <circle cx="320" cy="38.6" r="2.5" fill="#10b981" />
+                        <rect x="250" y="5" width="6" height="6" fill="#ff535a" />
+                        <text x="260" y="10" fontSize="7" fill="#888" className="font-mono-label">Naive OLS</text>
+                        <rect x="250" y="15" width="6" height="6" fill="#10b981" />
+                        <text x="260" y="20" fontSize="7" fill="#888" className="font-mono-label">Tobit MLE</text>
+                      </svg>
+                    </div>
+
+                    <div className="bg-black/30 border border-surface-variant p-md rounded-xl space-y-2 font-mono-label text-[11.5px] mt-md">
                       <div className="flex justify-between text-error">
                         <span>OLS Naive WMAPE (60% Censored):</span>
                         <span>26.5%</span>
@@ -1590,7 +1624,36 @@ export default function App() {
                     <p>
                       <strong>Solution</strong>: Redis SETNX distributed locks with Lua release scripts + SQL SELECT FOR UPDATE NOWAIT fail-fast.
                     </p>
-                    <div className="bg-black/30 border border-surface-variant p-md rounded-xl space-y-2 font-mono-label text-[11.5px]">
+                    
+                    {/* Inline SVG Chart */}
+                    <div className="mt-md bg-black/45 border border-surface-variant p-sm rounded-xl">
+                      <p className="font-mono-label text-[9px] text-secondary uppercase mb-2">Concurrency Lock Latency p50 (Postgres vs Redis)</p>
+                      <svg viewBox="0 0 340 100" className="w-full h-24 overflow-visible">
+                        <line x1="40" y1="20" x2="320" y2="20" stroke="#262626" strokeDasharray="2" />
+                        <line x1="40" y1="50" x2="320" y2="50" stroke="#262626" strokeDasharray="2" />
+                        <line x1="40" y1="80" x2="320" y2="80" stroke="#262626" strokeDasharray="2" />
+                        <line x1="40" y1="10" x2="40" y2="80" stroke="#444" strokeWidth="1" />
+                        <line x1="40" y1="80" x2="320" y2="80" stroke="#444" strokeWidth="1" />
+                        <text x="35" y="23" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">30ms</text>
+                        <text x="35" y="53" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">15ms</text>
+                        <text x="35" y="83" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">0ms</text>
+                        <text x="80" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">100 RPS</text>
+                        <text x="180" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">500 RPS</text>
+                        <text x="280" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">1000 RPS</text>
+                        <rect x="65" y="62.2" width="12" height="17.8" fill="#ff535a" rx="1" />
+                        <rect x="80" y="71.6" width="12" height="8.4" fill="#10b981" rx="1" />
+                        <rect x="165" y="43.2" width="12" height="36.8" fill="#ff535a" rx="1" />
+                        <rect x="180" y="68.4" width="12" height="11.6" fill="#10b981" rx="1" />
+                        <rect x="265" y="11.6" width="12" height="68.4" fill="#ff535a" rx="1" />
+                        <rect x="280" y="63.8" width="12" height="16.2" fill="#10b981" rx="1" />
+                        <rect x="230" y="5" width="6" height="6" fill="#ff535a" />
+                        <text x="240" y="10" fontSize="7" fill="#888" className="font-mono-label">Postgres</text>
+                        <rect x="230" y="15" width="6" height="6" fill="#10b981" />
+                        <text x="240" y="20" fontSize="7" fill="#888" className="font-mono-label">Redis</text>
+                      </svg>
+                    </div>
+
+                    <div className="bg-black/30 border border-surface-variant p-md rounded-xl space-y-2 font-mono-label text-[11.5px] mt-md">
                       <div className="flex justify-between text-error">
                         <span>Postgres Lock Wait (1k RPS):</span>
                         <span>34.2ms p50 (High connection starvation)</span>
