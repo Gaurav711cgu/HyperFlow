@@ -117,3 +117,38 @@
     }
 }
 
+:root {
+    --map-land: #f1f3f4;
+    --map-road: #ffffff;
+    --map-park: #e6f4ea;
+    --map-water: #e8f0fe;
+    --map-border: #dadce0;
+}
+
+body[data-theme='dark'] {
+    --map-land: #1f1f23;
+    --map-road: #2d2d34;
+    --map-park: #1b261b;
+    --map-water: #1a2333;
+    --map-border: #3c4043;
+}
+
+.map-google {
+    background-color: var(--map-land);
+    background-image: 
+        /* Primary road grid */
+        linear-gradient(90deg, transparent 95%, var(--map-road) 95%, var(--map-road) 100%),
+        linear-gradient(180deg, transparent 95%, var(--map-road) 95%, var(--map-road) 100%),
+        /* Secondary road grid */
+        linear-gradient(90deg, transparent 98%, var(--map-road) 98%, var(--map-road) 100%),
+        linear-gradient(180deg, transparent 98%, var(--map-road) 98%, var(--map-road) 100%),
+        /* Green park spaces */
+        radial-gradient(circle at 20% 30%, var(--map-park) 35%, transparent 35%),
+        radial-gradient(circle at 80% 75%, var(--map-park) 28%, transparent 28%),
+        /* Blue lakes / water bodies */
+        radial-gradient(circle at 65% 15%, var(--map-water) 22%, transparent 22%);
+    background-size: 80px 80px, 80px 80px, 40px 40px, 40px 40px, 100% 100%, 100% 100%, 100% 100%;
+    background-position: 0 0, 0 0, 20px 20px, 20px 20px, 0 0, 0 0, 0 0;
+    border: 1px solid var(--map-border);
+}
+

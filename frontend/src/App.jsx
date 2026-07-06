@@ -1120,10 +1120,9 @@ export default function App() {
                       </div>
                       
                       {/* Tracking map canvas */}
-                      <div className="h-28 w-full rounded-lg relative overflow-hidden border border-surface-variant map-satellite">
-                        <div className="absolute inset-0 bg-black/40"></div>
+                      <div className="h-28 w-full rounded-lg relative overflow-hidden border border-surface-variant map-google">
                         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 120">
-                          <path className="route-path" d="M 50 100 Q 150 20 250 80 T 350 40" fill="none" stroke="#ff535a" strokeLinecap="round" strokeWidth="4"></path>
+                          <path className="route-path" d="M 50 100 Q 150 20 250 80 T 350 40" fill="none" stroke="#1a73e8" strokeLinecap="round" strokeWidth="4"></path>
                         </svg>
                         
                         {/* Map GPS pointer */}
@@ -1131,7 +1130,7 @@ export default function App() {
                           className="absolute bg-zomato-red w-4 h-4 rounded-full border-2 border-white animate-pulse" 
                           style={{ left: `${20 + (riderProgress * 2.5)}px`, top: '40px' }}
                         ></div>
-                        <div className="rain-layer"></div>
+                        <div className="rain-layer opacity-10"></div>
                       </div>
 
                       <button 
@@ -1292,26 +1291,25 @@ export default function App() {
                   </div>
 
                   {/* Q3: SLA Route Batcher GIS Map */}
-                  <div className={`glass-panel inner-glow rounded-xl col-span-2 relative overflow-hidden min-h-[200px] map-satellite border-2 border-surface-variant cursor-pointer ${selectedUsp === 'batcher' ? 'border-primary' : ''}`} onClick={() => setSelectedUsp('batcher')}>
-                    <div className="absolute inset-0 bg-black/40"></div>
-                    <div className="rain-layer opacity-20"></div>
+                  <div className={`glass-panel inner-glow rounded-xl col-span-2 relative overflow-hidden min-h-[200px] map-google border-2 border-surface-variant cursor-pointer ${selectedUsp === 'batcher' ? 'border-primary' : ''}`} onClick={() => setSelectedUsp('batcher')}>
+                    <div className="rain-layer opacity-10"></div>
                     
-                    <div className="absolute top-md left-md z-10 flex flex-col gap-1">
+                    <div className="absolute top-md left-md z-10 flex flex-col gap-1 bg-black/60 backdrop-blur-[8px] p-md rounded-xl border border-white/[0.08]">
                       <div className="flex items-center gap-2">
-                        <h2 className="font-headline-sm text-on-surface text-base font-bold">SLA Route Batcher</h2>
+                        <h2 className="font-headline-sm text-white text-sm font-bold">SLA Route Batcher</h2>
                         <span className="bg-zomato-red text-white text-[9px] px-2 py-0.5 rounded-full font-bold">GIS ACTIVE</span>
                       </div>
-                      <p className="text-[10px] text-secondary leading-tight">Hyper-Batching Intelligence Grid • Bengaluru North</p>
+                      <p className="text-[9px] text-[#ccc] leading-tight font-mono-label">Hyper-Batching Intelligence Grid • Bengaluru North</p>
                     </div>
 
                     {/* Routing Overlay Map pins */}
                     <svg className="absolute inset-0 w-full h-full opacity-80" xmlns="http://www.w3.org/2000/svg">
-                      <path className="route-path" d="M100,120 L220,90 L290,40" fill="none" stroke="#71d7cf" strokeDasharray="10 5" strokeWidth="3"></path>
+                      <path className="route-path" d="M100,120 L220,90 L290,40" fill="none" stroke="#1a73e8" strokeDasharray="6 3" strokeWidth="3.5"></path>
                     </svg>
 
-                    <div className="absolute top-20 left-[40%] bg-surface-container-high/90 border border-primary/40 p-2 rounded backdrop-blur-md z-10 text-[9px] font-mono-label">
-                      <p className="text-primary">BATCH ALPHA: 12 DELIVERIES</p>
-                      <p className="text-secondary mt-0.5">SLA BREACH PROBABILITY: 0.00%</p>
+                    <div className="absolute top-20 left-[40%] bg-black/65 border border-white/[0.1] p-2 rounded-lg backdrop-blur-md z-10 text-[9px] font-mono-label text-white">
+                      <p className="text-zomato-red font-bold">BATCH ALPHA: 12 DELIVERIES</p>
+                      <p className="text-[#ccc] mt-0.5">SLA BREACH PROBABILITY: 0.00%</p>
                     </div>
 
                     <div className="absolute bottom-md right-md flex gap-2 z-20">
