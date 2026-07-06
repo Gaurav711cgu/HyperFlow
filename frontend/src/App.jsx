@@ -789,15 +789,11 @@ export default function App() {
 
             <button 
               className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
-                selectedUsp === 'tobit' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-white/[0.03]'
+                activeView === 'q1' ? 'bg-zomato-red/10 text-white font-bold border-l-2 border-zomato-red' : 'text-secondary hover:text-white hover:bg-white/[0.03]'
               }`}
               onClick={() => {
+                setActiveView('q1');
                 setSelectedUsp('tobit');
-                setActiveView('realtime');
-                setTimeout(() => {
-                  const el = document.getElementById('deep-dive-panel');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
               }}
             >
               <span className="material-symbols-outlined text-[16px]">analytics</span>
@@ -805,15 +801,11 @@ export default function App() {
             </button>
             <button 
               className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
-                selectedUsp === 'eta' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-white/[0.03]'
+                activeView === 'q2' ? 'bg-zomato-red/10 text-white font-bold border-l-2 border-zomato-red' : 'text-secondary hover:text-white hover:bg-white/[0.03]'
               }`}
               onClick={() => {
+                setActiveView('q2');
                 setSelectedUsp('eta');
-                setActiveView('realtime');
-                setTimeout(() => {
-                  const el = document.getElementById('deep-dive-panel');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
               }}
             >
               <span className="material-symbols-outlined text-[16px]">speed</span>
@@ -821,15 +813,11 @@ export default function App() {
             </button>
             <button 
               className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
-                selectedUsp === 'resale' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-white/[0.03]'
+                activeView === 'q3' ? 'bg-zomato-red/10 text-white font-bold border-l-2 border-zomato-red' : 'text-secondary hover:text-white hover:bg-white/[0.03]'
               }`}
               onClick={() => {
+                setActiveView('q3');
                 setSelectedUsp('resale');
-                setActiveView('realtime');
-                setTimeout(() => {
-                  const el = document.getElementById('deep-dive-panel');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
               }}
             >
               <span className="material-symbols-outlined text-[16px]">verified_user</span>
@@ -1199,221 +1187,337 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 3-Quadrant bento layout */}
-                <div className="grid grid-cols-2 gap-gutter">
+                {/* Main Operations Dispatch Map Panel */}
+                <div className="glass-panel inner-glow rounded-xl relative overflow-hidden flex-grow min-h-[300px] map-google border border-surface-variant">
+                  <div className="rain-layer opacity-10"></div>
                   
-                  {/* Q1: Tobit Imputer */}
-                  <div className={`glass-panel inner-glow rounded-xl p-lg flex flex-col gap-md cursor-pointer ${selectedUsp === 'tobit' ? 'border-primary shadow-[0_0_15px_rgba(255,179,177,0.15)]' : ''}`} onClick={() => setSelectedUsp('tobit')}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h2 className="font-headline-sm text-on-surface text-base font-bold">Tobit Latent Demand</h2>
-                        <p className="text-body-sm text-secondary text-xs">Solver v2.4 Predictive Engine</p>
-                      </div>
-                      <span className="material-symbols-outlined text-primary-container">query_stats</span>
+                  <div className="absolute top-md left-md z-10 flex flex-col gap-1 bg-black/60 backdrop-blur-[8px] p-md rounded-xl border border-white/[0.08]">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <h2 className="font-headline-sm text-white text-sm font-bold">GIS Dispatch & Routing Monitor</h2>
                     </div>
-                    <div className="grid grid-cols-2 gap-sm">
-                      <div className="bg-surface-container-low p-md rounded-lg border border-surface-variant">
-                        <p className="text-mono-label text-secondary text-[9px] uppercase">Censoring rate</p>
-                        <p className="text-base font-mono-label">{(censoringRate * 100).toFixed(0)}%</p>
-                      </div>
-                      <div className="bg-surface-container-low p-md rounded-lg border border-surface-variant">
-                        <p className="text-mono-label text-secondary text-[9px] uppercase">WMAPE Lift</p>
-                        <p className="text-base font-mono-label text-primary">{(forecastOutput.lift_pct).toFixed(1)}%</p>
-                      </div>
-                    </div>
-                    <div className="mt-2">
-                      <label className="text-mono-label text-secondary text-[10px] mb-2 block">Solver aggressiveness threshold</label>
-                      <input 
-                        className="w-full h-1 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-zomato-red" 
-                        type="range"
-                        min="0.1"
-                        max="0.8"
-                        step="0.05"
-                        value={censoringRate}
-                        onChange={(e) => {
-                          setCensoringRate(parseFloat(e.target.value));
-                          runForecast(parseFloat(e.target.value));
-                        }}
-                      />
-                      <div className="flex justify-between text-[8px] mt-1 font-mono-label">
-                        <span>CONSERVATIVE</span>
-                        <span>AGGRESSIVE</span>
-                      </div>
-                    </div>
+                    <p className="text-[9px] text-[#ccc] leading-tight font-mono-label">Active dispatch grid tracking route trajectories for {activeHub} Hub</p>
                   </div>
 
-                  {/* Q2: ETA Smoother Graph */}
-                  <div className={`glass-panel inner-glow rounded-xl p-lg flex flex-col gap-md cursor-pointer ${selectedUsp === 'eta' ? 'border-primary shadow-[0_0_15px_rgba(255,179,177,0.15)]' : ''}`} onClick={() => setSelectedUsp('eta')}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h2 className="font-headline-sm text-on-surface text-base font-bold">Monsoon ETA Jitter</h2>
-                        <p className="text-body-sm text-secondary text-xs">Real-time Smoother Analysis</p>
-                      </div>
-                      <span className="bg-primary/20 text-primary-fixed-dim px-2 py-0.5 rounded font-mono-label text-[9px]">LIVE</span>
-                    </div>
+                  {/* Routing path overlay */}
+                  <svg className="absolute inset-0 w-full h-full opacity-80" xmlns="http://www.w3.org/2000/svg">
+                    <path className="route-path" d="M100,180 L220,130 L320,60" fill="none" stroke="#1a73e8" strokeDasharray="6 3" strokeWidth="4"></path>
+                    <path className="route-path" d="M60,110 L140,80 L200,40" fill="none" stroke="#1a73e8" strokeDasharray="6 3" strokeWidth="4" opacity="0.5"></path>
+                  </svg>
 
-                    <div className="flex-grow relative border-l border-b border-surface-variant overflow-hidden min-h-[90px]">
-                      <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 300 120">
-                        <polyline 
-                          fill="none" 
-                          points={etaHistory.slice(-7).map((h, idx) => `${idx * 50},${120 - (h.raw * 5)}`).join(' ')} 
-                          stroke="#ff535a" 
-                          strokeWidth="2"
-                        ></polyline>
-                        <polyline 
-                          fill="none" 
-                          points={etaHistory.slice(-7).map((h, idx) => `${idx * 50},${120 - (h.smooth * 5)}`).join(' ')} 
-                          stroke="#10b981" 
-                          strokeWidth="2"
-                        ></polyline>
-                      </svg>
-                    </div>
+                  {/* Active markers */}
+                  <div 
+                    className="absolute bg-zomato-red w-4 h-4 rounded-full border-2 border-white shadow-lg animate-pulse" 
+                    style={{ left: '220px', top: '130px' }}
+                  ></div>
+                  <div className="absolute bg-[#1a73e8] w-3 h-3 rounded-full border-2 border-white shadow-lg" style={{ left: '100px', top: '180px' }}></div>
+                  <div className="absolute bg-[#1a73e8] w-3 h-3 rounded-full border-2 border-white shadow-lg" style={{ left: '320px', top: '60px' }}></div>
 
-                    <div className="flex justify-between items-center px-1 text-[9px] text-secondary">
-                      <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-error"></div>
-                        <span>Raw GPS</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-success-color"></div>
-                        <span>Gated Smooth</span>
-                      </div>
-                      <button 
-                        className="font-bold underline text-primary" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          simulateETAStep();
-                        }}
-                      >
-                        Inject Telemetry
-                      </button>
-                    </div>
+                  <div className="absolute bottom-md left-md bg-black/60 border border-white/[0.1] p-md rounded-xl backdrop-blur-md z-10 text-[9px] font-mono-label text-white space-y-1">
+                    <p className="text-primary font-bold">ACTIVE ORDER STATUS:</p>
+                    <p className="text-[#ccc]">Current Rider: Gaurav Nayak</p>
+                    <p className="text-[#ccc]">Lock Latency: 8.1ms • Nominal</p>
                   </div>
-
-                  {/* Q3: SLA Route Batcher GIS Map */}
-                  <div className={`glass-panel inner-glow rounded-xl col-span-2 relative overflow-hidden min-h-[200px] map-google border-2 border-surface-variant cursor-pointer ${selectedUsp === 'batcher' ? 'border-primary' : ''}`} onClick={() => setSelectedUsp('batcher')}>
-                    <div className="rain-layer opacity-10"></div>
-                    
-                    <div className="absolute top-md left-md z-10 flex flex-col gap-1 bg-black/60 backdrop-blur-[8px] p-md rounded-xl border border-white/[0.08]">
-                      <div className="flex items-center gap-2">
-                        <h2 className="font-headline-sm text-white text-sm font-bold">SLA Route Batcher</h2>
-                        <span className="bg-zomato-red text-white text-[9px] px-2 py-0.5 rounded-full font-bold">GIS ACTIVE</span>
-                      </div>
-                      <p className="text-[9px] text-[#ccc] leading-tight font-mono-label">Hyper-Batching Intelligence Grid • Bengaluru North</p>
-                    </div>
-
-                    {/* Routing Overlay Map pins */}
-                    <svg className="absolute inset-0 w-full h-full opacity-80" xmlns="http://www.w3.org/2000/svg">
-                      <path className="route-path" d="M100,120 L220,90 L290,40" fill="none" stroke="#1a73e8" strokeDasharray="6 3" strokeWidth="3.5"></path>
-                    </svg>
-
-                    <div className="absolute top-20 left-[40%] bg-black/65 border border-white/[0.1] p-2 rounded-lg backdrop-blur-md z-10 text-[9px] font-mono-label text-white">
-                      <p className="text-zomato-red font-bold">BATCH ALPHA: 12 DELIVERIES</p>
-                      <p className="text-[#ccc] mt-0.5">SLA BREACH PROBABILITY: 0.00%</p>
-                    </div>
-
-                    <div className="absolute bottom-md right-md flex gap-2 z-20">
-                      <button 
-                        className="bg-primary text-on-primary-container px-3 py-1 rounded text-[10px] font-bold"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOptimizeBatch();
-                        }}
-                      >
-                        Run Batch Optimization
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Q4: ML Robustness & Production Safeguards */}
-                  <div className="glass-panel inner-glow rounded-xl p-lg col-span-2 flex flex-col gap-md">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h2 className="font-headline-sm text-on-surface text-base font-bold">ML Robustness & Production Safeguards</h2>
-                        <p className="text-body-sm text-secondary text-xs">Swiggy Bytes Active Feature Audits & Clipping</p>
-                      </div>
-                      <div className="flex items-center gap-sm text-[9px] bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20 text-emerald-500 font-mono-label font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        AUDIT ACTIVE
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-sm">
-                      {Object.entries(robustnessMetrics.features_drift).map(([feature, metric]) => (
-                        <div key={feature} className="bg-surface-container-low p-md rounded-lg border border-surface-variant flex flex-col gap-1">
-                          <span className="text-[9px] font-mono-label text-secondary uppercase truncate">{feature.replace('weather_', '').replace('_sec', '')}</span>
-                          <div className="flex justify-between items-center mt-1">
-                            <span className="text-sm font-bold font-mono-label">{metric.psi}</span>
-                            <span className={`text-[8.5px] px-1.5 py-0.5 rounded font-mono-label font-bold uppercase ${
-                              metric.status === 'green' ? 'bg-emerald-500/10 text-emerald-500' :
-                              metric.status === 'yellow' ? 'bg-yellow-500/10 text-yellow-500' :
-                              'bg-zomato-red/10 text-zomato-red animate-pulse'
-                            }`}>
-                              {metric.status.toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-col gap-2 mt-2 border-t border-surface-variant pt-2 text-[10.5px] font-mono-label text-secondary">
-                      <div className="flex justify-between">
-                        <span>CLIPPED OBSERVATIONS TODAY (p1-p99):</span>
-                        <span className="text-on-surface font-bold">{robustnessMetrics.clipping_guard.total_clipped_observations_today}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>ACTIVE CLIPPING RANGES:</span>
-                        <span className="text-on-surface text-[10px]">
-                          {robustnessMetrics.clipping_guard.active_ranges.temp} | {robustnessMetrics.clipping_guard.active_ranges.rain}
-                        </span>
-                      </div>
-                      {robustnessMetrics.unit_warnings.map((warn, i) => (
-                        <div key={i} className="text-yellow-500 flex items-center gap-1.5 mt-1">
-                          <span className="material-symbols-outlined text-[14px]">warning</span>
-                          <span>{warn}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                 </div>
 
-                {/* Mathematical Deep Dive box */}
-                <div id="deep-dive-panel" className="glass-panel inner-glow rounded-xl p-md">
-                  <h4 className="text-xs font-bold text-primary mb-1 uppercase">Dynamic Parameter Deep Dive</h4>
-                  <div className="text-[11px] text-secondary leading-relaxed font-mono-label">
-                    {selectedUsp === 'tobit' && (
-                      <p>
-                        Tobit Type I MLE fits observed demand y censored below zero: 
-                        <br />
-                        <code>{"L = ∑ log[ φ((y_i - Xβ)/σ) / σ ] + ∑ log[ 1 - Φ((0 - Xβ)/σ) ]"}</code>
-                      </p>
-                    )}
-                    {selectedUsp === 'eta' && (
-                      <p>
-                        Gated ETA Filter smoothing weights are dynamically updated by Gated Classification parameters:
-                        <br />
-                        <code>{"ETA_(t+1) = α * Raw_ETA + (1 - α) * ETA_t (α=0.15 holding storm spikes)"}</code>
-                      </p>
-                    )}
-                    {selectedUsp === 'resale' && (
-                      <p>
-                        Anti-Arbitrage checks: 
-                        <br />
-                        <code>{"Flag = CoLocation(buyer, cancel) < 15m || SameSubnet(buyer_ip, cancel_ip)"}</code>
-                      </p>
-                    )}
-                    {selectedUsp === 'batcher' && (
-                      <p>
-                        SLA batched delivery sequences:
-                        <br />
-                        <code>{"Max Delay = max(PrepTime_i + RouteDistance_i) ≤ 15 Minutes SLA limit"}</code>
-                      </p>
-                    )}
+                {/* Live MLOps Safeguards Widget */}
+                <div className="glass-panel inner-glow rounded-xl p-lg flex flex-col gap-sm">
+                  <div className="flex justify-between items-start border-b border-surface-variant pb-2">
+                    <div>
+                      <h2 className="font-headline-sm text-on-surface text-xs font-bold uppercase">ML Robustness & Performance Audits</h2>
+                      <p className="text-secondary text-[10px] font-mono-label">Active Feature Audits & Outlier Clipping</p>
+                    </div>
+                    <div className="flex items-center gap-xs text-[9px] bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 text-emerald-500 font-mono-label font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      AUDIT NOMINAL
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-sm text-[10px] font-mono-label mt-1">
+                    {Object.entries(robustnessMetrics.features_drift).map(([feature, metric]) => (
+                      <div key={feature} className="bg-surface-container-low p-2 rounded-lg border border-surface-variant flex flex-col justify-between">
+                        <span className="text-[8px] text-secondary uppercase truncate">{feature.replace('weather_', '').replace('_sec', '')}</span>
+                        <div className="flex justify-between items-center mt-1">
+                          <span className="font-bold text-white">{metric.psi} PSI</span>
+                          <span className="text-emerald-500 font-bold text-[8px] uppercase">Stable</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
               </section>
+
+            </div>
+          )}
+
+          {/* VIEW Q1: Dedicated Tobit MLE Deep Dive Panel */}
+          {activeView === 'q1' && (
+            <div className="flex flex-col gap-lg overflow-y-auto pb-8">
+              
+              {/* Header card with summary */}
+              <div className="glass-panel p-lg rounded-2xl border-l-4 border-l-primary flex flex-col gap-sm">
+                <div className="flex items-center gap-md">
+                  <span className="material-symbols-outlined text-primary text-2xl">analytics</span>
+                  <h2 className="font-headline-sm text-headline-sm text-on-surface">Q1 Deep Dive: Censored Tobit MLE Regressor</h2>
+                </div>
+                <p className="text-xs text-secondary leading-relaxed">
+                  Solving Swiggy Instamart stockout censoring bias. Standard demand estimators underestimate demand during stockout periods; our Tobit Maximum Likelihood Estimator reconstructs latent demand parameters dynamically.
+                </p>
+              </div>
+
+              {/* Main content grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
+                
+                {/* Left parameter control column */}
+                <div className="glass-panel p-lg rounded-xl flex flex-col gap-md md:col-span-1">
+                  <h3 className="font-bold text-xs uppercase text-on-surface">Estimator Controls</h3>
+                  <div className="bg-surface-container-low p-md rounded-lg border border-surface-variant">
+                    <p className="text-mono-label text-secondary text-[9px] uppercase">Censoring rate</p>
+                    <p className="text-base font-mono-label">{(censoringRate * 100).toFixed(0)}%</p>
+                  </div>
+                  <div className="bg-surface-container-low p-md rounded-lg border border-surface-variant">
+                    <p className="text-mono-label text-secondary text-[9px] uppercase">WMAPE Lift</p>
+                    <p className="text-base font-mono-label text-primary">{(forecastOutput.lift_pct).toFixed(1)}%</p>
+                  </div>
+                  
+                  <div className="mt-2">
+                    <label className="text-mono-label text-secondary text-[10px] mb-2 block">Solver aggressiveness threshold</label>
+                    <input 
+                      className="w-full h-1 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-zomato-red" 
+                      type="range"
+                      min="0.1"
+                      max="0.8"
+                      step="0.05"
+                      value={censoringRate}
+                      onChange={(e) => {
+                        setCensoringRate(parseFloat(e.target.value));
+                        runForecast(parseFloat(e.target.value));
+                      }}
+                    />
+                    <div className="flex justify-between text-[8px] mt-1 font-mono-label">
+                      <span>CONSERVATIVE</span>
+                      <span>AGGRESSIVE</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right chart column */}
+                <div className="glass-panel p-lg rounded-xl md:col-span-2 flex flex-col gap-md">
+                  <h3 className="font-bold text-xs uppercase text-on-surface">WMAPE Bias Sensitivity (OLS vs Tobit MLE)</h3>
+                  <div className="bg-black/45 border border-surface-variant p-sm rounded-xl flex-grow flex items-center justify-center">
+                    <svg viewBox="0 0 340 100" className="w-full h-36 overflow-visible">
+                      <line x1="40" y1="20" x2="320" y2="20" stroke="#262626" strokeDasharray="2" />
+                      <line x1="40" y1="50" x2="320" y2="50" stroke="#262626" strokeDasharray="2" />
+                      <line x1="40" y1="80" x2="320" y2="80" stroke="#262626" strokeDasharray="2" />
+                      <line x1="40" y1="10" x2="40" y2="80" stroke="#444" strokeWidth="1" />
+                      <line x1="40" y1="80" x2="320" y2="80" stroke="#444" strokeWidth="1" />
+                      <text x="35" y="23" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">25%</text>
+                      <text x="35" y="53" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">15%</text>
+                      <text x="35" y="83" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">5%</text>
+                      <text x="40" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">10%</text>
+                      <text x="133" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">25%</text>
+                      <text x="226" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">40%</text>
+                      <text x="320" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">60%</text>
+                      <path d="M 40 38 L 133 24.5 L 226 17.6 L 320 0.5" fill="none" stroke="#ff535a" strokeWidth="1.5" />
+                      <circle cx="40" cy="38" r="2.5" fill="#ff535a" />
+                      <circle cx="133" cy="24.5" r="2.5" fill="#ff535a" />
+                      <circle cx="226" cy="17.6" r="2.5" fill="#ff535a" />
+                      <circle cx="320" cy="0.5" r="2.5" fill="#ff535a" />
+                      <path d="M 40 76 L 133 69 L 226 62.1 L 320 54.5" fill="none" stroke="#71d7cf" strokeWidth="1.5" />
+                      <circle cx="40" cy="76" r="2.5" fill="#71d7cf" />
+                      <circle cx="133" cy="69" r="2.5" fill="#71d7cf" />
+                      <circle cx="226" cy="62.1" r="2.5" fill="#71d7cf" />
+                      <circle cx="320" cy="54.5" r="2.5" fill="#71d7cf" />
+                      <text x="200" y="35" fontSize="6" fill="#ff535a" className="font-mono-label font-bold">OLS Bias (Censored)</text>
+                      <text x="200" y="70" fontSize="6" fill="#71d7cf" className="font-mono-label font-bold">Tobit MLE (Unbiased)</text>
+                    </svg>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Mathematical Equation breakdown */}
+              <div className="glass-panel p-lg rounded-2xl flex flex-col gap-sm">
+                <h3 className="font-bold text-xs uppercase text-primary">Dynamic Parameter Deep Dive & Math</h3>
+                <div className="text-xs text-secondary leading-relaxed font-mono-label bg-black/40 border border-surface-variant p-md rounded-xl">
+                  <p>
+                    Tobit Type I MLE fits observed demand y censored below zero: 
+                    <br /><br />
+                    <code>{"L = ∑ log[ φ((y_i - Xβ)/σ) / σ ] + ∑ log[ 1 - Φ((0 - Xβ)/σ) ]"}</code>
+                    <br /><br />
+                    Here, <code>φ</code> and <code>Φ</code> denote the standard normal PDF and CDF respectively. By maximizing this log-likelihood function, we reconstruct unbiased parameters <code>β</code> that represent true latent grocery demand.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* VIEW Q2: Dedicated ETA Smoother Deep Dive Panel */}
+          {activeView === 'q2' && (
+            <div className="flex flex-col gap-lg overflow-y-auto pb-8">
+              
+              {/* Header card with summary */}
+              <div className="glass-panel p-lg rounded-2xl border-l-4 border-l-primary flex flex-col gap-sm">
+                <div className="flex items-center gap-md">
+                  <span className="material-symbols-outlined text-primary text-2xl">speed</span>
+                  <h2 className="font-headline-sm text-headline-sm text-on-surface">Q2 Deep Dive: Monsoon ETA Jitter Smoother</h2>
+                </div>
+                <p className="text-xs text-secondary leading-relaxed">
+                  Calibrating delivery ETA predictions during severe weather surges. Raw GPS telemetry experiences massive noise/jitter under rainfall; our Gated Smoothing Filter dynamically clips raw jumps to preserve user peace of mind.
+                </p>
+              </div>
+
+              {/* Main content grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
+                
+                {/* Left control panel */}
+                <div className="glass-panel p-lg rounded-xl flex flex-col gap-md md:col-span-1 justify-between">
+                  <div className="space-y-md">
+                    <h3 className="font-bold text-xs uppercase text-on-surface">Jitter Injection</h3>
+                    <p className="text-xs text-secondary">
+                      Inject telemetry spikes to simulate live courier GPS jumps under heavy weather.
+                    </p>
+                    <button 
+                      className="w-full bg-zomato-red text-white py-2 rounded-lg font-bold text-xs active:scale-95 cursor-pointer"
+                      onClick={simulateETAStep}
+                    >
+                      Inject Spiky Telemetry
+                    </button>
+                  </div>
+                  <div className="bg-surface-container-low border border-surface-variant p-md rounded-lg text-xs space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-secondary font-mono-label">Active Hub:</span>
+                      <span className="text-white font-bold">{activeHub}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-secondary font-mono-label">Average ETA Bump:</span>
+                      <span className="text-white font-bold">1.84%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right chart column */}
+                <div className="glass-panel p-lg rounded-xl md:col-span-2 flex flex-col gap-md">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-bold text-xs uppercase text-on-surface">Raw GPS vs Gated Smoothed ETA</h3>
+                    <div className="flex gap-md text-[10px] font-mono-label">
+                      <span className="text-error font-bold">● Raw GPS</span>
+                      <span className="text-success-color font-bold">● Gated Smooth</span>
+                    </div>
+                  </div>
+                  <div className="bg-black/45 border border-surface-variant p-sm rounded-xl h-48 flex items-center justify-center">
+                    <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 300 120">
+                      <polyline 
+                        fill="none" 
+                        points={etaHistory.slice(-7).map((h, idx) => `${idx * 50},${120 - (h.raw * 5)}`).join(' ')} 
+                        stroke="#ff535a" 
+                        strokeWidth="2"
+                      ></polyline>
+                      <polyline 
+                        fill="none" 
+                        points={etaHistory.slice(-7).map((h, idx) => `${idx * 50},${120 - (h.smooth * 5)}`).join(' ')} 
+                        stroke="#10b981" 
+                        strokeWidth="2"
+                      ></polyline>
+                    </svg>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Mathematical Equation breakdown */}
+              <div className="glass-panel p-lg rounded-2xl flex flex-col gap-sm">
+                <h3 className="font-bold text-xs uppercase text-primary">Dynamic Parameter Deep Dive & Math</h3>
+                <div className="text-xs text-secondary leading-relaxed font-mono-label bg-black/40 border border-surface-variant p-md rounded-xl">
+                  <p>
+                    Gated ETA Filter smoothing weights are dynamically updated by Gated Classification parameters:
+                    <br /><br />
+                    <code>{"ETA_(t+1) = α * Raw_ETA + (1 - α) * ETA_t"}</code>
+                    <br /><br />
+                    Here, the smoothing coefficient <code>α</code> is dynamically adjusted. When storm surge features are detected, <code>α</code> is dialed down (e.g. to <code>0.15</code>) to hold steady against high variance noise spikes, preventing jitter from reaching client devices.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* VIEW Q3: Dedicated CORO Resale / SLA Route Batcher Deep Dive */}
+          {activeView === 'q3' && (
+            <div className="flex flex-col gap-lg overflow-y-auto pb-8">
+              
+              {/* Header card with summary */}
+              <div className="glass-panel p-lg rounded-2xl border-l-4 border-l-primary flex flex-col gap-sm">
+                <div className="flex items-center gap-md">
+                  <span className="material-symbols-outlined text-primary text-2xl">verified_user</span>
+                  <h2 className="font-headline-sm text-headline-sm text-on-surface">Q3 Deep Dive: CORO Resale Filter & SLA Route Batcher</h2>
+                </div>
+                <p className="text-xs text-secondary leading-relaxed">
+                  Mitigating order cancellation food waste while guarding against resale arbitrage loops. Employs hyperlocal geospatial co-location limits and identical device subnet checks to prevent rogue buyers from claiming discounted rescue food.
+                </p>
+              </div>
+
+              {/* Main content grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
+                
+                {/* Left parameters / triggers */}
+                <div className="glass-panel p-lg rounded-xl flex flex-col gap-md md:col-span-1 justify-between">
+                  <div className="space-y-md">
+                    <h3 className="font-bold text-xs uppercase text-on-surface">GIS Optimization</h3>
+                    <p className="text-xs text-secondary">
+                      Trigger the spatial batching route solver to compute optimal multi-delivery order sequences under the 15 minutes SLA threshold limit.
+                    </p>
+                    <button 
+                      className="w-full bg-zomato-red text-white py-2 rounded-lg font-bold text-xs active:scale-95 cursor-pointer"
+                      onClick={handleOptimizeBatch}
+                    >
+                      Run Batch Optimization
+                    </button>
+                  </div>
+                  <div className="bg-surface-container-low border border-surface-variant p-md rounded-lg text-xs space-y-1 font-mono-label">
+                    <p className="text-primary font-bold">BATCH ALPHA: 12 DELIVERIES</p>
+                    <p className="text-secondary mt-0.5">SLA BREACH PROBABILITY: 0.00%</p>
+                  </div>
+                </div>
+
+                {/* Right GIS map column */}
+                <div className="glass-panel p-lg rounded-xl md:col-span-2 flex flex-col gap-md relative min-h-[300px] map-google">
+                  <div className="rain-layer opacity-10"></div>
+                  
+                  <div className="absolute top-md left-md z-10 flex flex-col gap-1 bg-black/60 backdrop-blur-[8px] p-md rounded-xl border border-white/[0.08]">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-zomato-red text-white text-[9px] px-2 py-0.5 rounded-full font-bold">GIS ACTIVE</span>
+                    </div>
+                    <p className="text-[10px] text-white leading-tight">Bengaluru North Hyper-Batching Intelligence Grid</p>
+                  </div>
+
+                  {/* Routing Overlay Map pins */}
+                  <svg className="absolute inset-0 w-full h-full opacity-80" xmlns="http://www.w3.org/2000/svg">
+                    <path className="route-path" d="M100,120 L220,90 L290,40" fill="none" stroke="#1a73e8" strokeDasharray="6 3" strokeWidth="3.5"></path>
+                  </svg>
+                </div>
+
+              </div>
+
+              {/* Mathematical Equation breakdown */}
+              <div className="glass-panel p-lg rounded-2xl flex flex-col gap-sm">
+                <h3 className="font-bold text-xs uppercase text-primary">Dynamic Parameter Deep Dive & Math</h3>
+                <div className="text-xs text-secondary leading-relaxed font-mono-label bg-black/40 border border-surface-variant p-md rounded-xl">
+                  <p>
+                    <strong>Anti-Arbitrage checks:</strong>
+                    <br />
+                    <code>{"Flag = CoLocation(buyer_lat_long, cancel_lat_long) < 15m || SameSubnet(buyer_ip, cancel_ip)"}</code>
+                    <br /><br />
+                    <strong>SLA batched delivery sequences:</strong>
+                    <br />
+                    <code>{"Max Delay = max(PrepTime_i + RouteDistance_i) ≤ 15 Minutes SLA limit"}</code>
+                    <br /><br />
+                    Hyperlocal order routing is formulated as a Vehicle Routing Problem (VRP) solved by a clustering algorithm ensuring prep time and dispatch transit sums fall under 15 minutes.
+                  </p>
+                </div>
+              </div>
 
             </div>
           )}
@@ -1600,6 +1704,55 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Command CLI Console & Terminal Logs */}
+              <div className="glass-panel p-lg rounded-xl flex flex-col gap-md">
+                <div className="flex justify-between items-center border-b border-surface-variant pb-2">
+                  <div className="flex items-center gap-sm">
+                    <span className="material-symbols-outlined text-primary">terminal</span>
+                    <h3 className="font-bold text-sm text-on-surface uppercase">Operations CLI Console & Security Events</h3>
+                  </div>
+                  <span className="text-[9px] font-mono-label bg-surface-container px-2 py-0.5 rounded border border-surface-variant text-secondary">Interactive Mode</span>
+                </div>
+
+                <div className="flex flex-col gap-md">
+                  {/* CLI Terminal Logs Screen */}
+                  <div className="bg-black/60 border border-surface-variant p-md rounded-lg font-mono-label text-xs h-40 overflow-y-auto flex flex-col gap-1.5 scrollbar-thin">
+                    {securityLogs.length > 0 ? (
+                      securityLogs.map((log, idx) => (
+                        <div key={idx} className="flex gap-2 leading-relaxed">
+                          <span className="text-secondary select-none">[{log.time}]</span>
+                          <span className={
+                            log.type === 'success' ? 'text-emerald-400 font-bold' :
+                            log.type === 'error' ? 'text-red-400 font-bold' :
+                            log.type === 'warning' ? 'text-yellow-400 font-bold' :
+                            'text-on-surface'
+                          }>
+                            {log.event}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-secondary text-center my-auto">No security logs recorded. Type a command below.</div>
+                    )}
+                  </div>
+
+                  {/* CLI Interactive Input */}
+                  <div className="flex gap-sm">
+                    <div className="flex-grow bg-[#0f0f14] border border-surface-variant rounded-lg px-md py-sm flex items-center gap-2">
+                      <span className="text-primary font-mono-label select-none">&gt;_</span>
+                      <input 
+                        type="text" 
+                        placeholder="Type command (e.g., 'run-imputer', 'monsoon-grid', 'clear') and press Enter..." 
+                        className="bg-transparent border-none outline-none text-white text-xs w-full font-mono-label"
+                        value={terminalInput}
+                        onChange={(e) => setTerminalInput(e.target.value)}
+                        onKeyDown={runTerminalCommand}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -1622,7 +1775,7 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
                 
                 {/* Instamart Case Study */}
-                <div className="glass-panel p-lg rounded-2xl flex flex-col gap-md">
+                <div className="glass-panel p-lg rounded-2xl flex flex-col gap-md cursor-pointer hover:border-primary transition-all duration-300" onClick={() => { setActiveView('q1'); setSelectedUsp('tobit'); }}>
                   <div className="flex justify-between items-start border-b border-surface-variant pb-3">
                     <div className="flex items-center gap-sm">
                       <span className="material-symbols-outlined text-primary">analytics</span>
@@ -1689,7 +1842,7 @@ export default function App() {
                 </div>
 
                 {/* Swiggy Delivery Jitter Case Study */}
-                <div className="glass-panel p-lg rounded-2xl flex flex-col gap-md">
+                <div className="glass-panel p-lg rounded-2xl flex flex-col gap-md cursor-pointer hover:border-primary transition-all duration-300" onClick={() => { setActiveView('q2'); setSelectedUsp('eta'); }}>
                   <div className="flex justify-between items-start border-b border-surface-variant pb-3">
                     <div className="flex items-center gap-sm">
                       <span className="material-symbols-outlined text-primary">speed</span>
@@ -1722,7 +1875,7 @@ export default function App() {
                 </div>
 
                 {/* Zomato Food Rescue Case Study */}
-                <div className="glass-panel p-lg rounded-2xl flex flex-col gap-md">
+                <div className="glass-panel p-lg rounded-2xl flex flex-col gap-md cursor-pointer hover:border-primary transition-all duration-300" onClick={() => { setActiveView('q3'); setSelectedUsp('resale'); }}>
                   <div className="flex justify-between items-start border-b border-surface-variant pb-3">
                     <div className="flex items-center gap-sm">
                       <span className="material-symbols-outlined text-primary">restaurant</span>
