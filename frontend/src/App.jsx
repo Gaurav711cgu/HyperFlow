@@ -1,5 +1,160 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+
+const HUB_COORDINATES = {
+  Whitefield: {
+    center: [12.9698, 77.7499],
+    route: [
+      [12.9698, 77.7499],
+      [12.9734, 77.7522],
+      [12.9782, 77.7565]
+    ]
+  },
+  Koramangala: {
+    center: [12.9279, 77.6271],
+    route: [
+      [12.9279, 77.6271],
+      [12.9312, 77.6295],
+      [12.9354, 77.6322]
+    ]
+  },
+  Indiranagar: {
+    center: [12.9719, 77.6412],
+    route: [
+      [12.9719, 77.6412],
+      [12.9750, 77.6445],
+      [12.9790, 77.6480]
+    ]
+  }
+};
+
+const getInterpolatedPosition = (route, progress) => {
+  if (!route || route.length === 0) return null;
+  if (route.length === 1) return route[0];
+  const totalSegments = route.length - 1;
+  const progressPercent = progress / 100;
+  const segmentIndex = Math.min(
+    Math.floor(progressPercent * totalSegments),
+    totalSegments - 1
+  );
+  const start = route[segmentIndex];
+  const end = route[segmentIndex + 1];
+  const segmentProgress = (progressPercent * totalSegments) - segmentIndex;
+  const lat = start[0] + (end[0] - start[0]) * segmentProgress;
+  const lng = start[1] + (end[1] - start[1]) * segmentProgress;
+  return [lat, lng];
+};
+
+function LeafletMap({ center, routePoints, riderPos, theme, zoom = 13 }) {
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const routeLayerRef = useRef(null);
+  const riderMarkerRef = useRef(null);
+  const storeMarkerRef = useRef(null);
+  const customerMarkersRef = useRef([]);
+
+  useEffect(() => {
+    if (!mapRef.current || !window.L) return;
+    
+    const map = window.L.map(mapRef.current, {
+      zoomControl: false,
+      attributionControl: false
+    }).setView(center, zoom);
+
+    mapInstanceRef.current = map;
+
+    const darkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    const lightTiles = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    
+    window.L.tileLayer(theme === 'dark' ? darkTiles : lightTiles, {
+      maxZoom: 19
+    }).addTo(map);
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !window.L) return;
+
+    map.eachLayer((layer) => {
+      if (layer instanceof window.L.TileLayer) {
+        map.removeLayer(layer);
+      }
+    });
+
+    const darkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    const lightTiles = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+    window.L.tileLayer(theme === 'dark' ? darkTiles : lightTiles, {
+      maxZoom: 19
+    }).addTo(map);
+  }, [theme]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (map) {
+      map.setView(center, zoom);
+    }
+  }, [center, zoom]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !window.L) return;
+
+    if (routeLayerRef.current) {
+      map.removeLayer(routeLayerRef.current);
+    }
+
+    if (routePoints && routePoints.length > 0) {
+      routeLayerRef.current = window.L.polyline(routePoints, {
+        color: '#1a73e8',
+        weight: 4.5,
+        dashArray: '8, 8',
+        opacity: 0.95
+      }).addTo(map);
+    }
+
+    if (storeMarkerRef.current) map.removeLayer(storeMarkerRef.current);
+    if (riderMarkerRef.current) map.removeLayer(riderMarkerRef.current);
+    customerMarkersRef.current.forEach(m => map.removeLayer(m));
+    customerMarkersRef.current = [];
+
+    const createCircleIcon = (color, size, pulse = false) => {
+      return window.L.divIcon({
+        className: 'custom-map-pin',
+        html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 2.5px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.4); ${pulse ? 'animation: pulse 1.5s infinite;' : ''}"></div>`,
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2]
+      });
+    };
+
+    if (routePoints && routePoints.length > 0) {
+      storeMarkerRef.current = window.L.marker(routePoints[0], {
+        icon: createCircleIcon('#1a73e8', 14)
+      }).addTo(map);
+      
+      for (let i = 1; i < routePoints.length; i++) {
+        const marker = window.L.marker(routePoints[i], {
+          icon: createCircleIcon('#10b981', 14)
+        }).addTo(map);
+        customerMarkersRef.current.push(marker);
+      }
+    }
+
+    if (riderPos) {
+      riderMarkerRef.current = window.L.marker(riderPos, {
+        icon: createCircleIcon('#ff535a', 18, true)
+      }).addTo(map);
+    }
+
+  }, [routePoints, riderPos]);
+
+  return <div ref={mapRef} className="absolute inset-0 w-full h-full rounded-2xl z-0" />;
+}
 
 export default function App() {
   const [activeView, setActiveView] = useState('realtime'); // 'realtime' (Dual-Pane) vs 'security' (Sybil-Guard)
@@ -1108,25 +1263,15 @@ export default function App() {
                       </div>
                       
                       {/* Tracking map canvas */}
-                      <div className="h-28 w-full rounded-lg relative overflow-hidden border border-surface-variant map-google">
-                        <iframe 
-                          src={`https://maps.google.com/maps?q=${activeHub},%20Bengaluru&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                          className="absolute inset-0 w-full h-full border-0 map-iframe"
-                          allowFullScreen="" 
-                          loading="lazy"
-                          title="Phone Dispatch Google Map"
-                        ></iframe>
-
-                        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 120">
-                          <path className="route-path" d="M 50 100 Q 150 20 250 80 T 350 40" fill="none" stroke="#1a73e8" strokeLinecap="round" strokeWidth="4"></path>
-                        </svg>
-                        
-                        {/* Map GPS pointer */}
-                        <div 
-                          className="absolute bg-zomato-red w-4 h-4 rounded-full border-2 border-white animate-pulse" 
-                          style={{ left: `${20 + (riderProgress * 2.5)}px`, top: '40px' }}
-                        ></div>
-                        <div className="rain-layer opacity-10 pointer-events-none"></div>
+                      <div className="h-28 w-full rounded-lg relative overflow-hidden border border-surface-variant z-0">
+                        <LeafletMap 
+                          center={HUB_COORDINATES[activeHub].center}
+                          routePoints={HUB_COORDINATES[activeHub].route}
+                          riderPos={getInterpolatedPosition(HUB_COORDINATES[activeHub].route, riderProgress)}
+                          theme={theme}
+                          zoom={14}
+                        />
+                        <div className="rain-layer opacity-10 pointer-events-none z-10"></div>
                       </div>
 
                       <button 
@@ -1196,16 +1341,16 @@ export default function App() {
                 </div>
 
                 {/* Main Operations Dispatch Map Panel */}
-                <div className="glass-panel inner-glow rounded-xl relative overflow-hidden flex-grow min-h-[300px] map-google border border-surface-variant">
-                  <iframe 
-                    src={`https://maps.google.com/maps?q=${activeHub},%20Bengaluru&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                    className="absolute inset-0 w-full h-full border-0 map-iframe"
-                    allowFullScreen="" 
-                    loading="lazy"
-                    title="GIS Dispatch Google Map"
-                  ></iframe>
+                <div className="glass-panel inner-glow rounded-xl relative overflow-hidden flex-grow min-h-[300px] border border-surface-variant z-0">
+                  <LeafletMap 
+                    center={HUB_COORDINATES[activeHub].center}
+                    routePoints={HUB_COORDINATES[activeHub].route}
+                    riderPos={activeOrder ? getInterpolatedPosition(HUB_COORDINATES[activeHub].route, riderProgress) : null}
+                    theme={theme}
+                    zoom={13}
+                  />
 
-                  <div className="rain-layer opacity-10 pointer-events-none"></div>
+                  <div className="rain-layer opacity-10 pointer-events-none z-10"></div>
                   
                   <div className="absolute top-md left-md z-10 flex flex-col gap-1 bg-black/60 backdrop-blur-[8px] p-md rounded-xl border border-white/[0.08] pointer-events-none">
                     <div className="flex items-center gap-2">
@@ -1214,20 +1359,6 @@ export default function App() {
                     </div>
                     <p className="text-[9px] text-[#ccc] leading-tight font-mono-label">Active dispatch grid tracking route trajectories for {activeHub} Hub</p>
                   </div>
-
-                  {/* Routing path overlay */}
-                  <svg className="absolute inset-0 w-full h-full opacity-80 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                    <path className="route-path" d="M100,180 L220,130 L320,60" fill="none" stroke="#1a73e8" strokeDasharray="6 3" strokeWidth="4"></path>
-                    <path className="route-path" d="M60,110 L140,80 L200,40" fill="none" stroke="#1a73e8" strokeDasharray="6 3" strokeWidth="4" opacity="0.5"></path>
-                  </svg>
-
-                  {/* Active markers */}
-                  <div 
-                    className="absolute bg-zomato-red w-4 h-4 rounded-full border-2 border-white shadow-lg animate-pulse pointer-events-none" 
-                    style={{ left: '220px', top: '130px' }}
-                  ></div>
-                  <div className="absolute bg-[#1a73e8] w-3 h-3 rounded-full border-2 border-white shadow-lg pointer-events-none" style={{ left: '100px', top: '180px' }}></div>
-                  <div className="absolute bg-[#1a73e8] w-3 h-3 rounded-full border-2 border-white shadow-lg pointer-events-none" style={{ left: '320px', top: '60px' }}></div>
 
                   <div className="absolute bottom-md left-md bg-black/60 border border-white/[0.1] p-md rounded-xl backdrop-blur-md z-10 text-[9px] font-mono-label text-white space-y-1 pointer-events-none">
                     <p className="text-primary font-bold">ACTIVE ORDER STATUS:</p>
@@ -1499,16 +1630,16 @@ export default function App() {
                 </div>
 
                 {/* Right GIS map column */}
-                <div className="glass-panel p-lg rounded-xl md:col-span-2 flex flex-col gap-md relative min-h-[300px] map-google">
-                  <iframe 
-                    src={`https://maps.google.com/maps?q=${activeHub},%20Bengaluru&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                    className="absolute inset-0 w-full h-full border-0 map-iframe"
-                    allowFullScreen="" 
-                    loading="lazy"
-                    title="Q3 GIS Dispatch Google Map"
-                  ></iframe>
+                <div className="glass-panel p-lg rounded-xl md:col-span-2 flex flex-col gap-md relative min-h-[300px] border border-surface-variant z-0">
+                  <LeafletMap 
+                    center={HUB_COORDINATES[activeHub].center}
+                    routePoints={HUB_COORDINATES[activeHub].route}
+                    riderPos={null}
+                    theme={theme}
+                    zoom={13}
+                  />
 
-                  <div className="rain-layer opacity-10 pointer-events-none"></div>
+                  <div className="rain-layer opacity-10 pointer-events-none z-10"></div>
                   
                   <div className="absolute top-md left-md z-10 flex flex-col gap-1 bg-black/60 backdrop-blur-[8px] p-md rounded-xl border border-white/[0.08] pointer-events-none">
                     <div className="flex items-center gap-2">
@@ -1516,11 +1647,6 @@ export default function App() {
                     </div>
                     <p className="text-[10px] text-white leading-tight">Bengaluru North Hyper-Batching Intelligence Grid</p>
                   </div>
-
-                  {/* Routing Overlay Map pins */}
-                  <svg className="absolute inset-0 w-full h-full opacity-80 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                    <path className="route-path" d="M100,120 L220,90 L290,40" fill="none" stroke="#1a73e8" strokeDasharray="6 3" strokeWidth="3.5"></path>
-                  </svg>
                 </div>
 
               </div>
