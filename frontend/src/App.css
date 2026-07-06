@@ -91,3 +91,29 @@
     animation: scan 4s linear infinite;
     pointer-events: none;
 }
+
+/* Height-based responsive scaling for the smartphone simulator to prevent clipping */
+@media (max-height: 820px) {
+    .phone-frame {
+        transform: scale(0.85);
+        transform-origin: top center;
+        margin-bottom: -98px; /* Counter-act the layout space collapse from scaling */
+    }
+}
+
+@media (max-height: 720px) {
+    .phone-frame {
+        transform: scale(0.75);
+        transform-origin: top center;
+        margin-bottom: -162px;
+    }
+}
+
+@media (max-height: 640px) {
+    .phone-frame {
+        transform: scale(0.68);
+        transform-origin: top center;
+        margin-bottom: -208px;
+    }
+}
+
