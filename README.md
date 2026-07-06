@@ -1,17 +1,7 @@
----
-title: HyperFlow
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-pinned: false
-app_port: 7860
----
+
 
 # Project Antigravity: Production-Grade Hyperlocal ML Operations Engine
 **Designed for Senior ML / AI Engineer Portfolios | Targeted at Swiggy Instamart, Zomato, and Blinkit Roles**
-
-[![Hugging Face Spaces](https://img.shields.io/badge/Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces)
-[![Vercel Frontend](https://img.shields.io/badge/Vercel-Frontend-black)](https://vercel.com)
 
 Project Antigravity is a high-performance hyperlocal delivery ML engine built to solve **four documented operational gaps** publicly published by Swiggy Bytes and Zomato Engineering:
 1. **Censored (Truncated) Demand**: Reconstructing real consumer demand when stockouts censor sales data.
