@@ -1670,6 +1670,137 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* E. Spatial Order Batching Case Study */}
+                <div className="glass-panel p-lg rounded-2xl flex flex-col gap-md">
+                  <div className="flex justify-between items-start border-b border-surface-variant pb-3">
+                    <div className="flex items-center gap-sm">
+                      <span className="material-symbols-outlined text-primary">map</span>
+                      <h3 className="font-bold text-xs uppercase text-on-surface">E. Instamart: Spatial Order Batching</h3>
+                    </div>
+                    <span className="badge badge-success text-[10px] text-emerald-500 font-bold uppercase bg-emerald-500/10 px-2 py-0.5 rounded">NP-Hard Solved</span>
+                  </div>
+                  <div className="text-xs text-secondary space-y-3">
+                    <p>
+                      <strong>Challenge</strong>: Hyperlocal batch routing combinations scale quadratically. Synchronous solver delays block the main API threads.
+                    </p>
+                    <p>
+                      <strong>Solution</strong>: Greedy nearest-neighbor heuristic with distance matrices cached in Redis, offloaded to asynchronous worker pools.
+                    </p>
+                    
+                    {/* Inline SVG Chart (Spatial Routing Diagram) */}
+                    <div className="mt-md bg-black/45 border border-surface-variant p-sm rounded-xl">
+                      <p className="font-mono-label text-[9px] text-secondary uppercase mb-2">Optimized Hyperlocal Delivery Path (SLA Bound)</p>
+                      <svg viewBox="0 0 340 100" className="w-full h-24 overflow-visible">
+                        {/* Dark Store Node */}
+                        <circle cx="50" cy="50" r="12" fill="rgba(255, 83, 90, 0.2)" stroke="#ff535a" strokeWidth="1.5" />
+                        <text x="50" y="53" textAnchor="middle" fontSize="7" fill="#white" className="font-mono-label font-bold">STORE</text>
+
+                        {/* Customer Nodes */}
+                        <circle cx="140" cy="25" r="8" fill="#1e1e24" stroke="#71d7cf" strokeWidth="1" />
+                        <text x="140" y="28" textAnchor="middle" fontSize="6" fill="#888" className="font-mono-label">A</text>
+                        
+                        <circle cx="230" cy="40" r="8" fill="#1e1e24" stroke="#71d7cf" strokeWidth="1" />
+                        <text x="230" y="43" textAnchor="middle" fontSize="6" fill="#888" className="font-mono-label">B</text>
+
+                        <circle cx="300" cy="75" r="8" fill="#1e1e24" stroke="#71d7cf" strokeWidth="1" />
+                        <text x="300" y="78" textAnchor="middle" fontSize="6" fill="#888" className="font-mono-label">C</text>
+
+                        {/* Route Arrows / Paths */}
+                        <path d="M 62 47 L 128 27" fill="none" stroke="#71d7cf" strokeWidth="1.5" strokeDasharray="3" />
+                        <path d="M 148 27 L 222 38" fill="none" stroke="#71d7cf" strokeWidth="1.5" strokeDasharray="3" />
+                        <path d="M 238 43 L 292 71" fill="none" stroke="#71d7cf" strokeWidth="1.5" strokeDasharray="3" />
+
+                        {/* Annotations */}
+                        <text x="95" y="32" fontSize="6" fill="#888" className="font-mono-label">1.2 km</text>
+                        <text x="185" y="29" fontSize="6" fill="#888" className="font-mono-label">0.9 km</text>
+                        <text x="270" y="53" fontSize="6" fill="#888" className="font-mono-label">1.5 km</text>
+                      </svg>
+                    </div>
+
+                    <div className="bg-black/30 border border-surface-variant p-md rounded-xl space-y-2 font-mono-label text-[11.5px] mt-md">
+                      <div className="flex justify-between text-error">
+                        <span>Baseline Synchronous Solver:</span>
+                        <span>42.1ms (SLA Breach Lock)</span>
+                      </div>
+                      <div className="flex justify-between text-emerald-500 font-bold border-t border-surface-variant pt-2">
+                        <span>HyperFlow Async Batcher:</span>
+                        <span>4.8ms (8.7x latency improvement)</span>
+                      </div>
+                      <div className="flex justify-between border-t border-surface-variant pt-2 text-primary-container">
+                        <span>SLA Delivery Breach Rate:</span>
+                        <span>Reduced from 14.8% to 1.1%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* F. MLOps Data Drift & Retraining Case Study */}
+                <div className="glass-panel p-lg rounded-2xl flex flex-col gap-md">
+                  <div className="flex justify-between items-start border-b border-surface-variant pb-3">
+                    <div className="flex items-center gap-sm">
+                      <span className="material-symbols-outlined text-primary">published_with_changes</span>
+                      <h3 className="font-bold text-xs uppercase text-on-surface">F. MLOps: Retraining & Drift</h3>
+                    </div>
+                    <span className="badge badge-success text-[10px] text-emerald-500 font-bold uppercase bg-emerald-500/10 px-2 py-0.5 rounded">Self-Healing</span>
+                  </div>
+                  <div className="text-xs text-secondary space-y-3">
+                    <p>
+                      <strong>Challenge</strong>: Unchecked feature shifts (e.g. temperature drops in storms) bias estimators, causing large prediction errors.
+                    </p>
+                    <p>
+                      <strong>Solution</strong>: Real-time mathematical PSI drift check triggers rolling window retraining containers when PSI exceeds 0.20 limits.
+                    </p>
+                    
+                    {/* Inline SVG Chart (Drift Bar Chart with Retrain Threshold Line) */}
+                    <div className="mt-md bg-black/45 border border-surface-variant p-sm rounded-xl">
+                      <p className="font-mono-label text-[9px] text-secondary uppercase mb-2">Live Feature Drift Index vs. Retrain Threshold</p>
+                      <svg viewBox="0 0 340 100" className="w-full h-24 overflow-visible">
+                        {/* Axes */}
+                        <line x1="80" y1="10" x2="80" y2="80" stroke="#444" strokeWidth="1" />
+                        <line x1="80" y1="80" x2="320" y2="80" stroke="#444" strokeWidth="1" />
+
+                        {/* Labels */}
+                        <text x="75" y="28" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">temp</text>
+                        <text x="75" y="48" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">rain</text>
+                        <text x="75" y="68" textAnchor="end" fontSize="7" fill="#888" className="font-mono-label">elapsed_s</text>
+                        
+                        <text x="80" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">0.0</text>
+                        <text x="140" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">0.1</text>
+                        <text x="200" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">0.2</text>
+                        <text x="260" y="93" textAnchor="middle" fontSize="7" fill="#888" className="font-mono-label">0.3</text>
+
+                        {/* Bars (Scaled: X = 80 + (PSI * 600)) */}
+                        {/* temp: 0.04 -> width=24 */}
+                        <rect x="80" y="21" width="24" height="10" fill="#10b981" rx="1" />
+                        
+                        {/* rain: 0.08 -> width=48 */}
+                        <rect x="80" y="41" width="48" height="10" fill="#10b981" rx="1" />
+                        
+                        {/* elapsed_s: 0.06 -> width=36 */}
+                        <rect x="80" y="61" width="36" height="10" fill="#10b981" rx="1" />
+
+                        {/* Red Dashed Threshold line at PSI=0.2 (X = 80 + 120 = 200) */}
+                        <line x1="200" y1="10" x2="200" y2="80" stroke="#ff535a" strokeWidth="1.5" strokeDasharray="3" />
+                        <text x="205" y="20" fontSize="7" fill="#ff535a" className="font-mono-label font-bold">Retrain Limit (0.2 PSI)</text>
+                      </svg>
+                    </div>
+
+                    <div className="bg-black/30 border border-surface-variant p-md rounded-xl space-y-2 font-mono-label text-[11.5px] mt-md">
+                      <div className="flex justify-between text-error">
+                        <span>Static Model WMAPE (Drifted):</span>
+                        <span>31.4%</span>
+                      </div>
+                      <div className="flex justify-between text-emerald-500 font-bold border-t border-surface-variant pt-2">
+                        <span>PSI Gated Rolling Retrain:</span>
+                        <span>14.1% (Outlier bounds aligned)</span>
+                      </div>
+                      <div className="flex justify-between border-t border-surface-variant pt-2 text-primary-container">
+                        <span>Auto-retraining convergence:</span>
+                        <span>2.1 seconds execution duration</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
