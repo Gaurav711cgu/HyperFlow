@@ -5,6 +5,30 @@ export default function App() {
   const [activeView, setActiveView] = useState('realtime'); // 'realtime' (Dual-Pane) vs 'security' (Sybil-Guard)
   const [consumerSubTab, setConsumerSubTab] = useState('food'); // 'food' vs 'grocery'
   const [selectedUsp, setSelectedUsp] = useState('tobit'); // active deep dive math info
+  const [activeHub, setActiveHub] = useState('Whitefield');
+  const hubMetrics = {
+    Whitefield: {
+      success: '99.4',
+      outliers: '1.84',
+      latency: '8.1ms',
+      riders: 342,
+      latencyHistory: [6.2, 7.1, 5.8, 8.1, 9.4, 7.8, 6.9, 8.1, 8.5, 8.1]
+    },
+    Koramangala: {
+      success: '98.9',
+      outliers: '2.15',
+      latency: '9.4ms',
+      riders: 418,
+      latencyHistory: [8.5, 9.1, 7.4, 9.4, 11.2, 10.1, 8.9, 9.4, 9.8, 9.4]
+    },
+    Indiranagar: {
+      success: '99.6',
+      outliers: '1.12',
+      latency: '6.7ms',
+      riders: 289,
+      latencyHistory: [5.1, 6.0, 5.5, 6.7, 7.4, 6.2, 5.8, 6.7, 7.1, 6.7]
+    }
+  };
   
   // Interactive inputs & telemetry states
   const [censoringRate, setCensoringRate] = useState(0.40);
@@ -679,10 +703,10 @@ export default function App() {
       <main className="pt-16 flex h-[calc(100vh-64px)] overflow-hidden">
         
         {/* Navigation Sidebar */}
-        <nav className="w-64 h-full bg-surface-dim border-r border-surface-variant flex flex-col py-md flex-shrink-0">
+        <nav className="w-64 h-full bg-black/40 backdrop-blur-[24px] border-r border-white/[0.08] flex flex-col py-md flex-shrink-0">
           
           {/* Operator Profile Header */}
-          <div className="px-md pb-md border-b border-surface-variant flex items-center gap-sm mb-md">
+          <div className="px-md pb-md border-b border-white/[0.08] flex items-center gap-sm mb-md">
             <div className="relative">
               <img alt="Operator Avatar" className="w-10 h-10 rounded-full border border-zomato-red/50 shadow-inner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByD_66IQXZw8HY8qefpO2M4iEA6Factgnob6YOX0XU7ISF1my7bnzFf625TnJXUcsA0yOIsFu1qEPbI9IhUr-moX_Biup0vU_bcQ8uhTWTjA3MFy1rjbodjmpVCShM4y_GxnK8hKXYFTF3gd_jKnmcbON9nyUBwiJrQxLN5gyqaY8ZXZz_S1-8jhTAQBP1qsQWQGgreOIT2RWSaBZJxIr5FN6OwfOrcQkJUbGT4QrmjH3a-MC6RYVGeH66Ar4HAbtn2oF2aj4bPR0" />
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-surface-dim"></span>
@@ -690,6 +714,31 @@ export default function App() {
             <div>
               <p className="font-bold text-xs tracking-tight text-white leading-none">Gaurav Nayak</p>
               <span className="text-[10px] text-secondary font-mono-label block mt-0.5">OPS COMMANDER</span>
+            </div>
+          </div>
+
+          {/* Active Hub Controller Dropdown */}
+          <div className="px-md mb-md">
+            <span className="text-[8px] font-bold text-secondary uppercase tracking-wider block mb-1.5 font-mono-label">Active Hub Control</span>
+            <div className="flex gap-1 p-0.5 bg-black/40 border border-white/[0.08] rounded-lg">
+              {['Whitefield', 'Koramangala', 'Indiranagar'].map(hub => (
+                <button 
+                  key={hub}
+                  className={`flex-1 py-1 rounded text-[9px] font-bold font-mono-label transition-all active:scale-95 ${
+                    activeHub === hub 
+                      ? 'bg-zomato-red text-white shadow-sm font-bold' 
+                      : 'text-secondary hover:text-white'
+                  }`}
+                  onClick={() => {
+                    setActiveHub(hub);
+                    if (hub === 'Whitefield') setSelectedProfitabilityStore('store_01');
+                    else if (hub === 'Koramangala') setSelectedProfitabilityStore('store_02');
+                    else if (hub === 'Indiranagar') setSelectedProfitabilityStore('store_03');
+                  }}
+                >
+                  {hub.slice(0, 5)}..
+                </button>
+              ))}
             </div>
           </div>
 
@@ -703,7 +752,7 @@ export default function App() {
               className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
                 activeView === 'realtime' 
                   ? 'bg-zomato-red/10 text-white font-bold border-l-2 border-zomato-red' 
-                  : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
+                  : 'text-secondary hover:text-white hover:bg-white/[0.03]'
               }`}
               onClick={() => setActiveView('realtime')}
             >
@@ -714,7 +763,7 @@ export default function App() {
               className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
                 activeView === 'security' 
                   ? 'bg-zomato-red/10 text-white font-bold border-l-2 border-zomato-red' 
-                  : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
+                  : 'text-secondary hover:text-white hover:bg-white/[0.03]'
               }`}
               onClick={() => setActiveView('security')}
             >
@@ -725,7 +774,7 @@ export default function App() {
               className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
                 activeView === 'casestudies' 
                   ? 'bg-zomato-red/10 text-white font-bold border-l-2 border-zomato-red' 
-                  : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
+                  : 'text-secondary hover:text-white hover:bg-white/[0.03]'
               }`}
               onClick={() => setActiveView('casestudies')}
             >
@@ -740,7 +789,7 @@ export default function App() {
 
             <button 
               className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
-                selectedUsp === 'tobit' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
+                selectedUsp === 'tobit' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-white/[0.03]'
               }`}
               onClick={() => {
                 setSelectedUsp('tobit');
@@ -756,7 +805,7 @@ export default function App() {
             </button>
             <button 
               className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
-                selectedUsp === 'eta' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
+                selectedUsp === 'eta' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-white/[0.03]'
               }`}
               onClick={() => {
                 setSelectedUsp('eta');
@@ -772,7 +821,7 @@ export default function App() {
             </button>
             <button 
               className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
-                selectedUsp === 'resale' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
+                selectedUsp === 'resale' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-white/[0.03]'
               }`}
               onClick={() => {
                 setSelectedUsp('resale');
@@ -787,38 +836,80 @@ export default function App() {
               <span>Q3: CORO Resale Filter</span>
             </button>
 
-            {/* Live Telemetry Panel (Moved from Top Header Bar) */}
+            {/* Live Telemetry Glassmorphic Panel */}
             <div className="px-sm mt-lg">
-              <div className="bg-black/40 border border-surface-variant p-sm rounded-xl">
-                <span className="text-[8px] font-bold text-secondary uppercase tracking-wider block mb-2 font-mono-label">System Telemetry</span>
-                <div className="grid grid-cols-2 gap-2 text-[9.5px] font-mono-label text-secondary">
-                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
-                    <span className="text-[8px] text-secondary opacity-60">API STATUS</span>
+              <div className="bg-white/[0.02] backdrop-blur-[12px] border border-white/[0.08] hover:border-white/[0.15] transition-all duration-300 rounded-xl p-sm">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[8px] font-bold text-secondary uppercase tracking-wider font-mono-label">System Telemetry</span>
+                  <span className="text-[8px] text-zomato-red font-mono-label font-bold">{activeHub.toUpperCase()} HUB</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-1.5 text-[9px] font-mono-label text-secondary mb-2">
+                  <div className="bg-white/[0.01] hover:bg-white/[0.05] border border-white/[0.03] transition-colors p-1 rounded flex flex-col justify-between">
+                    <span className="text-[7.5px] text-secondary opacity-60">API STATUS</span>
                     <div className="flex items-center gap-1 mt-0.5">
-                      <span className={`w-1.5 h-1.5 rounded-full ${isBackendConnected ? 'bg-emerald-500 animate-pulse' : 'bg-secondary'}`}></span>
+                      <span className={`w-1 h-1 rounded-full ${isBackendConnected ? 'bg-emerald-500 animate-pulse' : 'bg-secondary'}`}></span>
                       <span className="text-white font-bold">{isBackendConnected ? 'ONLINE' : 'OFFLINE'}</span>
                     </div>
                   </div>
-                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
-                    <span className="text-[8px] text-secondary opacity-60">SUCCESS</span>
-                    <span className="text-white font-bold mt-0.5">{liveTelemetry.reservation_success_rate}%</span>
+                  <div className="bg-white/[0.01] hover:bg-white/[0.05] border border-white/[0.03] transition-colors p-1 rounded flex flex-col justify-between">
+                    <span className="text-[7.5px] text-secondary opacity-60">SUCCESS</span>
+                    <span className="text-white font-bold mt-0.5">{hubMetrics[activeHub].success}%</span>
                   </div>
-                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
-                    <span className="text-[8px] text-secondary opacity-60">ETA OUTLIERS</span>
-                    <span className="text-white font-bold mt-0.5">{liveTelemetry.eta_bump_rate}%</span>
+                  <div className="bg-white/[0.01] hover:bg-white/[0.05] border border-white/[0.03] transition-colors p-1 rounded flex flex-col justify-between">
+                    <span className="text-[7.5px] text-secondary opacity-60">ETA OUTLIERS</span>
+                    <span className="text-white font-bold mt-0.5">{hubMetrics[activeHub].outliers}%</span>
                   </div>
-                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
-                    <span className="text-[8px] text-secondary opacity-60">LOCK WAIT</span>
-                    <span className="text-white font-bold mt-0.5">8.1ms</span>
+                  <div className="bg-white/[0.01] hover:bg-white/[0.05] border border-white/[0.03] transition-colors p-1 rounded flex flex-col justify-between">
+                    <span className="text-[7.5px] text-secondary opacity-60">LOCK latency</span>
+                    <span className="text-white font-bold mt-0.5">{hubMetrics[activeHub].latency}</span>
                   </div>
-                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
-                    <span className="text-[8px] text-secondary opacity-60">ML STATUS</span>
+                  <div className="bg-white/[0.01] hover:bg-white/[0.05] border border-white/[0.03] transition-colors p-1 rounded flex flex-col justify-between">
+                    <span className="text-[7.5px] text-secondary opacity-60">ML STATUS</span>
                     <span className="text-emerald-500 font-bold mt-0.5">NOMINAL</span>
                   </div>
-                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
-                    <span className="text-[8px] text-secondary opacity-60">RIDERS</span>
-                    <span className="text-white font-bold mt-0.5">342</span>
+                  <div className="bg-white/[0.01] hover:bg-white/[0.05] border border-white/[0.03] transition-colors p-1 rounded flex flex-col justify-between">
+                    <span className="text-[7.5px] text-secondary opacity-60">RIDERS</span>
+                    <span className="text-white font-bold mt-0.5">{hubMetrics[activeHub].riders}</span>
                   </div>
+                </div>
+
+                {/* Animated Latency SVG Sparkline wave path */}
+                <div className="border-t border-white/[0.05] pt-1">
+                  <span className="text-[7px] text-secondary opacity-50 font-mono-label block">CHECKOUT LOCK WAIT HISTORY (p95)</span>
+                  <svg viewBox="0 0 100 20" className="w-full h-8 mt-1 overflow-visible">
+                    <path 
+                      d={`M 0 ${20 - (hubMetrics[activeHub].latencyHistory[0] * 1.5)} 
+                          L 10 ${20 - (hubMetrics[activeHub].latencyHistory[1] * 1.5)} 
+                          L 20 ${20 - (hubMetrics[activeHub].latencyHistory[2] * 1.5)} 
+                          L 30 ${20 - (hubMetrics[activeHub].latencyHistory[3] * 1.5)} 
+                          L 40 ${20 - (hubMetrics[activeHub].latencyHistory[4] * 1.5)} 
+                          L 50 ${20 - (hubMetrics[activeHub].latencyHistory[5] * 1.5)} 
+                          L 60 ${20 - (hubMetrics[activeHub].latencyHistory[6] * 1.5)} 
+                          L 70 ${20 - (hubMetrics[activeHub].latencyHistory[7] * 1.5)} 
+                          L 80 ${20 - (hubMetrics[activeHub].latencyHistory[8] * 1.5)} 
+                          L 90 ${20 - (hubMetrics[activeHub].latencyHistory[9] * 1.5)}`}
+                      fill="none" 
+                      stroke="#ff535a" 
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                    />
+                    <path 
+                      d={`M 0 20 
+                          L 0 ${20 - (hubMetrics[activeHub].latencyHistory[0] * 1.5)} 
+                          L 10 ${20 - (hubMetrics[activeHub].latencyHistory[1] * 1.5)} 
+                          L 20 ${20 - (hubMetrics[activeHub].latencyHistory[2] * 1.5)} 
+                          L 30 ${20 - (hubMetrics[activeHub].latencyHistory[3] * 1.5)} 
+                          L 40 ${20 - (hubMetrics[activeHub].latencyHistory[4] * 1.5)} 
+                          L 50 ${20 - (hubMetrics[activeHub].latencyHistory[5] * 1.5)} 
+                          L 60 ${20 - (hubMetrics[activeHub].latencyHistory[6] * 1.5)} 
+                          L 70 ${20 - (hubMetrics[activeHub].latencyHistory[7] * 1.5)} 
+                          L 80 ${20 - (hubMetrics[activeHub].latencyHistory[8] * 1.5)} 
+                          L 90 ${20 - (hubMetrics[activeHub].latencyHistory[9] * 1.5)} 
+                          L 90 20 Z`}
+                      fill="rgba(255, 83, 90, 0.1)"
+                    />
+                  </svg>
                 </div>
               </div>
             </div>
