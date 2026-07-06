@@ -771,7 +771,10 @@ export default function App() {
           </div>
 
           <div className="px-md mb-xl mt-auto">
-            <button className="w-full bg-surface-container-highest border border-surface-variant py-md rounded-lg font-mono-label text-mono-label text-on-surface hover:bg-surface-variant transition-colors">
+            <button 
+              className="w-full bg-surface-container-highest border border-surface-variant py-md rounded-lg font-mono-label text-mono-label text-on-surface hover:bg-surface-variant transition-colors"
+              onClick={() => alert("HyperFlow Deployment Manager: Version CORE V1.0 is already hot-deployed. Cluster is in stable state.")}
+            >
               DEPLOY UPDATE
             </button>
           </div>
