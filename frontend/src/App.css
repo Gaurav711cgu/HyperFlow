@@ -152,3 +152,17 @@ body[data-theme='dark'] {
     border: 1px solid var(--map-border);
 }
 
+.map-iframe {
+    border: 0;
+    opacity: 0.65;
+    transition: all 0.3s ease;
+}
+
+body[data-theme='dark'] .map-iframe {
+    filter: grayscale(1) invert(1) contrast(1.2) opacity(0.4) hue-rotate(180deg);
+}
+
+body[data-theme='light'] .map-iframe {
+    filter: grayscale(0.25) contrast(0.95) opacity(0.75);
+}
+

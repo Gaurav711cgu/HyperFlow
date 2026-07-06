@@ -668,7 +668,7 @@ export default function App() {
           </button>
           <button 
             className={`px-md py-1 rounded-full font-mono-label text-[11px] transition-all active:scale-95 duration-200 flex items-center gap-2 ${
-              activeView === 'casestudies' ? 'bg-zomato-red text-white font-bold shadow' : 'text-secondary hover:text-on-surface'
+              ['casestudies', 'q1', 'q2', 'q3'].includes(activeView) ? 'bg-zomato-red text-white font-bold shadow' : 'text-secondary hover:text-on-surface'
             }`}
             onClick={() => setActiveView('casestudies')}
           >
@@ -1109,7 +1109,15 @@ export default function App() {
                       
                       {/* Tracking map canvas */}
                       <div className="h-28 w-full rounded-lg relative overflow-hidden border border-surface-variant map-google">
-                        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 120">
+                        <iframe 
+                          src={`https://maps.google.com/maps?q=${activeHub},%20Bengaluru&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                          className="absolute inset-0 w-full h-full border-0 map-iframe"
+                          allowFullScreen="" 
+                          loading="lazy"
+                          title="Phone Dispatch Google Map"
+                        ></iframe>
+
+                        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 120">
                           <path className="route-path" d="M 50 100 Q 150 20 250 80 T 350 40" fill="none" stroke="#1a73e8" strokeLinecap="round" strokeWidth="4"></path>
                         </svg>
                         
@@ -1118,7 +1126,7 @@ export default function App() {
                           className="absolute bg-zomato-red w-4 h-4 rounded-full border-2 border-white animate-pulse" 
                           style={{ left: `${20 + (riderProgress * 2.5)}px`, top: '40px' }}
                         ></div>
-                        <div className="rain-layer opacity-10"></div>
+                        <div className="rain-layer opacity-10 pointer-events-none"></div>
                       </div>
 
                       <button 
@@ -1189,9 +1197,17 @@ export default function App() {
 
                 {/* Main Operations Dispatch Map Panel */}
                 <div className="glass-panel inner-glow rounded-xl relative overflow-hidden flex-grow min-h-[300px] map-google border border-surface-variant">
-                  <div className="rain-layer opacity-10"></div>
+                  <iframe 
+                    src={`https://maps.google.com/maps?q=${activeHub},%20Bengaluru&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                    className="absolute inset-0 w-full h-full border-0 map-iframe"
+                    allowFullScreen="" 
+                    loading="lazy"
+                    title="GIS Dispatch Google Map"
+                  ></iframe>
+
+                  <div className="rain-layer opacity-10 pointer-events-none"></div>
                   
-                  <div className="absolute top-md left-md z-10 flex flex-col gap-1 bg-black/60 backdrop-blur-[8px] p-md rounded-xl border border-white/[0.08]">
+                  <div className="absolute top-md left-md z-10 flex flex-col gap-1 bg-black/60 backdrop-blur-[8px] p-md rounded-xl border border-white/[0.08] pointer-events-none">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                       <h2 className="font-headline-sm text-white text-sm font-bold">GIS Dispatch & Routing Monitor</h2>
@@ -1200,20 +1216,20 @@ export default function App() {
                   </div>
 
                   {/* Routing path overlay */}
-                  <svg className="absolute inset-0 w-full h-full opacity-80" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="absolute inset-0 w-full h-full opacity-80 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
                     <path className="route-path" d="M100,180 L220,130 L320,60" fill="none" stroke="#1a73e8" strokeDasharray="6 3" strokeWidth="4"></path>
                     <path className="route-path" d="M60,110 L140,80 L200,40" fill="none" stroke="#1a73e8" strokeDasharray="6 3" strokeWidth="4" opacity="0.5"></path>
                   </svg>
 
                   {/* Active markers */}
                   <div 
-                    className="absolute bg-zomato-red w-4 h-4 rounded-full border-2 border-white shadow-lg animate-pulse" 
+                    className="absolute bg-zomato-red w-4 h-4 rounded-full border-2 border-white shadow-lg animate-pulse pointer-events-none" 
                     style={{ left: '220px', top: '130px' }}
                   ></div>
-                  <div className="absolute bg-[#1a73e8] w-3 h-3 rounded-full border-2 border-white shadow-lg" style={{ left: '100px', top: '180px' }}></div>
-                  <div className="absolute bg-[#1a73e8] w-3 h-3 rounded-full border-2 border-white shadow-lg" style={{ left: '320px', top: '60px' }}></div>
+                  <div className="absolute bg-[#1a73e8] w-3 h-3 rounded-full border-2 border-white shadow-lg pointer-events-none" style={{ left: '100px', top: '180px' }}></div>
+                  <div className="absolute bg-[#1a73e8] w-3 h-3 rounded-full border-2 border-white shadow-lg pointer-events-none" style={{ left: '320px', top: '60px' }}></div>
 
-                  <div className="absolute bottom-md left-md bg-black/60 border border-white/[0.1] p-md rounded-xl backdrop-blur-md z-10 text-[9px] font-mono-label text-white space-y-1">
+                  <div className="absolute bottom-md left-md bg-black/60 border border-white/[0.1] p-md rounded-xl backdrop-blur-md z-10 text-[9px] font-mono-label text-white space-y-1 pointer-events-none">
                     <p className="text-primary font-bold">ACTIVE ORDER STATUS:</p>
                     <p className="text-[#ccc]">Current Rider: Gaurav Nayak</p>
                     <p className="text-[#ccc]">Lock Latency: 8.1ms • Nominal</p>
@@ -1484,9 +1500,17 @@ export default function App() {
 
                 {/* Right GIS map column */}
                 <div className="glass-panel p-lg rounded-xl md:col-span-2 flex flex-col gap-md relative min-h-[300px] map-google">
-                  <div className="rain-layer opacity-10"></div>
+                  <iframe 
+                    src={`https://maps.google.com/maps?q=${activeHub},%20Bengaluru&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                    className="absolute inset-0 w-full h-full border-0 map-iframe"
+                    allowFullScreen="" 
+                    loading="lazy"
+                    title="Q3 GIS Dispatch Google Map"
+                  ></iframe>
+
+                  <div className="rain-layer opacity-10 pointer-events-none"></div>
                   
-                  <div className="absolute top-md left-md z-10 flex flex-col gap-1 bg-black/60 backdrop-blur-[8px] p-md rounded-xl border border-white/[0.08]">
+                  <div className="absolute top-md left-md z-10 flex flex-col gap-1 bg-black/60 backdrop-blur-[8px] p-md rounded-xl border border-white/[0.08] pointer-events-none">
                     <div className="flex items-center gap-2">
                       <span className="bg-zomato-red text-white text-[9px] px-2 py-0.5 rounded-full font-bold">GIS ACTIVE</span>
                     </div>
@@ -1494,7 +1518,7 @@ export default function App() {
                   </div>
 
                   {/* Routing Overlay Map pins */}
-                  <svg className="absolute inset-0 w-full h-full opacity-80" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="absolute inset-0 w-full h-full opacity-80 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
                     <path className="route-path" d="M100,120 L220,90 L290,40" fill="none" stroke="#1a73e8" strokeDasharray="6 3" strokeWidth="3.5"></path>
                   </svg>
                 </div>
