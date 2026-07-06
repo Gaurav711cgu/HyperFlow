@@ -620,20 +620,6 @@ export default function App() {
           </span>
           <div className="h-4 w-[1px] bg-surface-variant mx-sm"></div>
           <span className="font-mono-label text-mono-label text-primary-container bg-primary-container/10 px-2 py-0.5 rounded border border-primary-container/20">CORE V1.0</span>
-          <div className="hidden xl:flex items-center gap-sm ml-md text-[9.5px] font-mono-label text-secondary">
-            <span className={`w-1.5 h-1.5 rounded-full ${isBackendConnected ? 'bg-emerald-500 animate-pulse' : 'bg-secondary'}`}></span>
-            <span>API: {isBackendConnected ? 'ONLINE' : 'FALLBACK'}</span>
-            <span className="mx-1 opacity-20">|</span>
-            <span className="text-on-surface">SUCCESS: {liveTelemetry.reservation_success_rate}%</span>
-            <span className="mx-1 opacity-20">|</span>
-            <span className="text-primary">ETA BUMP: {liveTelemetry.eta_bump_rate}%</span>
-            <span className="mx-1 opacity-20">|</span>
-            <span className="text-tertiary">LOCK LATENCY: 8.1ms (p95)</span>
-            <span className="mx-1 opacity-20">|</span>
-            <span className="text-emerald-500">ML STATUS: NOMINAL</span>
-            <span className="mx-1 opacity-20">|</span>
-            <span className="text-secondary-container">ACTIVE RIDERS: 342</span>
-          </div>
         </div>
         
         {/* Center View Switcher Segmented Control */}
@@ -694,43 +680,68 @@ export default function App() {
         
         {/* Navigation Sidebar */}
         <nav className="w-64 h-full bg-surface-dim border-r border-surface-variant flex flex-col py-md flex-shrink-0">
-          <div className="px-md mb-lg">
-            <p className="font-headline-sm text-headline-sm text-on-surface">Operator Console</p>
-            <p className="font-mono-label text-mono-label text-secondary opacity-60">SYSTEM ADMIN</p>
+          
+          {/* Operator Profile Header */}
+          <div className="px-md pb-md border-b border-surface-variant flex items-center gap-sm mb-md">
+            <div className="relative">
+              <img alt="Operator Avatar" className="w-10 h-10 rounded-full border border-zomato-red/50 shadow-inner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByD_66IQXZw8HY8qefpO2M4iEA6Factgnob6YOX0XU7ISF1my7bnzFf625TnJXUcsA0yOIsFu1qEPbI9IhUr-moX_Biup0vU_bcQ8uhTWTjA3MFy1rjbodjmpVCShM4y_GxnK8hKXYFTF3gd_jKnmcbON9nyUBwiJrQxLN5gyqaY8ZXZz_S1-8jhTAQBP1qsQWQGgreOIT2RWSaBZJxIr5FN6OwfOrcQkJUbGT4QrmjH3a-MC6RYVGeH66Ar4HAbtn2oF2aj4bPR0" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-surface-dim"></span>
+            </div>
+            <div>
+              <p className="font-bold text-xs tracking-tight text-white leading-none">Gaurav Nayak</p>
+              <span className="text-[10px] text-secondary font-mono-label block mt-0.5">OPS COMMANDER</span>
+            </div>
           </div>
-          <div className="flex flex-col gap-xs flex-grow">
+
+          <div className="flex flex-col gap-xs flex-grow px-sm">
+            {/* Category label */}
+            <div className="px-sm text-[9px] font-bold text-secondary uppercase tracking-wider mb-1">
+              Main Consoles
+            </div>
+
             <button 
-              className={`flex items-center gap-md px-md py-sm w-full text-left transition-all ${
-                activeView === 'realtime' ? 'text-primary border-r-4 border-primary bg-surface-container-high' : 'text-on-secondary-container hover:bg-surface-container-highest'
+              className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
+                activeView === 'realtime' 
+                  ? 'bg-zomato-red/10 text-white font-bold border-l-2 border-zomato-red' 
+                  : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
               }`}
               onClick={() => setActiveView('realtime')}
             >
-              <span className="material-symbols-outlined">monitoring</span>
-              <span className="font-mono-label text-mono-label">Real-time Monitor</span>
+              <span className="material-symbols-outlined text-[16px]">monitoring</span>
+              <span>Real-time Monitor</span>
             </button>
             <button 
-              className={`flex items-center gap-md px-md py-sm w-full text-left transition-all ${
-                activeView === 'security' ? 'text-primary border-r-4 border-primary bg-surface-container-high' : 'text-on-secondary-container hover:bg-surface-container-highest'
+              className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
+                activeView === 'security' 
+                  ? 'bg-zomato-red/10 text-white font-bold border-l-2 border-zomato-red' 
+                  : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
               }`}
               onClick={() => setActiveView('security')}
             >
-              <span className="material-symbols-outlined">terminal</span>
-              <span className="font-mono-label text-mono-label">Security Logs</span>
+              <span className="material-symbols-outlined text-[16px]">terminal</span>
+              <span>Security Logs</span>
             </button>
             <button 
-              className={`flex items-center gap-md px-md py-sm w-full text-left transition-all ${
-                activeView === 'casestudies' ? 'text-primary border-r-4 border-primary bg-surface-container-high' : 'text-on-secondary-container hover:bg-surface-container-highest'
+              className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
+                activeView === 'casestudies' 
+                  ? 'bg-zomato-red/10 text-white font-bold border-l-2 border-zomato-red' 
+                  : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
               }`}
               onClick={() => setActiveView('casestudies')}
             >
-              <span className="material-symbols-outlined">menu_book</span>
-              <span className="font-mono-label text-mono-label">Case Studies</span>
+              <span className="material-symbols-outlined text-[16px]">menu_book</span>
+              <span>Case Studies</span>
             </button>
-            <div className="px-md mt-4 opacity-50">
-              <span className="text-[10px] font-mono-label text-secondary uppercase">ML Deep Dives</span>
+
+            {/* Category label */}
+            <div className="px-sm text-[9px] font-bold text-secondary uppercase tracking-wider mt-md mb-1">
+              ML Deep Dives
             </div>
+
             <button 
-              className={`flex items-center gap-md px-md py-2 w-full text-left text-xs ${selectedUsp === 'tobit' ? 'text-primary' : 'text-secondary'}`}
+              className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
+                selectedUsp === 'tobit' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
+              }`}
               onClick={() => {
                 setSelectedUsp('tobit');
                 setActiveView('realtime');
@@ -740,10 +751,13 @@ export default function App() {
                 }, 100);
               }}
             >
+              <span className="material-symbols-outlined text-[16px]">analytics</span>
               <span>Q1: Censored Tobit MLE</span>
             </button>
             <button 
-              className={`flex items-center gap-md px-md py-2 w-full text-left text-xs ${selectedUsp === 'eta' ? 'text-primary' : 'text-secondary'}`}
+              className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
+                selectedUsp === 'eta' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
+              }`}
               onClick={() => {
                 setSelectedUsp('eta');
                 setActiveView('realtime');
@@ -753,10 +767,13 @@ export default function App() {
                 }, 100);
               }}
             >
+              <span className="material-symbols-outlined text-[16px]">speed</span>
               <span>Q2: ETA Jitter Smoother</span>
             </button>
             <button 
-              className={`flex items-center gap-md px-md py-2 w-full text-left text-xs ${selectedUsp === 'resale' ? 'text-primary' : 'text-secondary'}`}
+              className={`flex items-center gap-md px-md py-2 w-full text-left rounded-lg transition-all text-xs font-semibold ${
+                selectedUsp === 'resale' ? 'bg-zomato-red/5 text-primary border-l-2 border-primary/30' : 'text-secondary hover:text-white hover:bg-surface-container-high/50'
+              }`}
               onClick={() => {
                 setSelectedUsp('resale');
                 setActiveView('realtime');
@@ -766,13 +783,50 @@ export default function App() {
                 }, 100);
               }}
             >
+              <span className="material-symbols-outlined text-[16px]">verified_user</span>
               <span>Q3: CORO Resale Filter</span>
             </button>
+
+            {/* Live Telemetry Panel (Moved from Top Header Bar) */}
+            <div className="px-sm mt-lg">
+              <div className="bg-black/40 border border-surface-variant p-sm rounded-xl">
+                <span className="text-[8px] font-bold text-secondary uppercase tracking-wider block mb-2 font-mono-label">System Telemetry</span>
+                <div className="grid grid-cols-2 gap-2 text-[9.5px] font-mono-label text-secondary">
+                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
+                    <span className="text-[8px] text-secondary opacity-60">API STATUS</span>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className={`w-1.5 h-1.5 rounded-full ${isBackendConnected ? 'bg-emerald-500 animate-pulse' : 'bg-secondary'}`}></span>
+                      <span className="text-white font-bold">{isBackendConnected ? 'ONLINE' : 'OFFLINE'}</span>
+                    </div>
+                  </div>
+                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
+                    <span className="text-[8px] text-secondary opacity-60">SUCCESS</span>
+                    <span className="text-white font-bold mt-0.5">{liveTelemetry.reservation_success_rate}%</span>
+                  </div>
+                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
+                    <span className="text-[8px] text-secondary opacity-60">ETA OUTLIERS</span>
+                    <span className="text-white font-bold mt-0.5">{liveTelemetry.eta_bump_rate}%</span>
+                  </div>
+                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
+                    <span className="text-[8px] text-secondary opacity-60">LOCK WAIT</span>
+                    <span className="text-white font-bold mt-0.5">8.1ms</span>
+                  </div>
+                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
+                    <span className="text-[8px] text-secondary opacity-60">ML STATUS</span>
+                    <span className="text-emerald-500 font-bold mt-0.5">NOMINAL</span>
+                  </div>
+                  <div className="bg-surface-container-high/40 p-1.5 rounded flex flex-col justify-between border border-surface-variant/30">
+                    <span className="text-[8px] text-secondary opacity-60">RIDERS</span>
+                    <span className="text-white font-bold mt-0.5">342</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="px-md mb-xl mt-auto">
             <button 
-              className="w-full bg-surface-container-highest border border-surface-variant py-md rounded-lg font-mono-label text-mono-label text-on-surface hover:bg-surface-variant transition-colors"
+              className="w-full bg-[#ff535a]/10 hover:bg-[#ff535a]/20 border border-[#ff535a]/30 text-[#ff535a] py-md rounded-lg font-mono-label text-[10px] transition-all hover:border-zomato-red font-bold"
               onClick={() => alert("HyperFlow Deployment Manager: Version CORE V1.0 is already hot-deployed. Cluster is in stable state.")}
             >
               DEPLOY UPDATE
