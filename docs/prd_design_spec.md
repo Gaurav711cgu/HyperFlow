@@ -1,120 +1,140 @@
-# Product Requirement Document (PRD) & UI/UX Design Specification
-**Project: HyperFlow Hyperlocal ML Operations Engine**
+# Product Requirements Document (PRD) & God-Level Design Spec
+## HyperFlow 3.0: Zomato District-Style Premium Food & Nightlife Commerce Engine
+
+This document provides the complete, production-grade specification for the **HyperFlow 3.0** platform. It details our "god-level" system architecture, color tokens, and exact UI layouts for all **16 screen permutations** to ensure a high-fidelity visual experience and recruiter-shocking engineering depth.
 
 ---
 
-## 1. Product Overview & Core USP Blending
-HyperFlow is a dual-purpose hyperlocal quick-commerce operations simulator. It demonstrates real-time production algorithms for food and grocery delivery platforms by pairing a **mock customer app** with a **live operational control room**. 
+## 1. System & Architecture Specification (The "God-Level" Upgrade)
 
-### The Interactivity Matrix (The "Blending" Rule)
-Any action taken in the simulated phone client must dynamically alter the operational telemetry on the right pane:
-1. **Grocery Stockouts (Instamart)**: When a user encounters an out-of-stock item (e.g., Milk or Bananas) in the phone simulator, they click "Impute Latent Demand." This triggers the backend Tobit MLE solver. The Control Room immediately updates to show the latent demand curve, censoring limits, and recommended replenishment units.
-2. **Telemetry Weather Fluctuations (ETA)**: Toggling "Monsoon Storm Grid" in the phone simulator alters the status bar of the phone to a "Storm Surge Active" state and triggers rain telemetry. The Control Room graph starts plotting high-variance raw GPS arrival times (showing jitter) alongside our stable Gated Random Forest Smoother clock.
-3. **Cancelled Food Resale (CORO)**: Placing an order and immediately cancelling it triggers the Zomato Food Rescue queue. The canceled items go on sale at a 50% markdown. When you attempt to purchase this discounted offer on the phone, the right-pane Sybil Guard monitor prints real-time safety inspection logs (matching IP subnets, device fingerprints, and coordinate ranges to block self-buyback exploits).
-4. **SLA Batching**: Clicking "Optimize Route" on the phone or batcher widget calculates pairwise haversine distance matrices on the fly, rendering routing nodes (Dark Store, Customer 1, Customer 2) visually on a coordinate grid while ensuring max-delay does not exceed the 15-minute SLA.
+### A. Scalability & High-Concurrency Transaction Engine
+1. **Double-Layer Locking Pipeline**:
+   - **Primary Lock (In-Memory)**: Redis `SETNX` key checkout with custom token signatures. Key TTLs are strictly bounded (default `5000ms`) to prevent deadlocks.
+   - **Unlock Safeguard**: Evaluated via atomic Redis Lua scripts ensuring that only the original thread owner can release its lock.
+   - **Fail-Safe Database Row Lock**: PostgreSQL `SELECT FOR UPDATE NOWAIT` is queried if Redis is unreachable or if inventory verification falls back to the database. Thread pools fail-fast immediately with an `HTTP 409 Conflict` rather than queuing under contention, avoiding connection starvation.
+2. **Transactional Outbox Event Sourcing**:
+   - Instead of direct dual-writes to PostgreSQL and Apache Kafka, events are written to an `outbox` database table within the same ACID transaction.
+   - A separate CDC (Change Data Capture) polling daemon tails the outbox table and streams events to Kafka topic `hyperflow.orders.telemetry` with at-least-once delivery guarantees.
+3. **Strict Session Pooling & Keep-Alives**:
+   - Enforce SQLAlchemy pool recycling (`pool_recycle=1800`), overflow constraints (`max_overflow=10`), and size limits (`pool_size=20`) to handle high-frequency active connections without leakage.
 
----
-
-## 2. UI/UX Architecture & Layout System
-
-The dashboard is structured as a single-page responsive workspace divided into two main panels:
-
-```
-+-----------------------------------------------------------------------------------+
-|  [Logo] HyperFlow  [ML Core v1.0] [API Status: ONLINE]        📍 Indiranagar, BLR  |
-+-----------------------------------------------------------------------------------+
-|                                                                                   |
-|  +------------------------+  +-------------------------------------------------+  |
-|  |  MOCK SMARTPHONE       |  |  OPERATIONS TELEMETRY CONTROL ROOM              |  |
-|  |  Width: 410px          |  |  (60% Width, Responsive Grid)                    |  |
-|  |  Height: 760px         |  |                                                 |  |
-|  |                        |  |  +---------------------+ +--------------------+ |  |
-|  |  +------------------+  |  |  | Q1: Tobit Imputer   | | Q2: ETA Smoother   | |  |
-|  |  | OS Status Bar    |  |  |  |                     | | (Jitter Graph)     | |  |
-|  |  +------------------+  |  |  +---------------------+ +--------------------+ |  |
-|  |  | Auto-Promo Slide |  |  |  +---------------------+ +--------------------+ |  |
-|  |  +------------------+  |  |  | Q3: Sybil Security  | | Q4: SLA Batcher    | |  |
-|  |  | Food vs Groceries|  |  |  | (Monospace Logs)    | | (Routing Map)      | |  |
-|  |  +------------------+  |  |  +---------------------+ +--------------------+ |  |
-|  |  | Product Directory|  |  |                                                 |  |
-|  |  | & Cart Triggers  |  |  |  +-------------------------------------------+  |  |
-|  |  +------------------+  |  |  |  Swagger Interactive Documentation Link  |  |  |
-|  |  | Active Tracker   |  |  |  +-------------------------------------------+  |  |
-|  |  +------------------+  |  |                                                 |  |
-|  +------------------------+  +-------------------------------------------------+  |
-|                                                                                   |
-+-----------------------------------------------------------------------------------+
-```
-
-### Spacing and Grid Rules
-* **Outer Padding**: `1.5rem` (24px) around the main body container.
-* **Grid Gap**: `2rem` (32px) between the Left Phone Simulator and Right Control Room.
-* **Phone Frame Sizing**: Exact dimensions of `410px` width by `760px` height. Uses an outer border of `12px` solid charcoal grey (`#2d2d35`) and border-radius of `40px` to simulate modern smartphone bezels.
-* **Telemetry Grid**: Displays as a 2x2 responsive grid on desktop screens, falling back to a single column on tablet/mobile screens.
-* **Internal Card Padding**: `1.25rem` (20px) padding inside all control room quadrant cards.
+### B. Machine Learning & Predictive Pipeline
+1. **Tobit Type I MLE Demand Forecaster**:
+   - Corrects for stockout data censoring. Incorporates historical demand bounds. If a product sells out, real demand is treated as right-censored: $y \ge y_{\text{observed}}$.
+   - Implements optimization via SciPy's L-BFGS-B algorithm initialized using Heckman's two-step estimator for rapid convergence in production ASGI loops.
+2. **Cox Proportional Hazards Store Churn Estimator**:
+   - Monitors dark store lifetime profitability metrics based on covariates: average order value (AOV), user complaints ratio, and local density competition.
+3. **Active Anomaly Detection & PSI Monitoring**:
+   - Population Stability Index (PSI) calculations run continuously on sliding windows of input features (ambient temperature, rainfall intensity, order volume).
+   - If PSI exceeds $0.20$ (indicating significant drift), a background task compiles new LightGBM prediction trees and updates reference distributions automatically.
 
 ---
 
-## 3. Elite Color Palette (Nocturnal Epicure Specification)
-To create a high-fidelity visual experience, Stitch should apply this curated dark-themed color system:
+## 2. UI/UX Design System (Zomato District Aesthetics)
 
-| Token Name | Hex Code / Value | CSS Variable | Applied Elements |
-|---|---|---|---|
-| **Midnight Backdrop** | `#0a0a0f` | `--bg-primary` | Main page background |
-| **Dark Carbon Surface** | `#131317` | `--bg-secondary` | Telemetry container backdrop |
-| **Glassmorphic Glass** | `rgba(25, 25, 30, 0.7)` | `--card-bg` | Phone screen & quadrant card background |
-| **Zomato Crimson** | `#e23744` | `--accent-color` | Active highlights, Zomato logo, active order cancel buttons |
-| **Zomato Glow** | `rgba(226, 55, 68, 0.2)` | `--accent-glow` | Hover glows and active borders |
-| **Instamart Mint** | `#10b981` | `--success-color` | In-Stock tags, Tobit lift logs, ETA smoother line |
-| **Telemetry Error** | `#ffb4ab` | `--error-color` | Out-Of-Stock labels, Raw GPS jumpy points, Sybil security alarms |
-| **Blinkit Yellow** | `#f59e0b` | `--badge-warning` | Low stock thresholds |
+- **Theme**: Premium Midnight Dining & Nightlife (Neon Accent-Heavy Dark Mode).
+- **Background (Surface)**: `#040406` (Deep Space Obsidian Black).
+- **Primary Accent**: `#FF0077` (District Crimson / Hot Pink Glow).
+- **Secondary Accent**: `#8F00FF` (Neon Indigo / Rave Violet).
+- **Success Mint**: `#00E676` (Neon Green).
+- **Warning Amber**: `#FFB300` (Surge / Low Stock).
+- **Typography**:
+  - Headings: *Outfit* (Inter-spaced, bold, wide display weight).
+  - Metrics & Numbers: *JetBrains Mono* (Semi-bold, crisp monospace).
 
 ---
 
-## 4. Master Prompts for Stitch UI Generation
+## 3. Screen Permutations & Layout Specifications (All 16 Screens)
 
-### Prompt A: Smartphone Customer App Mockup (Left Column)
-```text
-Generate a high-fidelity, vertical mobile application screen (dimensions: 410px by 760px) simulating a premium quick-commerce app. 
-Use a dark background (#111115) and clean white/grey typography with Zomato red (#e23744) accents.
-
-Sections to include from top to bottom:
-1. Status Bar: Minimal bar with carrier name "HyperFlow OS", network signal icons, and battery percentage (94%).
-2. Location Header: Interactive selector badge styled as "📍 Indiranagar, Bengaluru" with a dropdown caret.
-3. Search Field: Rounded glassmorphic input bar containing text "Search dishes, fresh fruits, or resale deals..." with a magnifying glass icon.
-4. Promotional Carousel: Auto-sliding card banner with gradient backdrops (e.g., Zomato Red to Maroon). Content: "Zomato Food Rescue - Get cancelled meals at 50% discount. Calibrated by weather thermal decay indexes."
-5. Sub-Tab Switcher: Two pill buttons side-by-side: "Zomato Food" (active red state) and "Instamart Store" (inactive glass state).
-6. Category Circular List: Four circular thumbnails with labels: Biryani, Burgers, Pizzas, Desserts. Active circular icon has a Zomato red border rings.
-7. Active Order Progress Card: A floating card with a pulsing red status indicator. Title: "Order ORD_412 is preparing at kitchen." Includes a border button styled with red text: "Cancel Order (Triggers CORO)".
-8. Food Rescue Alert Card: An active green alert box displaying: "Zomato Food Rescue Offer - 1x Mutton Biryani (INR 170). Original Price: Del INR 340 (50% off). SQI Thermal Quality: 94/100." Includes a solid green button: "Claim Resale".
+```mermaid
+graph TD
+    A[Login / Verification Screen] --> B[Multi-Cuisine Feed & Hub]
+    B --> C[Restaurant Details & Menu View]
+    B --> G[Quick Tab Grocery Console]
+    B --> J[Dineout Booking Calendar]
+    C --> D[Active Cart & Checkout Drawer]
+    D --> E[Live Delivery Tracker & Map]
+    B --> F[Admin Operations Dashboard]
+    F --> H[System Telemetry Panel]
+    F --> I[ML Guard & Dispute Triage]
 ```
 
-### Prompt B: Operations Control Room Console (Right Column)
-```text
-Generate a responsive 2x2 dashboard grid simulating a live quick-commerce operations control room. 
-Style: Glassmorphic cards with charcoal borders, glowing borders on active cards, and neon telemetry status signals.
+### 1. Splash & Onboarding Screen
+- **Visuals**: Full-screen deep radial gradient (`#040406` to `#FF0077` at 15% opacity). Features the animated "HF" logo monogram with a particle glow.
+- **Interactivity**: Lottie-based onboarding carousel illustrating Food, Instamart, and Dineout operations. "Continue with Phone" triggers active slide transitions.
 
-Display the following four quadrants:
-1. Quadrant 1 (Tobit Latent Demand Solver):
-   - Title: "Q1: Tobit Latent Demand Solver" with a green "+33.1% Lift" badge.
-   - Target SKU box: "Fresh Toned Milk 1L - Imputed Demand: 48.2 units/day (Recommended replenishment: 55 units)."
-   - Slider Control: An active slider bar labeled "Simulation Censoring Rate: 40%".
-   - Metrics: Two small boxes comparing "OLS WMAPE: 20.8%" and "Tobit WMAPE: 13.9%".
+### 2. Login & Phone OTP Verification Screen
+- **Visuals**: Centered glassmorphic modal with a pulsing neon pink border (`box-shadow: 0 0 15px rgba(255,0,119,0.3)`).
+- **Interactivity**: Numeric keypad inputs for 10-digit mobile number, transitioning into 4-digit OTP slots with active countdown timers.
 
-2. Quadrant 2 (Monsoon ETA Jitter Smoother):
-   - Title: "Q2: Monsoon ETA Jitter Smoother" with a green status badge "81.4% Jitter Blocked".
-   - Graph: A dark, grid-aligned line chart showing two paths. Path A (Raw GPS clock) shows jumpy, erratic red spikes. Path B (Gated Smoother) shows a smooth, stable green line.
-   - Action Button: A wide button labeled "Inject Route Telemetry Update".
+### 3. Multi-Cuisine Discovery Hub (Home Feed)
+- **Visuals**: Wide display headers, horizontal scrolling cuisine list, bento-grid cuisine categories.
+- **Interactivity**: 
+  - Tapping Address triggers address dropdown populated dynamically from the Swiggy `get_addresses` API.
+  - Features the "Weekly Streak Challenge" progress indicator showing completed orders.
+  - "AI Recommended Pick of the Day" shows a customized restaurant card with an `🤖 AI recommended` glowing chip.
+  - Veg-only filter toggles list results instantly with haptic-scale transitions.
 
-3. Quadrant 3 (Anti-Arbitrage Sybil-Guard Logs):
-   - Title: "Q3: Anti-Arbitrage Sybil-Guard" with a red "100% Exploits Blocked" badge.
-   - Log Screen: A black monospaced console window containing lines:
-     "[01:10:12] Anti-Arbitrage Guard initialized on subnet 192.168.1.*"
-     "[01:12:45] ALERT: Blocked self-buyback exploit (Co-Location distance: 11 meters)"
-     "[01:12:46] RULE COMPLIANCE: IP subnet 192.168.1.* matches cancel origin."
+### 4. Search & Autocomplete Screen
+- **Visuals**: Glassmorphic search field with a blinking cursor. Shows "Trending Searches" as glowing outline tags.
+- **Interactivity**: Typing executes a debounced (50ms) API call fetching dish-level and restaurant-level matches.
 
-4. Quadrant 4 (SLA Route Batcher Map):
-   - Title: "Q4: SLA Route Batcher" with a green badge "Zero SLA Breaches".
-   - Canvas: A dark map showing 4 node pins labeled "Dark Store", "ORD_1", "ORD_2", and "ORD_3" with thin connection lines.
-   - Action Button: A blue button labeled "Optimize Route Permutations".
-```
+### 5. Restaurant Detail Page
+- **Visuals**: Full-bleed hero banner representing gourmet cuisines. Sticky header appears on scroll with search and share shortcuts.
+- **Interactivity**: Tapping menu category badges scrolls the view smoothly to corresponding sections. Displays dynamic calorie/protein counts per item.
+
+### 6. Detailed Cart Drawer
+- **Visuals**: Glassmorphic bottom drawer (`backdrop-filter: blur(20px)`) overlaying the menu.
+- **Interactivity**: Items list with increment/decrement controls, active delivery mode toggle (Eco EV vs Normal), and the circular **AI Nutrition Progress Ring** showing macro targets (protein/carbs/fat).
+
+### 7. Interactive Offers & Coupons Drawer
+- **Visuals**: List of cards detailing promo codes (`DIWALI50`, `HYPERPRO`, `FREEFEES`) with active borders.
+- **Interactivity**: Selecting a coupon recalculates delivery fees, taxes, and platforms fees dynamically with a text verification alert.
+
+### 8. Secure Payment Selection
+- **Visuals**: Premium wallet style icons representing Google Pay, Paytm, Visa, and co-branded cards.
+- **Interactivity**: Confirming payment triggers a fullscreen color confetti explosion (`canvas-confetti`) celebrating successful checkout.
+
+### 9. Active Delivery Tracker (Leaflet Map)
+- **Visuals**: Map layout rendering dark Carto Tiles. Renders a dotted route polyline and a scooter marker smoothly interpolating coordinates.
+- **Interactivity**: Live Rider HUD displays rider speed in `m/s` (JetBrains Mono) and ambient weather sensors.
+
+### 10. AI Agent Chat Console
+- **Visuals**: Typewriter chat feed. Shows tool executions as glass badges (e.g., `search_menu()`, `book_table()`) illustrating system transparency.
+- **Interactivity**: Typing dietary goals (e.g. "high protein under ₹250") parses menus and appends cards directly.
+
+### 11. Dineout Slot Booking Calendar
+- **Visuals**: Swipeable gallery cards for premium hotels (e.g. Mayfair Lagoon) showing rating badges and costs.
+- **Interactivity**: Active slot booking calendar showing available timings (e.g. "08:30 PM") and guest counts.
+
+### 12. System Telemetry Panel (Control Room)
+- **Visuals**: Recharts-based double AreaChart displaying live feature drift indices (PSI) and outbox event sizes.
+- **Interactivity**: "Inject Drift" and "Trigger Retrain" buttons simulate pipeline failures and rebuild LightGBM trees.
+
+### 13. Restaurant SLA & Order Prep Dashboard (Control Room)
+- **Visuals**: Grid of preparation orders showing timer bounds. Status bars turn red as limits approach.
+- **Interactivity**: "Ready for Pickup" button releases the Redis/PostgreSQL inventory hold and updates the outbox queue.
+
+### 14. Dark Store Picking Console (Control Room)
+- **Visuals**: Table listing order SKUs with aisle locations (e.g. Aisle 5, C3) to simulate physical picking.
+- **Interactivity**: "Mark Packed" checkbox increments warehouse throughput metrics.
+
+### 15. Rider Logistics & Dispatch Tracking (Control Room)
+- **Visuals**: Geospatial map showing all active dispatch nodes.
+- **Interactivity**: Updates coordinates automatically using WebSocket streams.
+
+### 16. ML Guard / Refund Triage Console (Control Room)
+- **Visuals**: Data tables highlighting customer claims, original order amounts, and fraud probabilities.
+- **Interactivity**: "Approve Refund" triggers semantic match checks and flags anomalies.
+
+---
+
+## 4. Verification & Test Suite Strategy
+
+### A. Unit Tests
+- Execute `python -m unittest discover -s tests -p "test_*.py"` to verify core regression equations, fraud plausibility filters, and dispatch SLA limits.
+- Assert that Tobit model imputations always evaluate $\ge$ observed stockout numbers.
+
+### B. Manual Verification Steps
+1. Re-run `docker compose -f docker-compose.prod.yml up -d --build` to ensure all containers launch cleanly with zero compilation warnings.
+2. Hit `http://localhost/` in the browser and navigate through the different screens to verify that smooth transitions compile perfectly.
