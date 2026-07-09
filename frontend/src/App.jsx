@@ -968,32 +968,43 @@ export default function App() {
     if (!chatInput.trim()) return;
     const userMsg = chatInput.trim();
     setChatInput("");
-    setChatMessages(prev => [...prev, { sender: 'user', text: userMsg, time: new Date().toLocaleTimeString() }]);
+    
+    const newMessages = [...chatMessages, { sender: 'user', text: userMsg, time: new Date().toLocaleTimeString() }];
+    setChatMessages(newMessages);
     setIsAgentThinking(true);
-    setAgentThinkingTools(['search_restaurants', 'search_menu']);
+    setAgentThinkingTools(['agent_brain_router']);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/v1/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMsg,
+          history: chatMessages.map(m => ({
+            role: m.sender === 'user' ? 'user' : 'model',
+            text: m.text
+          }))
+        })
+      });
+      
+      const data = await response.json();
       setIsAgentThinking(false);
-      const lower = userMsg.toLowerCase();
-      let reply = "I parsed your query. Would you like me to book a Dineout slot or search for exclusive restaurants?";
-      let toolsCalled = ['get_addresses', 'search_restaurants'];
-      
-      if (lower.includes("card") || lower.includes("tier") || lower.includes("level")) {
-        reply = `Your active loyalty tier is the ${currentTier.name} card (Cashback: ${currentTier.cashback}%). You can increase your tier by ordering food (spend ₹${currentTier.limit - getTotalSpent()} more to unlock the next level) or by purchasing a direct card upgrade in the profile tab.`;
-      } else if (lower.includes("pro") || lower.includes("membership")) {
-        reply = "You can upgrade to HyperFlow Pro inside your Profile. Pro offers: Free delivery on all orders & extra 10% discount on food orders.";
-      } else if (lower.includes("protein") || lower.includes("gym")) {
-        reply = "Found 2 meals near Patia matching high protein goals:\n\n1. 🍛 **Dum Gosht Biryani** - 36g Protein | ₹349\n2. 🥗 **Butter Chicken** - 28g Protein | ₹280\n\nI can add either to your cart directly using the `update_food_cart` tool.";
-        toolsCalled = ['search_restaurants', 'search_menu'];
-      }
-      
       setChatMessages(prev => [...prev, {
         sender: 'agent',
-        text: reply,
+        text: data.reply,
         time: new Date().toLocaleTimeString(),
-        tools: toolsCalled
+        tools: data.tools || []
       }]);
-    }, 1500);
+    } catch (err) {
+      console.error("AI Agent Chat error:", err);
+      setIsAgentThinking(false);
+      setChatMessages(prev => [...prev, {
+        sender: 'agent',
+        text: "Sorry, I had trouble communicating with my backend brain. Please verify that your backend server is running and the Gemini API key is configured.",
+        time: new Date().toLocaleTimeString(),
+        tools: []
+      }]);
+    }
   };
 
   return (
