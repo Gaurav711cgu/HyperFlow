@@ -106,19 +106,31 @@ def seed_database():
                     slaConfidence=97,
                     isAIPick=True,
                     isExclusive=True,
-                    image="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop&q=60"
+                    image="https://lh3.googleusercontent.com/aida-public/AB6AXuB3O6h3kN5v2ZfZDd3Ufds1_PUUHBmlla4WShhsUOwN1BiWVty9aGs9k-ujSiY3HWg0c-a6yUVCpufZJTK3hqLopqOy-INM9HYG-SKcVE0PbA__mUudSLa2FZF4yeu1q6fwxpjVZXn7yNLyelP_KZmven-uKjmR8Q3bG2PkZi64JiSya_N0Zb1Ww0kf3A7LW34llf4b4dpiTff9GbejYkJFooJR4Slc4fs85sLnGz-kZjWnuFABxdtocK8oviRGW5vmkB6XF1IMU4YS"
                 ),
                 Restaurant(
-                    id="rest_tandoor",
-                    name="Tandoor Imperial",
-                    cuisine="North Indian · Kababs",
+                    id="rest_carbon_grill",
+                    name="Carbon Grill",
+                    cuisine="Burgers · Wings · Sides",
                     rating=4.3,
                     distance="1.4 km",
                     time="22 min",
                     slaConfidence=94,
                     isAIPick=False,
                     isExclusive=False,
-                    image="https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=300&auto=format&fit=crop&q=60"
+                    image="https://lh3.googleusercontent.com/aida-public/AB6AXuD9C62CkwFO1Ta65rOPGt_zkQb3NWBfpIVfhSCWsS173P7Hw1t8O2CFnA1Swhsh03BFAJeCU4v8zMcs2FtgfS9UKrkQ-pgIxmQV0atKwEY1VvIrOO2nqjJirHB5LtlEy7v2E23zmpz5QUROCmGsEwpUTOxc6-W7bqEnwZTpjlEj84W0_wRNkm3oiChRsbQBbdUsj6iQ4IQ8MjgCXDjvXHjIGyb2EehurUmG2rcFE5E_2NQqMXhnC7sZPl5JUl0b-89s8s1A5HghkpjV"
+                ),
+                Restaurant(
+                    id="rest_yoko_ono",
+                    name="Yoko Ono Sushi",
+                    cuisine="Sushi · Asian · Japanese",
+                    rating=4.5,
+                    distance="3.0 km",
+                    time="32 min",
+                    slaConfidence=96,
+                    isAIPick=False,
+                    isExclusive=True,
+                    image="https://lh3.googleusercontent.com/aida-public/AB6AXuCBY63vuIkeBp6l5cHYDUYAUxyfZjekeIUDrgoaWXdYWfRsIItON9yVcNgasVY5EVJ_z9UCEYE7ifS6es_em8GXuQSZjL4elMAOcYKY-mFqvK7XoIYiCdoO9fXcs76s27BFjIlZ-jibt94sXMKAMiW-HDhL8Fx6YgFDMjXCKJuqgQvL6f2QokApfLDSvnpgf5uRCpVCyjlevWvENzKb2pD1gJvWBrOj_kU8HsHYg8siO1GP2yGFdEgOS79jFlelYdFjbEs_cIizY-X6"
                 )
             ]
             session.add_all(rests)

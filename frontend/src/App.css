@@ -188,5 +188,151 @@ body[data-festival='monsoon'] {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* ─── Stitch Spec Alignment ─── */
+.phone-frame {
+  width: 410px;
+  height: 760px;
+  border-radius: 40px;
+  overflow: hidden;
+  position: relative;
+  background-color: #040406;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 0, 119, 0.1);
+}
+
+.ambient-glow {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(143, 0, 255, 0.2) 0%, rgba(4, 4, 6, 0) 70%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.logo-rings {
+  position: relative;
+  border-radius: 50%;
+  padding: 4px;
+  background: linear-gradient(to bottom right, #FF0077, #8F00FF);
+  box-shadow: 0 0 30px rgba(143, 0, 255, 0.6);
+}
+
+.logo-rings::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: linear-gradient(to bottom right, #8F00FF, #FF0077);
+  z-index: -1;
+  filter: blur(8px);
+}
+
+.logo-inner {
+  background-color: #040406;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-gradient-logo {
+  background: linear-gradient(135deg, #FF9900, #FF3366, #39FF14);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gradient-logo-bg {
+  background: linear-gradient(135deg, #FF9900, #FF3366, #39FF14);
+}
+
+.neon-glow-primary {
+  box-shadow: 0 0 20px rgba(255, 0, 119, 0.3);
+}
+
+.neon-glow-pink {
+  box-shadow: 0 0 20px rgba(255, 0, 119, 0.3);
+}
+
+.neon-glow-purple {
+  box-shadow: 0 0 20px rgba(143, 0, 255, 0.3);
+}
+
+.metallic-gradient {
+  background: linear-gradient(135deg, #FF0077 0%, #8f03ff 100%);
+}
+
+.shimmer-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: skewX(-15deg);
+  animation: shimmer-swipe 3s infinite;
+}
+
+@keyframes shimmer-swipe {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(200%) skewX(-15deg); }
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.glow-ring {
+  position: relative;
+}
+
+.glow-ring::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #FF0077, #8F00FF, #FF0077);
+  filter: blur(8px);
+  opacity: 0.8;
+  z-index: -1;
+  animation: spin 4s linear infinite;
+}
+
+.glow-ring::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: #040406;
+  z-index: -1;
+}
+
+.gradient-btn {
+  background: linear-gradient(135deg, #FF0077 0%, #8F00FF 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.gradient-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(to bottom right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  transform: rotate(45deg);
+  animation: shimmer-rot 3s infinite;
+}
+
+@keyframes shimmer-rot {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+
 
 

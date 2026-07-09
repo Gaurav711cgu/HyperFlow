@@ -71,6 +71,8 @@ services:
       - DATABASE_URL=postgresql://hyperflow_admin:hyperflow_secure_pass@postgres:5432/hyperflow_db
       - REDIS_URL=redis://redis:6379
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SWIGGY_ACCESS_TOKEN=${SWIGGY_ACCESS_TOKEN}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     ports:
       - "8000:8000"
     restart: always

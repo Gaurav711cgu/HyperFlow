@@ -69,6 +69,10 @@ export async function fetchRestaurants() {
   return apiFetch('/api/v1/restaurants');
 }
 
+export async function fetchRestaurantMenu(restaurantId) {
+  return apiFetch(`/api/v1/restaurants/${restaurantId}/menu`);
+}
+
 export async function createRestaurant(data) {
   return apiFetch('/api/v1/restaurants', {
     method: 'POST',

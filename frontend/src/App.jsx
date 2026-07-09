@@ -221,9 +221,34 @@ const categories = [
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [appView, setAppView] = useState('consumer'); 
-  const [isSimulatorMode, setIsSimulatorMode] = useState(true); 
+  const [isSimulatorMode, setIsSimulatorMode] = useState(window.innerWidth >= 1024); 
+  const [isMobileDevice, setIsMobileDevice] = useState(window.innerWidth < 1024);
   const [donateClimate, setDonateClimate] = useState(true);
   const [donateFoodSafety, setDonateFoodSafety] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 1024;
+      setIsMobileDevice(isMobile);
+      if (isMobile) {
+        setIsSimulatorMode(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    // run initial check
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (showSplash) {
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 2200); // 2.2 seconds splash animation
+      return () => clearTimeout(timer);
+    }
+  }, [showSplash]);
   
   // Swiggy, Zomato, Blinkit Operations & SOP states
   const [adminSubTab, setAdminSubTab] = useState('system'); // 'system', 'restaurant', 'picking', 'logistics'
@@ -279,10 +304,27 @@ export default function App() {
 
   // Cart & Orders State
   const [cart, setCart] = useState([]);
+  const [customizingItem, setCustomizingItem] = useState(null);
+  const [selectedBeverage, setSelectedBeverage] = useState('raita'); // 'raita' or 'pepsi'
+  const [selectedSweet, setSelectedSweet] = useState('jamun'); // 'jamun', 'meetha', or 'none'
+  const [deliveryMode, setDeliveryMode] = useState('ev'); // 'ev' or 'normal'
   const [activeOrder, setActiveOrder] = useState(null);
   const [riderProgress, setRiderProgress] = useState(0);
   const [restaurantPageOpen, setRestaurantPageOpen] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  
+  const handleSelectRestaurant = (rest) => {
+    setSelectedRestaurant(rest);
+    setRestaurantPageOpen(true);
+    if (!rest.menu || rest.menu.length === 0) {
+      API.fetchRestaurantMenu(rest.id).then(menuData => {
+        if (menuData && Array.isArray(menuData) && menuData.length > 0) {
+          setRestaurants(prev => prev.map(r => r.id === rest.id ? { ...r, menu: menuData } : r));
+          setSelectedRestaurant(prev => prev && prev.id === rest.id ? { ...prev, menu: menuData } : prev);
+        }
+      });
+    }
+  };
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -379,56 +421,56 @@ export default function App() {
       slaConfidence: 97,
       isAIPick: true,
       isExclusive: true,
-      image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop&q=60",
+      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB3O6h3kN5v2ZfZDd3Ufds1_PUUHBmlla4WShhsUOwN1BiWVty9aGs9k-ujSiY3HWg0c-a6yUVCpufZJTK3hqLopqOy-INM9HYG-SKcVE0PbA__mUudSLa2FZF4yeu1q6fwxpjVZXn7yNLyelP_KZmven-uKjmR8Q3bG2PkZi64JiSya_N0Zb1Ww0kf3A7LW34llf4b4dpiTff9GbejYkJFooJR4Slc4fs85sLnGz-kZjWnuFABxdtocK8oviRGW5vmkB6XF1IMU4YS",
       menu: [
-        { id: "dum_gosht", name: "Dum Gosht Biryani", price: 349, rating: 4.6, desc: "Fragrant long-grain basmati rice layered with juicy mutton in royal spices.", protein: 36, cal: 540, veg: false },
-        { id: "lazeez_chicken", name: "Lazeez Bhuna Murgh Biryani", price: 299, rating: 4.5, desc: "Tender boneless chicken in bhuna spices layered with basmati rice.", protein: 32, cal: 480, veg: false },
-        { id: "mint_raita", name: "Mint Raita", price: 49, rating: 4.2, desc: "Refreshing raita flavored with fresh mint leaves.", protein: 2, cal: 60, veg: true }
+        { id: "dum_gosht", name: "Dum Gosht Biryani", price: 349, rating: 4.6, desc: "Fragrant long-grain basmati rice layered with juicy mutton in royal spices.", protein: 36, cal: 540, veg: false, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAy8Ulq_axTRp6t2EagRb5G-YtqpRnvPzPmyNLG-1FBJ0_p-83Hb7anlB2ZhXsi9Yd0x4n4HVmWhRYJ4r1J0aeYhAKyBpAHs5R59gryk1trq626wW1LuUFZ7SkM8OvhMdS78RXzvNqpn-E03C047MfVamHP-NIetglvLA2A5zzJjsUUJ8KlWdV_E4DdUow8sK7YValAPmnwch_EcyAii9s8yhA-yi925HvzzqKBSoWyYDzGpNFU46e2dbF68cDx_CA1jI2gcAKBGs_E" },
+        { id: "lazeez_chicken", name: "Lazeez Bhuna Murgh Biryani", price: 299, rating: 4.5, desc: "Tender boneless chicken in bhuna spices layered with basmati rice.", protein: 32, cal: 480, veg: false, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBVH7_iiDjEwAqM-iOH8jm3r4ljZMINGVU_Xp5Q-c5wjp04ir3wyacHOLYmjmdPdsAEKmN7NFvNQ8ccPIwOAUEqVu7ESWWZFV7ECSWX7JzlbDWyCtYJ_7mti2MWNy3Yuj77gJG8cjX2qVom1OGcFA8kzAFxQ4u3CBk-mzNORIV01WqDHbcX9ae4xKUwXCM69aXnh0vKIHvWcTm7xzkbIx4a_pAK1gBNf1lGPPzRLuDKikphdzej965g0gpkdAKQ1V-5hDx9OoV1vQMF" },
+        { id: "mint_raita", name: "Mint Raita", price: 49, rating: 4.2, desc: "Refreshing raita flavored with fresh mint leaves.", protein: 2, cal: 60, veg: true, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuA9dB7F5xSnF4KMn9vZmYR-rdDJJynymGxYucwoE-YBitPw0VKGSu-DN14kA90BSzp-2uy6VqlvfPFGUv1w1bAkAncDACJEjmjyIs5U_edIxKkwyJXxKBdiWMNunXofnk0gpGuMhOYRmiAlpBLt1eDqi27iQu4sKk2m2BOZdHLrGxGFXuHSxNxRfZrvdjjDlDh9Qzm9Bq8gJA1kCDLJqJ4Wt4tvK3bGLCdxh0ENy_AR1ED6oHIrCU53WfftTybXUz_QCYlouZZvj1fU" }
       ]
     },
     {
-      id: "rest_tandoor",
-      name: "Tandoor Imperial",
-      cuisine: "North Indian · Kababs",
+      id: "rest_carbon_grill",
+      name: "Carbon Grill",
+      cuisine: "Burgers · Wings · Sides",
       rating: 4.3,
       distance: "1.4 km",
       time: "22 min",
       slaConfidence: 94,
       isAIPick: false,
       isExclusive: false,
-      image: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=300&auto=format&fit=crop&q=60",
+      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuD9C62CkwFO1Ta65rOPGt_zkQb3NWBfpIVfhSCWsS173P7Hw1t8O2CFnA1Swhsh03BFAJeCU4v8zMcs2FtgfS9UKrkQ-pgIxmQV0atKwEY1VvIrOO2nqjJirHB5LtlEy7v2E23zmpz5QUROCmGsEwpUTOxc6-W7bqEnwZTpjlEj84W0_wRNkm3oiChRsbQBbdUsj6iQ4IQ8MjgCXDjvXHjIGyb2EehurUmG2rcFE5E_2NQqMXhnC7sZPl5JUl0b-89s8s1A5HghkpjV",
       menu: [
-        { id: "butter_chicken", name: "Butter Chicken", price: 280, rating: 4.5, desc: "Creamy chicken cooked in rich buttery tomato gravy.", protein: 28, cal: 410, veg: false },
-        { id: "paneer_tikka", name: "Paneer Tikka", price: 210, rating: 4.3, desc: "Cottage cheese cubes grilled with rich tikka seasonings.", protein: 18, cal: 290, veg: true }
+        { id: "truffle_burger", name: "Truffle Cheese Burger", price: 280, rating: 4.5, desc: "Gourmet double-patty burger with Swiss cheese and black truffle aioli.", protein: 34, cal: 620, veg: false, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuD9C62CkwFO1Ta65rOPGt_zkQb3NWBfpIVfhSCWsS173P7Hw1t8O2CFnA1Swhsh03BFAJeCU4v8zMcs2FtgfS9UKrkQ-pgIxmQV0atKwEY1VvIrOO2nqjJirHB5LtlEy7v2E23zmpz5QUROCmGsEwpUTOxc6-W7bqEnwZTpjlEj84W0_wRNkm3oiChRsbQBbdUsj6iQ4IQ8MjgCXDjvXHjIGyb2EehurUmG2rcFE5E_2NQqMXhnC7sZPl5JUl0b-89s8s1A5HghkpjV" },
+        { id: "peri_fries", name: "Spicy Peri Peri Fries", price: 149, rating: 4.3, desc: "Crispy golden skin-on fries tossed in house peri-peri spice dust.", protein: 5, cal: 320, veg: True, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuD9C62CkwFO1Ta65rOPGt_zkQb3NWBfpIVfhSCWsS173P7Hw1t8O2CFnA1Swhsh03BFAJeCU4v8zMcs2FtgfS9UKrkQ-pgIxmQV0atKwEY1VvIrOO2nqjJirHB5LtlEy7v2E23zmpz5QUROCmGsEwpUTOxc6-W7bqEnwZTpjlEj84W0_wRNkm3oiChRsbQBbdUsj6iQ4IQ8MjgCXDjvXHjIGyb2EehurUmG2rcFE5E_2NQqMXhnC7sZPl5JUl0b-89s8s1A5HghkpjV" }
       ]
     },
     {
-      id: "rest_pizza",
-      name: "Pizza & Co",
-      cuisine: "Pizzas · Italian · Fast Food",
+      id: "rest_yoko_ono",
+      name: "Yoko Ono Sushi",
+      cuisine: "Sushi · Asian · Japanese",
       rating: 4.4,
       distance: "3.2 km",
       time: "18 min",
       slaConfidence: 98,
       isAIPick: false,
       isExclusive: true,
-      image: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=300&auto=format&fit=crop&q=60",
+      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCBY63vuIkeBp6l5cHYDUYAUxyfZjekeIUDrgoaWXdYWfRsIItON9yVcNgasVY5EVJ_z9UCEYE7ifS6es_em8GXuQSZjL4elMAOcYKY-mFqvK7XoIYiCdoO9fXcs76s27BFjIlZ-jibt94sXMKAMiW-HDhL8Fx6YgFDMjXCKJuqgQvL6f2QokApfLDSvnpgf5uRCpVCyjlevWvENzKb2pD1gJvWBrOj_kU8HsHYg8siO1GP2yGFdEgOS79jFlelYdFjbEs_cIizY-X6",
       menu: [
-        { id: "marg_pizza", name: "Margherita Pizza", price: 220, rating: 4.4, desc: "Classic mozzarella cheese and fresh basil leaves on thin crust.", protein: 14, cal: 320, veg: true },
-        { id: "pep_pizza", name: "Pepperoni Pizza", price: 299, rating: 4.6, desc: "Spiced pepperoni and double mozzarella cheese load.", protein: 20, cal: 440, veg: false }
+        { id: "salmon_nigiri", name: "Salmon Nigiri (2pcs)", price: 320, rating: 4.7, desc: "Slices of premium fresh Atlantic salmon laid over seasoned sushi rice.", protein: 14, cal: 180, veg: false, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCBY63vuIkeBp6l5cHYDUYAUxyfZjekeIUDrgoaWXdYWfRsIItON9yVcNgasVY5EVJ_z9UCEYE7ifS6es_em8GXuQSZjL4elMAOcYKY-mFqvK7XoIYiCdoO9fXcs76s27BFjIlZ-jibt94sXMKAMiW-HDhL8Fx6YgFDMjXCKJuqgQvL6f2QokApfLDSvnpgf5uRCpVCyjlevWvENzKb2pD1gJvWBrOj_kU8HsHYg8siO1GP2yGFdEgOS79jFlelYdFjbEs_cIizY-X6" },
+        { id: "tuna_maki", name: "Tuna Maki Roll (6pcs)", price: 280, rating: 4.5, desc: "Yellowfin tuna wrapped in nori sheet with sushi rice.", protein: 18, cal: 220, veg: false, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCBY63vuIkeBp6l5cHYDUYAUxyfZjekeIUDrgoaWXdYWfRsIItON9yVcNgasVY5EVJ_z9UCEYE7ifS6es_em8GXuQSZjL4elMAOcYKY-mFqvK7XoIYiCdoO9fXcs76s27BFjIlZ-jibt94sXMKAMiW-HDhL8Fx6YgFDMjXCKJuqgQvL6f2QokApfLDSvnpgf5uRCpVCyjlevWvENzKb2pD1gJvWBrOj_kU8HsHYg8siO1GP2yGFdEgOS79jFlelYdFjbEs_cIizY-X6" }
       ]
     }
   ]);
 
   const [groceries, setGroceries] = useState([
-    { id: "g_milk", name: "Amul Taaza Milk (1L)", brand: "Amul", price: 56, weight: "1L", image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&auto=format&fit=crop&q=60", stock: 0, latent_demand: 48, restock: 55, replacementName: "GoodLife Tetra Pack Milk (1L)" },
+    { id: "g_milk", name: "Amul Taaza Milk (1L)", brand: "Amul", price: 56, weight: "1L", image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200&auto=format&fit=crop&q=60", stock: 0, latent_demand: 48, restock: 55, replacementName: "GoodLife Tetra Pack Milk (1L)" },
     { id: "g_tomatoes", name: "Fresh Tomatoes (500g)", brand: "Organic Farms", price: 32, weight: "500g", image: "https://images.unsplash.com/photo-1595855759920-86582396756a?w=200&auto=format&fit=crop&q=60", stock: 3, latent_demand: 24, restock: 30 },
     { id: "g_bananas", name: "Organic Bananas (1 doz)", brand: "Fresh Produce", price: 60, weight: "1 Dozen", image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200&auto=format&fit=crop&q=60", stock: 18, latent_demand: 82, restock: 90 }
   ]);
 
   const [disputesQueue, setDisputesQueue] = useState([
     { id: "disp_1", customer: "Gaurav Nayak", merchantId: "rest_behrouz", type: "Cold Delivery", text: "Mutton Biryani was cold and dry on arrival.", items: "1x Dum Gosht Biryani", status: "PENDING", refundAmt: 349 },
-    { id: "disp_2", customer: "Anjali Patnaik", merchantId: "rest_pizza", type: "Missing Items", text: "Did not receive the pepperoni topping on pizza.", items: "1x Pepperoni Pizza", status: "PENDING", refundAmt: 299 }
+    { id: "disp_2", customer: "Anjali Patnaik", merchantId: "rest_yoko_ono", type: "Missing Items", text: "Did not receive the salmon nigiri pieces.", items: "1x Salmon Nigiri (2pcs)", status: "PENDING", refundAmt: 320 }
   ]);
 
   // Dineout Hotels Database
@@ -655,6 +697,14 @@ export default function App() {
       }
       return [...prev, { ...item, restaurantName: restName, restaurantId: restId, quantity: 1, protein: item.protein || 0, calories: item.calories || item.cal || 0 }];
     });
+  };
+
+  const handleAddOrCustomize = (item, restName, restId) => {
+    if (item.id === 'dum_gosht') {
+      setCustomizingItem({ dish: item, restaurantName: restName, restaurantId: restId });
+    } else {
+      handleAddToCart(item, restName, restId);
+    }
   };
 
   const updateCartQty = (id, delta) => {
@@ -1011,99 +1061,101 @@ export default function App() {
     <div className="bg-[#0A0A0F] text-white min-h-screen font-body-md overflow-hidden relative">
       
       {/* ─── Premium Glassmorphic Header ─── */}
-      <header className="fixed top-0 left-0 w-full h-16 z-50 flex justify-between items-center px-6 glass-panel border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#6C63FF] to-[#00D4AA] flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(108,99,255,0.4)]">
-            HF
-          </div>
-          <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
-            HyperFlow <span className="text-[10px] text-[#00D4AA] font-mono ml-1">3.0</span>
-          </span>
-        </div>
-
-        {/* View Switchers */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 bg-[#12121A] border border-white/10 p-1 rounded-full">
-            <button 
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${appView === 'consumer' ? 'bg-[#FF0077] text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-              onClick={() => setAppView('consumer')}
-            >
-              <Smartphone className="w-3.5 h-3.5" />
-              Consumer App
-            </button>
-            <button 
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${appView === 'intel' ? 'bg-[#FF0077] text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-              onClick={() => setAppView('intel')}
-            >
-              <Activity className="w-3.5 h-3.5" />
-              Intel Dashboard
-            </button>
-            <button 
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${appView === 'admin' ? 'bg-[#FF0077] text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-              onClick={() => setAppView('admin')}
-            >
-              <Settings className="w-3.5 h-3.5" />
-              Admin Panel
-            </button>
+      {!isMobileDevice && (
+        <header className="fixed top-0 left-0 w-full h-16 z-50 flex justify-between items-center px-6 glass-panel border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#6C63FF] to-[#00D4AA] flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(108,99,255,0.4)]">
+              HF
+            </div>
+            <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
+              HyperFlow <span className="text-[10px] text-[#00D4AA] font-mono ml-1">3.0</span>
+            </span>
           </div>
 
-          {/* Simulator vs Web Layout Switcher */}
-          {appView === 'consumer' && (
-            <div className="flex items-center gap-1 bg-[#12121A] border border-white/10 p-1 rounded-full">
+          {/* View Switchers */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 bg-[#12121A] border border-white/10 p-1 rounded-full">
               <button 
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 transition-all ${isSimulatorMode ? 'bg-[#8F00FF] text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
-                onClick={() => setIsSimulatorMode(true)}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${appView === 'consumer' ? 'bg-[#FF0077] text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                onClick={() => setAppView('consumer')}
               >
-                📱 Mobile
+                <Smartphone className="w-3.5 h-3.5" />
+                Consumer App
               </button>
               <button 
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 transition-all ${!isSimulatorMode ? 'bg-[#8F00FF] text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
-                onClick={() => setIsSimulatorMode(false)}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${appView === 'intel' ? 'bg-[#FF0077] text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                onClick={() => setAppView('intel')}
               >
-                💻 Web Portal
+                <Activity className="w-3.5 h-3.5" />
+                Intel Dashboard
+              </button>
+              <button 
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${appView === 'admin' ? 'bg-[#FF0077] text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                onClick={() => setAppView('admin')}
+              >
+                <Settings className="w-3.5 h-3.5" />
+                Admin Panel
               </button>
             </div>
-          )}
-        </div>
 
-        {/* User Badging */}
-        <div className="flex items-center gap-4 text-xs font-mono">
-          {liveMetrics ? (
-            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-[#00D4AA]/10 border border-[#00D4AA]/30 text-[#00D4AA] rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00D4AA] animate-pulse"></span>
-              <span>API: LIVE</span>
-              <span className="text-white/40">|</span>
-              <span className="text-white">✓ {liveMetrics.reservation_success_rate}%</span>
-              <span className="text-white/40">|</span>
-              <span className="text-amber-400">ETA Δ {liveMetrics.eta_bump_rate}%</span>
-              <span className="text-white/40">|</span>
-              <span className="text-[#6C63FF]">⚠ {liveMetrics.restock_alerts_count}</span>
-            </div>
-          ) : (
-            <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-[#00D4AA]/10 border border-[#00D4AA]/30 text-[#00D4AA] rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00D4AA] animate-pulse"></span>
-              SWIGGY MCP: ACTIVE
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400">Gaurav Nayak</span>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-500 to-indigo-600 flex items-center justify-center font-bold text-sm text-white">GN</div>
+            {/* Simulator vs Web Layout Switcher */}
+            {appView === 'consumer' && (
+              <div className="flex items-center gap-1 bg-[#12121A] border border-white/10 p-1 rounded-full">
+                <button 
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 transition-all ${isSimulatorMode ? 'bg-[#8F00FF] text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
+                  onClick={() => setIsSimulatorMode(true)}
+                >
+                  📱 Mobile
+                </button>
+                <button 
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 transition-all ${!isSimulatorMode ? 'bg-[#8F00FF] text-white shadow-md' : 'text-gray-400 hover:text-white'}`}
+                  onClick={() => setIsSimulatorMode(false)}
+                >
+                  💻 Web Portal
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-      </header>
+
+          {/* User Badging */}
+          <div className="flex items-center gap-4 text-xs font-mono">
+            {liveMetrics ? (
+              <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-[#00D4AA]/10 border border-[#00D4AA]/30 text-[#00D4AA] rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00D4AA] animate-pulse"></span>
+                <span>API: LIVE</span>
+                <span className="text-white/40">|</span>
+                <span className="text-white">✓ {liveMetrics.reservation_success_rate}%</span>
+                <span className="text-white/40">|</span>
+                <span className="text-amber-400">ETA Δ {liveMetrics.eta_bump_rate}%</span>
+                <span className="text-white/40">|</span>
+                <span className="text-[#6C63FF]">⚠ {liveMetrics.restock_alerts_count}</span>
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-[#00D4AA]/10 border border-[#00D4AA]/30 text-[#00D4AA] rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00D4AA] animate-pulse"></span>
+                SWIGGY MCP: ACTIVE
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">Gaurav Nayak</span>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-500 to-indigo-600 flex items-center justify-center font-bold text-sm text-white">GN</div>
+            </div>
+          </div>
+        </header>
+      )}
 
 
       {/* ─── Main Viewport Grid ─── */}
-      <main className="pt-16 h-[calc(100vh-64px)] flex overflow-hidden">
+      <main className={`flex overflow-hidden ${isMobileDevice ? 'pt-0 h-screen w-screen' : 'pt-16 h-[calc(100vh-64px)]'}`}>
         
         {/* VIEW 1: CONSUMER EXPERIENCE */}
         {appView === 'consumer' && (
-          <div className="flex-grow flex justify-center items-start p-6 bg-[#07070B] overflow-y-auto w-full h-full">
+          <div className={`flex-grow flex justify-center items-start bg-[#07070B] overflow-y-auto w-full h-full ${isMobileDevice ? 'p-0' : 'p-6'}`}>
             {isSimulatorMode ? (
-              <div className="flex flex-col lg:flex-row gap-12 max-w-6xl w-full justify-center items-center">
+              <div className="flex flex-col lg:flex-row gap-12 max-w-6xl w-full justify-center items-center h-full lg:h-auto">
               
               {/* Smartphone Simulator */}
-              <div className="phone-frame glass-panel flex flex-col relative shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10">
+              <div className="phone-frame glass-panel flex flex-col relative w-full h-full lg:w-[410px] lg:h-[760px] lg:rounded-[40px] lg:shadow-[0_20px_50px_rgba(0,0,0,0.8)] lg:border lg:border-white/10 overflow-hidden">
                 
                 {/* Warning banner triggered dynamically by monsoon surge */}
                 {stormSurge && (
@@ -1113,80 +1165,157 @@ export default function App() {
                 )}
 
                 {/* Status Bar */}
-                <div className="h-8 px-6 flex justify-between items-end pb-1 text-white text-[11px] font-medium z-10 bg-black/20">
-                  <span>9:41</span>
-                  <div className="flex gap-1.5 items-center opacity-85">
-                    <Smartphone className="w-3 h-3" />
-                    <Activity className="w-3 h-3" />
+                {!isMobileDevice && (
+                  <div className="h-8 px-6 flex justify-between items-end pb-1 text-white text-[11px] font-medium z-10 bg-black/20">
+                    <span>9:41</span>
+                    <div className="flex gap-1.5 items-center opacity-85">
+                      <Smartphone className="w-3 h-3" />
+                      <Activity className="w-3 h-3" />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Screens Router Container */}
                 <div className="flex-grow overflow-y-auto hide-scrollbar bg-[#0A0A0F] relative flex flex-col pb-16">
                   
-                  {restaurantPageOpen && selectedRestaurant ? (
-                    /* ─── SCREEN: Restaurant Detail Page ─── */
-                    <div className="flex-col flex flex-grow animate-fade-in">
-                      <div className="relative h-44 w-full flex-shrink-0">
+                  <AnimatePresence mode="wait">
+                    {showSplash ? (
+                      <motion.div 
+                        key="splash"
+                        initial={{ opacity: 1 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
+                        className="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center overflow-hidden cursor-pointer"
+                        onClick={() => setShowSplash(false)}
+                      >
+                        {/* Faint Radial Glow */}
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,0,119,0.1.5)_0%,rgba(0,0,0,0)_60%)]"></div>
+                        {/* Central Logo */}
+                        <div className="relative z-10 flex flex-col items-center">
+                          <div className="logo-rings w-28 h-28 mb-6">
+                            <div className="logo-inner w-full h-full relative">
+                              {/* Abstract 'H' / Infinity / Bolt */}
+                              <svg className="w-16 h-16" viewBox="0 0 100 100">
+                                <defs>
+                                  <linearGradient id="logoGrad" x1="0%" x2="100%" y1="0%" y2="100%">
+                                    <stop offset="0%" stopColor="#FF9900"></stop>
+                                    <stop offset="50%" stopColor="#FF3366"></stop>
+                                    <stop offset="100%" stopColor="#39FF14"></stop>
+                                  </linearGradient>
+                                </defs>
+                                <path d="M20,50 Q20,20 50,20 T80,50 Q80,80 50,80 T20,50 Z" fill="none" stroke="url(#logoGrad)" strokeWidth="6"></path>
+                                <path d="M30,30 L70,70 M30,70 L70,30" stroke="url(#logoGrad)" strokeLinecap="round" strokeWidth="6"></path>
+                                {/* Lightning Bolt */}
+                                <path d="M55,15 L40,55 L50,55 L45,85 L70,45 L55,45 Z" fill="#39FF14"></path>
+                              </svg>
+                            </div>
+                          </div>
+                          {/* Text */}
+                          <h1 className="text-base font-bold uppercase tracking-widest text-on-surface">
+                            <span className="bg-gradient-logo font-bold">HyperFlow</span>
+                            <span className="text-white/60 font-medium"> x DISTRICT</span>
+                          </h1>
+                          <p className="text-[9px] text-gray-500 font-mono mt-2 tracking-widest uppercase animate-pulse">Initializing Services...</p>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="app-main"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                        className="flex flex-col flex-grow w-full h-full"
+                      >
+                        {restaurantPageOpen && selectedRestaurant ? (
+                    /* ─── SCREEN: Restaurant Detail Page (Stitch Mockup) ─── */
+                    <div className="flex-col flex flex-grow animate-fade-in pb-12">
+                      {/* Hero Image Header with Gradient Overlays */}
+                      <div className="relative w-full h-[200px] flex-shrink-0">
                         <img className="w-full h-full object-cover" src={selectedRestaurant.image} alt={selectedRestaurant.name} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0F] via-[#0A0A0F]/40 to-transparent"></div>
-                        <button 
-                          className="absolute top-4 left-4 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white"
-                          onClick={() => setRestaurantPageOpen(false)}
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/85 to-transparent"></div>
+                        <div className="absolute top-0 left-0 w-full flex justify-between items-center px-4 pt-3 z-10">
+                          <button 
+                            className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10 active:scale-90 transition-all"
+                            onClick={() => setRestaurantPageOpen(false)}
+                          >
+                            <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                          </button>
+                          <div className="flex gap-1.5">
+                            <button className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10">
+                              <span className="material-symbols-outlined text-[18px]">search</span>
+                            </button>
+                            <button className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10">
+                              <span className="material-symbols-outlined text-[18px]">share</span>
+                            </button>
+                          </div>
+                        </div>
+                        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#040406] to-transparent"></div>
                       </div>
 
-                      <div className="px-4 -mt-8 relative z-10">
-                        <div className="bg-[#12121A] border border-white/5 p-4 rounded-xl shadow-lg mb-4">
+                      {/* Floating Info card overlapping hero */}
+                      <div className="px-4 -mt-14 relative z-10">
+                        <div className="glass-panel rounded-xl p-4 flex flex-col gap-2 shadow-2xl backdrop-blur-md">
                           <div className="flex justify-between items-start">
                             <div>
-                              <h2 className="font-bold text-base text-white">{selectedRestaurant.name}</h2>
-                              <p className="text-[11px] text-gray-400">{selectedRestaurant.cuisine}</p>
+                              <h1 className="font-bold text-base text-white leading-tight">{selectedRestaurant.name}</h1>
+                              <p className="text-[11px] text-gray-400 mt-0.5">{selectedRestaurant.cuisine}</p>
                             </div>
                             {selectedRestaurant.isExclusive && (
-                              <span className="text-[8px] bg-gradient-to-tr from-[#6C63FF] to-[#00D4AA] text-white px-2 py-0.5 rounded-full font-bold shadow pulse-neon">EXCLUSIVE</span>
+                              <span className="text-[8px] bg-gradient-to-tr from-[#FF0077] to-[#8F00FF] text-white px-2 py-0.5 rounded-full font-bold shadow pulse-neon">EXCLUSIVE</span>
                             )}
                           </div>
                           
-                          <div className="flex gap-4 text-xs font-semibold text-gray-300 border-t border-white/5 pt-2 mt-2">
-                            <span>⭐ {selectedRestaurant.rating}</span>
-                            <span>•</span>
-                            <span>{selectedRestaurant.distance}</span>
-                            <span>•</span>
-                            <span>{selectedRestaurant.time}</span>
-                          </div>
-                          
-                          <div className="mt-3 flex items-center gap-1.5 text-[10px] text-[#00D4AA] bg-[#00D4AA]/10 w-max px-2 py-0.5 rounded border border-[#00D4AA]/20 font-bold">
-                            <span className="w-1.5 h-1.5 bg-[#00D4AA] rounded-full"></span>
-                            AI SLA CONFIDENCE: {selectedRestaurant.slaConfidence}%
+                          <div className="flex items-center gap-3 mt-1.5 pt-2 border-t border-white/5 text-xs text-gray-300">
+                            <div className="flex items-center gap-0.5 font-mono text-[10px] text-white">
+                              <span className="text-warning text-sm leading-none">★</span>
+                              <span>{selectedRestaurant.rating}</span>
+                            </div>
+                            <div className="w-1 h-1 rounded-full bg-white/20"></div>
+                            <div className="font-mono text-[10px] text-gray-400">{selectedRestaurant.distance}</div>
+                            <div className="w-1 h-1 rounded-full bg-white/20"></div>
+                            <div className="font-mono text-[10px] text-[#00E676] flex flex-col leading-none">
+                              <span>SLA: {selectedRestaurant.time}</span>
+                              <span className="text-[9px] opacity-80 mt-0.5">Conf: {selectedRestaurant.slaConfidence}%</span>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Menu list */}
-                        <div className="space-y-3 mb-12">
-                          <h3 className="font-bold text-xs uppercase text-gray-400 tracking-wider">Popular Menu</h3>
+                        {/* Menu list matching Stitch layout */}
+                        <div className="mt-5 space-y-4 mb-24">
+                          <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Recommended for you</h2>
+                          
                           {selectedRestaurant.menu.map(dish => (
-                            <div key={dish.id} className="bg-[#12121A] border border-white/5 p-3 rounded-lg flex justify-between gap-4">
-                              <div className="flex-grow">
-                                <div className="flex items-center gap-1.5">
-                                  <span className={`w-2 h-2 rounded-full ${dish.veg ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                  <h4 className="font-bold text-sm text-white">{dish.name}</h4>
+                            <div key={dish.id} className="glass-panel rounded-xl p-3 flex gap-3 relative border border-white/5">
+                              {/* Item Details */}
+                              <div className="flex-1 flex flex-col justify-between">
+                                <div>
+                                  <div className="flex items-center gap-1.5 mb-1.5">
+                                    <span className={`w-3 h-3 rounded-sm border ${dish.veg ? 'border-green-500 bg-green-500/10' : 'border-danger bg-danger/10'} flex items-center justify-center relative`}>
+                                      <span className={`w-1.5 h-1.5 ${dish.veg ? 'bg-green-500' : 'bg-danger'} rounded-full`}></span>
+                                    </span>
+                                    <span className="text-[9px] font-bold text-warning bg-warning/10 px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono">
+                                      ★ {dish.rating || '4.5'}
+                                    </span>
+                                  </div>
+                                  <h3 className="font-bold text-xs text-white leading-tight mb-1">{dish.name}</h3>
+                                  <p className="text-[10px] font-bold text-white font-mono mb-1.5">₹{dish.price}</p>
+                                  <p className="text-[10px] text-gray-400 leading-normal line-clamp-2">{dish.desc}</p>
+                                  
+                                  <div className="flex gap-2 text-[9px] text-gray-500 font-semibold mt-2.5">
+                                    <span>🥩 {dish.protein}g Protein</span>
+                                    <span>🔥 {dish.cal} kcal</span>
+                                  </div>
                                 </div>
-                                <p className="text-xs text-gray-400 mt-1 leading-snug">{dish.desc}</p>
-                                <div className="flex gap-3 text-[10px] text-gray-500 font-semibold mt-2">
-                                  <span>🥩 {dish.protein}g Protein</span>
-                                  <span>🔥 {dish.cal} kcal</span>
-                                </div>
-                                <span className="font-bold text-sm text-[#00D4AA] block mt-1">₹{dish.price}</span>
                               </div>
-                              <div className="flex-shrink-0 flex items-center">
+                              
+                              {/* Item Image & Absolute Bottom Add Button */}
+                              <div className="w-[100px] h-[100px] relative shrink-0">
+                                <img alt={dish.name} className="w-full h-full object-cover rounded-lg" src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=200&auto=format&fit=crop&q=60" />
                                 <button 
-                                  className="px-4 py-1.5 rounded-full bg-[#6C63FF] hover:bg-[#574FEB] active:scale-95 text-xs font-bold transition-all shadow-md"
-                                  onClick={() => handleAddToCart(dish, selectedRestaurant.name, selectedRestaurant.id)}
+                                  className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#00E676]/10 border border-[#00E676] text-[#00E676] px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide backdrop-blur-md shadow-lg flex items-center justify-center hover:bg-[#00E676]/20 transition-all w-20 active:scale-95 z-20"
+                                  onClick={() => handleAddOrCustomize(dish, selectedRestaurant.name, selectedRestaurant.id)}
                                 >
-                                  + Add
+                                  ADD
                                 </button>
                               </div>
                             </div>
@@ -1197,36 +1326,48 @@ export default function App() {
                   ) : activeTab === 'home' ? (
                     /* ─── SCREEN: Home Feed ─── */
                     <>
-                      <div className="px-4 pt-3 flex justify-between items-center z-20">
-                        <div className="relative">
-                          <div 
-                            className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-1 cursor-pointer hover:bg-white/10 transition-colors"
-                            onClick={() => setAddressDropdownOpen(!addressDropdownOpen)}
-                          >
-                            <MapPin className="w-3.5 h-3.5 text-[#6C63FF]" />
-                            <span className="text-xs font-bold text-white max-w-[120px] truncate">{selectedAddress.tag}</span>
-                            <ChevronDown className="w-3.5 h-3.5" />
-                          </div>
-                          
-                          {addressDropdownOpen && (
-                            <div className="absolute top-10 left-0 bg-[#12121A] border border-white/10 rounded-xl shadow-2xl p-2 w-64 z-50 animate-fade-in">
-                              {savedAddresses.map(addr => (
-                                <div 
-                                  key={addr.id}
-                                  className={`p-2 rounded-lg cursor-pointer text-xs mt-1 hover:bg-white/5 ${selectedAddress.id === addr.id ? 'bg-[#6C63FF]/20 text-[#6C63FF] font-bold' : 'text-gray-300'}`}
-                                  onClick={() => {
-                                    setSelectedAddress(addr);
-                                    setAddressDropdownOpen(false);
-                                  }}
-                                >
-                                  <span>{addr.tag}</span>
-                                  <p className="text-[10px] opacity-70 truncate">{addr.detail}</p>
-                                </div>
-                              ))}
+                      {/* Premium Header with Co-Branded Compact Logo */}
+                      <header className="px-4 pt-3 pb-2 flex justify-between items-center z-20 bg-surface-panel/85 backdrop-blur-xl border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                          {/* Compact Logo */}
+                          <div className="w-8 h-8 rounded-full bg-gradient-logo-bg flex items-center justify-center p-[2px] neon-glow-purple">
+                            <div className="bg-[#040406] w-full h-full rounded-full flex items-center justify-center">
+                              <span className="material-symbols-outlined text-[16px] text-[#39FF14]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
                             </div>
-                          )}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[9px] text-gray-400 flex items-center gap-0.5">
+                              <span className="material-symbols-outlined text-[10px] text-[#FF0077]">location_on</span>
+                              Location
+                            </span>
+                            <div 
+                              className="text-xs font-bold text-white max-w-[150px] truncate flex items-center gap-0.5 cursor-pointer"
+                              onClick={() => setAddressDropdownOpen(!addressDropdownOpen)}
+                            >
+                              <span>{selectedAddress.tag} - {selectedAddress.detail.split(',')[1]}</span>
+                              <ChevronDown className="w-3 h-3 text-gray-400" />
+                            </div>
+                          </div>
                         </div>
-                        
+
+                        {addressDropdownOpen && (
+                          <div className="absolute top-12 left-4 bg-[#12121A] border border-white/10 rounded-xl shadow-2xl p-2 w-64 z-50 animate-fade-in">
+                            {savedAddresses.map(addr => (
+                              <div 
+                                key={addr.id}
+                                className={`p-2 rounded-lg cursor-pointer text-xs mt-1 hover:bg-white/5 ${selectedAddress.id === addr.id ? 'bg-[#6C63FF]/20 text-[#6C63FF] font-bold' : 'text-gray-300'}`}
+                                onClick={() => {
+                                  setSelectedAddress(addr);
+                                  setAddressDropdownOpen(false);
+                                }}
+                              >
+                                <span>{addr.tag}</span>
+                                <p className="text-[10px] opacity-70 truncate">{addr.detail}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
                         <div className="flex gap-2">
                           <button className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white" onClick={() => setActiveTab('search')}>
                             <Search className="w-4 h-4" />
@@ -1236,7 +1377,7 @@ export default function App() {
                             <span className="absolute top-0 right-0 w-2 h-2 bg-[#00D4AA] rounded-full"></span>
                           </button>
                         </div>
-                      </div>
+                      </header>
 
                       {/* Gamified Weekly Challenge progress card */}
                       <div className="mt-4 px-4">
@@ -1269,25 +1410,36 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* One-Click Quick Reorder Strip */}
+                      {/* One-Click Quick Reorder Strip — Premium Visual layout */}
                       {lastOrderedItem && (
-                        <div className="mt-4 px-4">
-                          <h4 className="font-bold text-[10px] text-gray-500 uppercase tracking-widest mb-2">Your Usual? (Fast Checkout)</h4>
-                          <div className="bg-gradient-to-r from-[#6C63FF]/20 to-transparent border border-white/5 p-3 rounded-xl flex justify-between items-center">
-                            <div>
-                              <span className="text-[8px] bg-[#6C63FF]/20 text-[#6C63FF] px-1.5 py-0.5 rounded font-mono font-bold flex items-center gap-1 w-max">
-                                <Zap className="w-2.5 h-2.5" />
-                                1-TAP REORDER
-                              </span>
-                              <h5 className="font-bold text-xs text-white mt-1 leading-tight">{lastOrderedItem.name}</h5>
-                              <p className="text-[9px] text-gray-400">from {lastOrderedItem.restaurantName} • ₹{lastOrderedItem.price}</p>
+                        <div className="mt-5 px-4">
+                          <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Your Usual</h2>
+                          <div className="glass-card rounded-xl overflow-hidden flex relative border border-white/5">
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#14141F] to-transparent opacity-85 pointer-events-none z-10"></div>
+                            
+                            {/* Dish image representation */}
+                            <div className="w-1/3 relative h-24 flex-shrink-0">
+                              <img className="w-full h-full object-cover" src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=200&auto=format&fit=crop&q=60" alt="Dum Gosht Biryani" />
                             </div>
-                            <button 
-                              className="bg-[#6C63FF] hover:bg-[#574FEB] text-white text-[10px] font-bold px-3 py-1.5 rounded-full active:scale-95 transition-all shadow"
-                              onClick={handleInstantReorder}
-                            >
-                              ⚡ Reorder
-                            </button>
+                            
+                            {/* Card Content details */}
+                            <div className="w-2/3 p-3 flex flex-col justify-center z-20 relative">
+                              <div className="flex items-center gap-1 mb-1">
+                                <span className="material-symbols-outlined text-[12px] text-[#00E676]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                <span className="text-[10px] font-bold text-[#00E676] font-mono">4.8</span>
+                                <span className="text-[9px] text-gray-400">• Behrouz Biryani</span>
+                              </div>
+                              <h3 className="font-bold text-xs text-white leading-tight">{lastOrderedItem.name}</h3>
+                              <div className="flex justify-between items-center mt-2">
+                                <span className="text-xs font-bold text-white font-mono">₹{lastOrderedItem.price}</span>
+                                <button 
+                                  className="w-7 h-7 rounded-full bg-[#FF0077]/10 border border-[#FF0077] flex items-center justify-center neon-glow-pink hover:bg-[#FF0077]/20 active:scale-90 transition-all"
+                                  onClick={handleInstantReorder}
+                                >
+                                  <span className="material-symbols-outlined text-[14px] text-[#FF0077]">add</span>
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -1313,23 +1465,80 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Category pills */}
-                      <div className="mt-4 px-4 overflow-hidden">
-                        <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-                          {categories.map((cat, idx) => (
-                            <div 
-                              key={idx}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer text-xs font-semibold whitespace-nowrap active:scale-95 transition-all ${
-                                selectedCuisine === cat.name 
-                                  ? 'bg-[#6C63FF] border-[#6C63FF] text-white' 
-                                  : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
-                              }`}
-                              onClick={() => setSelectedCuisine(prev => prev === cat.name ? null : cat.name)}
-                            >
-                              <CategoryIcon name={cat.name} className="w-3.5 h-3.5 stroke-current" />
-                              <span>{cat.name}</span>
-                            </div>
-                          ))}
+                      {/* Explore Categories Bento Grid — 5 columns visual layout */}
+                      <div className="mt-5 px-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Explore Categories</h2>
+                          <span className="text-[10px] font-semibold text-[#FF0077] cursor-pointer hover:underline">View All</span>
+                        </div>
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {/* Bento Item 1: Biryani */}
+                          <div 
+                            onClick={() => {
+                              setSelectedCuisine('Biryani');
+                              setActiveTab('home');
+                            }}
+                            className={`glass-card rounded-lg flex flex-col items-center justify-center py-3 gap-1 cursor-pointer hover:bg-white/10 active:scale-95 transition-all ${
+                              selectedCuisine === 'Biryani' ? 'border-[#FF3366] bg-[#FF3366]/10' : 'border-white/5'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[#FF3366] text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>rice_bowl</span>
+                            <span className="text-[9px] font-bold text-white">Biryani</span>
+                          </div>
+
+                          {/* Bento Item 2: Pizza */}
+                          <div 
+                            onClick={() => {
+                              setSelectedCuisine('Pizzas');
+                              setActiveTab('home');
+                            }}
+                            className={`glass-card rounded-lg flex flex-col items-center justify-center py-3 gap-1 cursor-pointer hover:bg-white/10 active:scale-95 transition-all ${
+                              selectedCuisine === 'Pizzas' ? 'border-[#FF9900] bg-[#FF9900]/10' : 'border-white/5'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[#FF9900] text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>local_pizza</span>
+                            <span className="text-[9px] font-bold text-white">Pizza</span>
+                          </div>
+
+                          {/* Bento Item 3: North Indian */}
+                          <div 
+                            onClick={() => {
+                              setSelectedCuisine('North Indian');
+                              setActiveTab('home');
+                            }}
+                            className={`glass-card rounded-lg flex flex-col items-center justify-center py-3 gap-1 cursor-pointer hover:bg-white/10 active:scale-95 transition-all ${
+                              selectedCuisine === 'North Indian' ? 'border-[#FFB300] bg-[#FFB300]/10' : 'border-white/5'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[#FFB300] text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>soup_kitchen</span>
+                            <span className="text-[9px] font-bold text-white text-center leading-none">North<br/>Indian</span>
+                          </div>
+
+                          {/* Bento Item 4: Groceries */}
+                          <div 
+                            onClick={() => {
+                              setSelectedCuisine(null);
+                              setActiveTab('quick');
+                            }}
+                            className="glass-card rounded-lg flex flex-col items-center justify-center py-3 gap-1 cursor-pointer border-white/5 hover:bg-white/10 active:scale-95 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[#39FF14] text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>shopping_basket</span>
+                            <span className="text-[9px] font-bold text-white">Groceries</span>
+                          </div>
+
+                          {/* Bento Item 5: Dineout */}
+                          <div 
+                            onClick={() => {
+                              setSelectedCuisine(null);
+                              setActiveTab('home');
+                              // Scroll down to table booking section
+                              document.getElementById('dineout-section')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="glass-card rounded-lg flex flex-col items-center justify-center py-3 gap-1 cursor-pointer border-white/5 hover:bg-white/10 active:scale-95 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[#FF0077] text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>restaurant</span>
+                            <span className="text-[9px] font-bold text-white">Dineout</span>
+                          </div>
                         </div>
                       </div>
 
@@ -1342,10 +1551,7 @@ export default function App() {
                           <div 
                             key={rest.id} 
                             className="bg-[#12121A] border border-white/5 rounded-xl overflow-hidden cursor-pointer card-hover-lift"
-                            onClick={() => {
-                              setSelectedRestaurant(rest);
-                              setRestaurantPageOpen(true);
-                            }}
+                            onClick={() => handleSelectRestaurant(rest)}
                           >
                             <div className="h-32 w-full relative">
                               <img className="w-full h-full object-cover" src={rest.image} alt={rest.name} />
@@ -1408,10 +1614,7 @@ export default function App() {
                             <div 
                               key={rest.id} 
                               className="bg-[#12121A] border border-white/5 rounded-lg overflow-hidden cursor-pointer card-hover-lift"
-                              onClick={() => {
-                                setSelectedRestaurant(rest);
-                                setRestaurantPageOpen(true);
-                              }}
+                              onClick={() => handleSelectRestaurant(rest)}
                             >
                               <div className="h-24 w-full relative">
                                 <img className="w-full h-full object-cover" src={rest.image} alt={rest.name} />
@@ -1844,10 +2047,7 @@ export default function App() {
                   {cart.length > 0 && !restaurantPageOpen && activeTab !== 'cart' && (
                     <div 
                       className="absolute bottom-16 left-3 right-3 bg-[#12121A] border border-[#6C63FF]/30 p-2.5 rounded-xl flex justify-between items-center cursor-pointer shadow-lg animate-slide-up glow-primary"
-                      onClick={() => {
-                        setSelectedRestaurant(restaurants[0]);
-                        setRestaurantPageOpen(true);
-                      }}
+                      onClick={() => handleSelectRestaurant(restaurants[0])}
                     >
                       <div className="flex items-center gap-2">
                         <ShoppingBasket className="w-4 h-4 text-[#6C63FF]" />
@@ -1860,28 +2060,97 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* Detailed Cart Checkout Drawer */}
+                  {/* Detailed Cart Checkout Drawer (Stitch Mockup) */}
                   {cart.length > 0 && restaurantPageOpen && (
-                    <div className="absolute bottom-0 left-0 w-full bg-[#12121A] border-t border-[#FF0077]/30 p-4 z-40 shadow-[0_-15px_30px_rgba(0,0,0,0.8)] flex flex-col rounded-t-2xl max-h-[85%] overflow-y-auto">
+                    <div className="absolute bottom-0 left-0 w-full bg-[#0A0A0F]/95 backdrop-blur-xl border-t border-[#FF0077]/30 p-4 z-40 shadow-[0_-15px_30px_rgba(0,0,0,0.85)] flex flex-col rounded-t-2xl max-h-[85%] overflow-y-auto select-none">
                       
                       {/* Invoice Title */}
                       <div className="flex justify-between items-center pb-2 border-b border-white/5 mb-3">
-                        <span className="font-bold text-xs text-white uppercase tracking-wider">Bill Summary & Invoice</span>
+                        <span className="font-bold text-xs text-white uppercase tracking-wider">Cart Checkout</span>
                         <button className="text-[10px] text-gray-500 hover:text-white" onClick={() => setRestaurantPageOpen(false)}>Close</button>
                       </div>
+
+                      {/* Delivering address section */}
+                      <section className="glass-card rounded-xl p-3 flex items-start gap-3 mb-3 border border-white/5 bg-[#12121A]">
+                        <div className="mt-0.5">
+                          <span className="material-symbols-outlined text-[#FF0077] text-[18px]">location_on</span>
+                        </div>
+                        <div className="flex-grow">
+                          <h3 className="font-bold text-xs text-white leading-tight">Delivering to {selectedAddress.tag}</h3>
+                          <p className="text-[9px] text-gray-400 mt-0.5 truncate max-w-[200px]">{selectedAddress.detail}</p>
+                        </div>
+                        <button className="text-[9px] text-[#FF0077] font-bold uppercase ml-auto" onClick={() => setAddressDropdownOpen(true)}>Change</button>
+                      </section>
 
                       {/* Item List inside Drawer */}
                       <div className="space-y-2 mb-3 max-h-36 overflow-y-auto pr-1">
                         {cart.map(item => (
-                          <div key={item.id} className="flex justify-between text-[11px] text-gray-300">
-                            <span>{item.name} x {item.quantity}</span>
+                          <div key={item.id} className="flex justify-between text-xs text-gray-300">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`w-2.5 h-2.5 rounded-sm border ${item.veg ? 'border-green-500 bg-green-500/10' : 'border-danger bg-danger/10'} flex items-center justify-center relative`}>
+                                <span className={`w-1 h-1 ${item.veg ? 'bg-green-500' : 'bg-danger'} rounded-full`}></span>
+                              </span>
+                              <span>{item.name} x {item.quantity}</span>
+                            </div>
                             <span className="font-mono">₹{item.price * item.quantity}</span>
                           </div>
                         ))}
                       </div>
 
+                      {/* Delivery Mode selector grid */}
+                      <section className="mb-3">
+                        <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Delivery Mode</h2>
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* EV Partner */}
+                          <div 
+                            onClick={() => setDeliveryMode('ev')}
+                            className={`glass-card rounded-xl p-3 border flex flex-col relative overflow-hidden cursor-pointer transition-all ${
+                              deliveryMode === 'ev' ? 'border-[#FF0077] bg-[#FF0077]/5' : 'border-white/5 opacity-60'
+                            }`}
+                          >
+                            <div className="absolute top-0 right-0 bg-[#00D4AA]/20 text-[#00D4AA] text-[8px] px-1.5 py-0.5 rounded-bl-lg font-bold font-mono">
+                              EV Partner
+                            </div>
+                            <span className="material-symbols-outlined text-[#00D4AA] mb-1 text-[16px]">bolt</span>
+                            <h3 className="text-xs font-bold text-white leading-tight">Time Saver</h3>
+                            <p className="text-[9px] text-gray-400 font-mono mt-0.5">18 min ETA</p>
+                          </div>
+                          
+                          {/* Normal Mode */}
+                          <div 
+                            onClick={() => setDeliveryMode('normal')}
+                            className={`glass-card rounded-xl p-3 border flex flex-col cursor-pointer transition-all ${
+                              deliveryMode === 'normal' ? 'border-[#FF0077] bg-[#FF0077]/5' : 'border-white/5 opacity-60'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-gray-400 mb-1 text-[16px]">local_shipping</span>
+                            <h3 className="text-xs font-bold text-white leading-tight">Normal</h3>
+                            <p className="text-[9px] text-gray-400 font-mono mt-0.5">25 min ETA</p>
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Climate Toggle */}
+                      <section className="glass-card rounded-xl p-2.5 flex items-center justify-between gap-3 mb-3 border border-white/5 bg-[#12121A]">
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className="material-symbols-outlined text-[#00D4AA] text-[18px]">electrical_services</span>
+                          <p className="text-[9px] text-gray-300 leading-tight">Select Electric Delivery Partner to save the climate (EV delivery)</p>
+                        </div>
+                        {/* Toggle Switch */}
+                        <div 
+                          onClick={() => setDeliveryMode(deliveryMode === 'ev' ? 'normal' : 'ev')}
+                          className={`w-9 h-5 rounded-full relative flex items-center px-0.5 cursor-pointer transition-colors ${
+                            deliveryMode === 'ev' ? 'bg-[#00D4AA]/30' : 'bg-white/10'
+                          }`}
+                        >
+                          <div className={`w-3.5 h-3.5 bg-[#00D4AA] rounded-full shadow transition-all absolute ${
+                            deliveryMode === 'ev' ? 'right-0.5' : 'left-0.5'
+                          }`}></div>
+                        </div>
+                      </section>
+
                       {/* Math Checklist */}
-                      <div className="space-y-2 border-t border-white/5 pt-2 mb-3 text-[11px] text-gray-400 font-mono">
+                      <div className="space-y-2 border-t border-white/5 pt-2 mb-3 text-[10px] text-gray-400 font-mono">
                         <div className="flex justify-between">
                           <span>Items Subtotal</span>
                           <span>₹{getCartSubtotal()}</span>
@@ -1902,8 +2171,8 @@ export default function App() {
                         </div>
                         
                         {/* Climate/Safety donation checkboxes */}
-                        <div className="flex justify-between items-center text-[10px] pt-1 select-none">
-                          <label className="flex items-center gap-1.5 cursor-pointer">
+                        <div className="flex justify-between items-center text-[9px] pt-0.5 select-none">
+                          <label className="flex items-center gap-1 cursor-pointer">
                             <input 
                               type="checkbox" 
                               checked={donateClimate} 
@@ -1914,8 +2183,8 @@ export default function App() {
                           </label>
                           <span>+₹{donateClimate ? 2 : 0}</span>
                         </div>
-                        <div className="flex justify-between items-center text-[10px] select-none">
-                          <label className="flex items-center gap-1.5 cursor-pointer">
+                        <div className="flex justify-between items-center text-[9px] select-none">
+                          <label className="flex items-center gap-1 cursor-pointer">
                             <input 
                               type="checkbox" 
                               checked={donateFoodSafety} 
@@ -1936,8 +2205,8 @@ export default function App() {
                       </div>
 
                       {/* Dynamic Coupons apply input */}
-                      <div className="bg-black/30 border border-white/5 p-2.5 rounded-xl mb-3 flex flex-col gap-2">
-                        <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase">
+                      <div className="bg-black/30 border border-white/5 p-2.5 rounded-xl mb-3 flex flex-col gap-1.5">
+                        <div className="flex justify-between items-center text-[9px] text-gray-400 font-bold uppercase">
                           <span>Coupons & Offers</span>
                         </div>
                         <div className="flex gap-2">
@@ -1946,7 +2215,7 @@ export default function App() {
                             placeholder="Enter Code (e.g. DIWALI50)"
                             value={couponCodeInput}
                             onChange={(e) => setCouponCodeInput(e.target.value)}
-                            className="bg-black/40 border border-white/10 rounded px-2.5 py-1 text-xs text-white outline-none flex-grow"
+                            className="bg-black/40 border border-white/10 rounded px-2 py-0.5 text-xs text-white outline-none flex-grow"
                           />
                           <button 
                             className="bg-[#FF0077] text-white text-xs px-3 py-1 rounded font-bold"
@@ -1957,7 +2226,7 @@ export default function App() {
                         </div>
                         {couponMessage && <span className="text-[9px] font-bold text-[#FFB347]">{couponMessage}</span>}
                         
-                        <div className="flex gap-1.5 overflow-x-auto hide-scrollbar pt-1">
+                        <div className="flex gap-1.5 overflow-x-auto hide-scrollbar pt-0.5">
                           {coupons.map(cop => (
                             <button 
                               key={cop.code}
@@ -2002,6 +2271,167 @@ export default function App() {
                       </button>
                     ))}
                   </nav>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {customizingItem && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col justify-end">
+                      <div className="w-full bg-[#0A0A0F]/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl p-4 shadow-[0_-8px_32px_rgba(0,0,0,0.8)] z-50 flex flex-col select-none max-h-[60%] overflow-y-auto animate-slide-up">
+                        {/* Drawer handle */}
+                        <div className="w-full flex justify-center pb-2">
+                          <div className="w-12 h-1 bg-white/20 rounded-full"></div>
+                        </div>
+
+                        {/* Title */}
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h2 className="text-sm font-bold text-white leading-tight">Customize 'Dum Gosht Biryani'</h2>
+                            <p className="text-[10px] text-gray-400 mt-0.5">Build your premium Royal Combo box</p>
+                          </div>
+                          <button className="text-gray-400 hover:text-white" onClick={() => setCustomizingItem(null)}>
+                            <span className="material-symbols-outlined text-[18px]">close</span>
+                          </button>
+                        </div>
+
+                        {/* Radio Option 1: Beverages */}
+                        <div className="mb-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-[10px] font-bold text-white uppercase tracking-wider">Required Beverage</span>
+                            <span className="text-[8px] bg-[#FF0077]/10 text-[#FF0077] px-1.5 py-0.5 rounded font-bold font-mono">CHOOSE 1</span>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <label className={`flex justify-between items-center p-3 rounded-lg border cursor-pointer transition-colors ${
+                              selectedBeverage === 'raita' ? 'bg-[#FF0077]/5 border-[#FF0077]' : 'bg-[#12121A] border-white/5 hover:bg-white/5'
+                            }`}>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="radio" 
+                                  name="beverage" 
+                                  checked={selectedBeverage === 'raita'}
+                                  onChange={() => setSelectedBeverage('raita')}
+                                  className="w-4 h-4 text-[#FF0077] bg-transparent border-white/25 focus:ring-[#FF0077] focus:ring-offset-transparent" 
+                                />
+                                <span className="text-xs text-white">Royal Mint Raita</span>
+                              </div>
+                              <span className="text-xs font-bold text-gray-400 font-mono">+₹49</span>
+                            </label>
+
+                            <label className={`flex justify-between items-center p-3 rounded-lg border cursor-pointer transition-colors ${
+                              selectedBeverage === 'pepsi' ? 'bg-[#FF0077]/5 border-[#FF0077]' : 'bg-[#12121A] border-white/5 hover:bg-white/5'
+                            }`}>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="radio" 
+                                  name="beverage" 
+                                  checked={selectedBeverage === 'pepsi'}
+                                  onChange={() => setSelectedBeverage('pepsi')}
+                                  className="w-4 h-4 text-[#FF0077] bg-transparent border-white/25 focus:ring-[#FF0077] focus:ring-offset-transparent" 
+                                />
+                                <span className="text-xs text-white">Pepsi Black 250ml</span>
+                              </div>
+                              <span className="text-xs font-bold text-gray-400 font-mono">+₹59</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Radio Option 2: Dessert */}
+                        <div className="mb-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-[10px] font-bold text-white uppercase tracking-wider">Royal Dessert</span>
+                            <span className="text-[8px] bg-white/10 text-gray-400 px-1.5 py-0.5 rounded font-bold">OPTIONAL</span>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <label className={`flex justify-between items-center p-3 rounded-lg border cursor-pointer transition-colors ${
+                              selectedSweet === 'jamun' ? 'bg-[#FF0077]/5 border-[#FF0077]' : 'bg-[#12121A] border-white/5 hover:bg-white/5'
+                            }`}>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="radio" 
+                                  name="dessert" 
+                                  checked={selectedSweet === 'jamun'}
+                                  onChange={() => setSelectedSweet('jamun')}
+                                  className="w-4 h-4 text-[#FF0077] bg-transparent border-white/25 focus:ring-[#FF0077] focus:ring-offset-transparent" 
+                                />
+                                <span className="text-xs text-white">Gulab Jamun (1pc)</span>
+                              </div>
+                              <span className="text-xs font-bold text-gray-400 font-mono">+₹39</span>
+                            </label>
+
+                            <label className={`flex justify-between items-center p-3 rounded-lg border cursor-pointer transition-colors ${
+                              selectedSweet === 'meetha' ? 'bg-[#FF0077]/5 border-[#FF0077]' : 'bg-[#12121A] border-white/5 hover:bg-white/5'
+                            }`}>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="radio" 
+                                  name="dessert" 
+                                  checked={selectedSweet === 'meetha'}
+                                  onChange={() => setSelectedSweet('meetha')}
+                                  className="w-4 h-4 text-[#FF0077] bg-transparent border-white/25 focus:ring-[#FF0077] focus:ring-offset-transparent" 
+                                />
+                                <span className="text-xs text-white">Double Ka Meetha</span>
+                              </div>
+                              <span className="text-xs font-bold text-gray-400 font-mono">+₹49</span>
+                            </label>
+
+                            <label className={`flex justify-between items-center p-3 rounded-lg border cursor-pointer transition-colors ${
+                              selectedSweet === 'none' ? 'bg-[#FF0077]/5 border-[#FF0077]' : 'bg-[#12121A] border-white/5 hover:bg-white/5'
+                            }`}>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="radio" 
+                                  name="dessert" 
+                                  checked={selectedSweet === 'none'}
+                                  onChange={() => setSelectedSweet('none')}
+                                  className="w-4 h-4 text-[#FF0077] bg-transparent border-white/25 focus:ring-[#FF0077] focus:ring-offset-transparent" 
+                                />
+                                <span className="text-xs text-white">No Dessert</span>
+                              </div>
+                              <span className="text-xs font-bold text-gray-400 font-mono">+₹0</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Nutrition dynamic preview bar inside drawer */}
+                        <div className="bg-[#12121A] border border-white/5 p-2.5 rounded-lg flex justify-between items-center mb-5 text-[10px] font-semibold text-gray-400 font-mono">
+                          <span>📊 COMBO TOTALS:</span>
+                          <span>🥩 {36 + (selectedBeverage === 'raita' ? 2 : 0) + (selectedSweet === 'jamun' ? 1 : selectedSweet === 'meetha' ? 2 : 0)}g Protein</span>
+                          <span>🔥 {540 + (selectedBeverage === 'raita' ? 60 : 0) + (selectedSweet === 'jamun' ? 150 : selectedSweet === 'meetha' ? 180 : 0)} kcal</span>
+                        </div>
+
+                        {/* Add Button */}
+                        <button 
+                          className="w-full bg-[#FF0077] hover:bg-[#E20066] text-white text-xs py-3 rounded-full font-bold shadow-lg flex justify-between px-6 items-center active:scale-95 transition-all"
+                          onClick={() => {
+                            const bevCost = selectedBeverage === 'raita' ? 49 : 59;
+                            const sweetCost = selectedSweet === 'jamun' ? 39 : selectedSweet === 'meetha' ? 49 : 0;
+                            const totalCost = 349 + bevCost + sweetCost;
+                            
+                            const bevName = selectedBeverage === 'raita' ? 'Mint Raita' : 'Pepsi Black';
+                            const sweetName = selectedSweet === 'jamun' ? 'Gulab Jamun' : selectedSweet === 'meetha' ? 'Double Ka Meetha' : 'None';
+                            
+                            const comboItem = {
+                              id: `dum_gosht_combo_${Date.now()}`,
+                              name: `Dum Gosht Combo (${bevName} + ${sweetName === 'None' ? 'No Dessert' : sweetName})`,
+                              price: totalCost,
+                              protein: 36 + (selectedBeverage === 'raita' ? 2 : 0) + (selectedSweet === 'jamun' ? 1 : selectedSweet === 'meetha' ? 2 : 0),
+                              calories: 540 + (selectedBeverage === 'raita' ? 60 : 0) + (selectedSweet === 'jamun' ? 150 : selectedSweet === 'meetha' ? 180 : 0),
+                              quantity: 1,
+                              restaurantName: customizingItem.restaurantName,
+                              restaurantId: customizingItem.restaurantId
+                            };
+                            
+                            setCart(prev => [...prev, comboItem]);
+                            setCustomizingItem(null);
+                            confetti({ particleCount: 80, spread: 60, origin: { y: 0.85 } });
+                          }}
+                        >
+                          <span>Add Combo Box to Cart</span>
+                          <span className="font-mono font-bold">₹{349 + (selectedBeverage === 'raita' ? 49 : 59) + (selectedSweet === 'jamun' ? 39 : selectedSweet === 'meetha' ? 49 : 0)}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                 </div>
               </div>
@@ -2231,49 +2661,94 @@ export default function App() {
 
                   {/* DYNAMIC SCREEN ROUTER */}
                   {restaurantPageOpen && selectedRestaurant ? (
-                    /* SCREEN 1: Restaurant Menu details */
-                    <div className="bg-[#0A0A0F] border border-white/5 rounded-xl overflow-hidden animate-fade-in">
-                      <div className="h-48 w-full relative">
-                        <img className="w-full h-full object-cover" src={selectedRestaurant.image} alt={selectedRestaurant.name} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0F] to-transparent" />
-                        <button className="absolute top-4 right-4 bg-black/60 w-8 h-8 rounded-full flex items-center justify-center" onClick={() => setRestaurantPageOpen(false)}>
-                          <span className="material-symbols-outlined text-sm">close</span>
-                        </button>
-                        <div className="absolute bottom-4 left-4">
-                          <h2 className="font-bold text-lg text-white">{selectedRestaurant.name}</h2>
-                          <p className="text-xs text-gray-300">{selectedRestaurant.cuisine}</p>
+                    /* SCREEN 1: Restaurant Menu details (Stitch Desktop Alignment) */
+                    <div className="bg-[#0A0A0F] border border-white/5 rounded-2xl overflow-hidden animate-fade-in flex flex-col gap-4 p-4 select-none">
+                      
+                      {/* Brand Banner */}
+                      <div className="relative w-full h-[200px] rounded-xl overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0F] via-transparent to-transparent z-10"></div>
+                        <img 
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                          src={selectedRestaurant.image} 
+                          alt={selectedRestaurant.name} 
+                        />
+                        <div className="absolute top-4 right-4 z-20 flex gap-2">
+                          <button className="w-8 h-8 bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-[#FF0077] transition-all active:scale-95">
+                            <span className="material-symbols-outlined text-[16px]">favorite</span>
+                          </button>
+                          <button className="w-8 h-8 bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-[#FF0077] transition-all active:scale-95" onClick={() => setRestaurantPageOpen(false)}>
+                            <span className="material-symbols-outlined text-[16px]">close</span>
+                          </button>
+                        </div>
+                        <div className="absolute bottom-4 left-4 z-20">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="bg-[#FF0077] text-white px-2 py-[2px] rounded text-[8px] font-bold uppercase tracking-tighter">Premium Partner</span>
+                            <div className="flex items-center gap-0.5 text-warning">
+                              <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                              <span className="text-[10px] font-bold font-mono">{selectedRestaurant.rating} (1k+)</span>
+                            </div>
+                          </div>
+                          <h2 className="text-xl font-bold text-white tracking-tight leading-none mb-1">{selectedRestaurant.name}</h2>
+                          <p className="text-xs text-gray-400">{selectedRestaurant.cuisine}</p>
                         </div>
                       </div>
-                      <div className="p-4 space-y-4">
-                        <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                          <div className="flex gap-3 text-xs text-gray-400">
-                            <span>⭐ {selectedRestaurant.rating}</span>
-                            <span>•</span>
-                            <span>⏱️ {selectedRestaurant.time}</span>
-                            <span>•</span>
-                            <span className="text-[#00E676] font-mono font-bold">{selectedRestaurant.slaConfidence}% SLA</span>
-                          </div>
-                        </div>
 
-                        <div className="space-y-3">
-                          <h3 className="font-bold text-xs uppercase tracking-wider text-gray-500">Popular dishes</h3>
-                          {selectedRestaurant.menu.map(item => (
-                            <div key={item.id} className="bg-[#12121A] border border-white/5 p-3 rounded-lg flex justify-between gap-4">
-                              <div>
-                                <span className={`w-2 h-2 rounded-full inline-block mr-2 ${item.veg ? 'bg-[#00E676]' : 'bg-[#FF3366]'}`} />
-                                <span className="font-bold text-xs text-white">{item.name}</span>
-                                <p className="text-[10px] text-gray-400 mt-1 leading-snug">{item.desc}</p>
-                                <span className="font-bold text-xs text-[#00E676] block mt-1.5">₹{item.price}</span>
-                              </div>
-                              <button 
-                                className="bg-[#FF0077] hover:bg-[#E20066] text-white text-[10px] font-bold px-3 py-1.5 rounded-full active:scale-95 transition-all self-center whitespace-nowrap"
-                                onClick={() => handleAddToCart(item, selectedRestaurant.name, selectedRestaurant.id)}
-                              >
-                                + Add to Cart
-                              </button>
-                            </div>
-                          ))}
+                      {/* Search & Filters */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-white/5 border border-white/10 rounded-full flex items-center px-3 py-1.5">
+                          <span className="material-symbols-outlined text-gray-400 text-[18px] mr-1.5">search</span>
+                          <input 
+                            className="bg-transparent border-none outline-none text-xs text-white placeholder:text-gray-500 w-full" 
+                            placeholder={`Search in ${selectedRestaurant.name}...`}
+                            type="text"
+                          />
                         </div>
+                        <div className="flex items-center gap-1.5">
+                          <button className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded-full text-[10px] font-bold text-gray-300 transition-all">VEG</button>
+                          <button className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded-full text-[10px] font-bold text-gray-300 transition-all">NON-VEG</button>
+                        </div>
+                      </div>
+
+                      {/* Menu List */}
+                      <div className="flex flex-col gap-3 max-h-[420px] overflow-y-auto pr-1">
+                        <h4 className="text-[10px] font-bold text-[#FF0077] uppercase tracking-[2px] mb-1">Featured Cuisines</h4>
+                        
+                        {selectedRestaurant.menu.map(item => (
+                          <div key={item.id} className="bg-[#12121A] border border-white/5 p-3 rounded-xl flex gap-3 hover:border-[#FF0077]/40 transition-all duration-300">
+                            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 relative bg-black/40">
+                              <img className="w-full h-full object-cover" src={item.image || "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=200&q=80"} alt={item.name} />
+                              <div className={`absolute top-1 left-1 bg-black/60 backdrop-blur-sm p-[2px] rounded border ${item.veg ? 'border-[#00E676]' : 'border-[#FF3366]'}`}>
+                                <div className={`w-1.5 h-1.5 rounded-full ${item.veg ? 'bg-[#00E676]' : 'bg-[#FF3366]'}`}></div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex-1 flex flex-col justify-between">
+                              <div>
+                                <div className="flex justify-between items-start mb-0.5">
+                                  <h5 className="text-xs font-bold text-white leading-tight">{item.name}</h5>
+                                  <span className="text-xs font-bold text-[#00E676] font-mono">₹{item.price}</span>
+                                </div>
+                                <p className="text-[10px] text-gray-400 leading-normal line-clamp-2">{item.desc}</p>
+                              </div>
+                              
+                              <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
+                                <div className="flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-warning text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>thumb_up</span>
+                                  <span className="text-[9px] text-gray-400 font-bold">Top Seller</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button className="px-3 py-1 border border-white/10 rounded-full text-[9px] font-bold text-gray-400 hover:text-white transition-colors">SWAP</button>
+                                  <button 
+                                    className="px-4 py-1 bg-[#FF0077] hover:bg-[#E20066] text-white rounded-full text-[9px] font-extrabold shadow-lg active:scale-95 transition-all"
+                                    onClick={() => handleAddOrCustomize(item, selectedRestaurant.name, selectedRestaurant.id)}
+                                  >
+                                    + ADD
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ) : activeTab === 'home' ? (
@@ -2299,10 +2774,7 @@ export default function App() {
                         {restaurants.filter(r => r.isAIPick).map(rest => (
                           <div 
                             key={rest.id} 
-                            onClick={() => {
-                              setSelectedRestaurant(rest);
-                              setRestaurantPageOpen(true);
-                            }}
+                            onClick={() => handleSelectRestaurant(rest)}
                             className="bg-[#12121A] border border-white/5 rounded-lg overflow-hidden cursor-pointer hover:border-white/10 transition-colors"
                           >
                             <img className="w-full h-32 object-cover" src={rest.image} alt={rest.name} />
@@ -2351,10 +2823,7 @@ export default function App() {
                           {restaurants.map(rest => (
                             <div 
                               key={rest.id} 
-                              onClick={() => {
-                                setSelectedRestaurant(rest);
-                                setRestaurantPageOpen(true);
-                              }}
+                              onClick={() => handleSelectRestaurant(rest)}
                               className="bg-[#12121A] border border-white/5 rounded-lg overflow-hidden cursor-pointer hover:border-white/10 transition-all active:scale-[0.98]"
                             >
                               <img className="w-full h-24 object-cover" src={rest.image} alt={rest.name} />
@@ -2509,32 +2978,127 @@ export default function App() {
                       )}
                     </div>
                   ) : (
-                    /* SCREEN 6: Profile reservations & list */
-                    <div className="bg-[#0A0A0F] border border-white/5 p-4 rounded-xl space-y-4">
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-gray-500">Reservations & Addresses</h3>
-                      
-                      <div className="space-y-2">
-                        <h4 className="font-bold text-[10px] text-gray-400">Dineout Reservations</h4>
-                        {reservations.map(res => (
-                          <div key={res.id} className="bg-[#12121A] border border-white/5 p-2 rounded flex justify-between items-center text-xs">
-                            <div>
-                              <span className="font-bold text-white block">{res.hotel}</span>
-                              <span className="text-[10px] text-gray-500 font-mono">Time: {res.time} · Party: {res.party}</span>
-                            </div>
-                            <span className="text-[9px] bg-green-500/10 text-green-500 border border-green-500/20 px-2 py-0.5 rounded font-mono font-bold">{res.status}</span>
-                          </div>
-                        ))}
-                      </div>
+                    /* SCREEN 6: Profile & Loyalty Analytics (Stitch Mockup) */
+                    <div className="flex flex-col gap-4 animate-fade-in">
+                      {/* Identity Header */}
+                      <section className="flex flex-col items-center py-2 bg-[#12121A] rounded-xl border border-white/5 p-3">
+                        <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10 relative mb-2">
+                          <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPbiGRkVu6-D13V9oA6CcwpVt8Gk2zYXCdCYqHQn7F_c-gnPddI7WuKmE-rSgbZ_bgfo6RbX8FK_Rh_3C0XaK4FGlPeysPfmU7OkvxCAtjIsta8Frwm-FRPLC1_EzSbtwBT5_UzrryiqJvy6iZyQF6LPEi5mqyKYq_KQXDiToGWE6JUCOOPhmM9c-uX4MoeNVaHoUddcFvIGRDNxzEJyVDK5AJ6YMe2LVaSBgUBRgftYjrUC4OIcu4gAVzKp7VQmZw9x0rw2R0WRzS" alt="Profile" />
+                          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#00E676] rounded-full border border-[#12121A]"></div>
+                        </div>
+                        <h2 className="text-sm font-bold text-white leading-tight">Gaurav Nayak</h2>
+                        <div className="mt-1 flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-[#FF0077]/30 bg-[#FF0077]/10">
+                          <span className="text-[8px] text-[#FF0077] font-bold tracking-wide">👑 HYPERFLOW PRO MEMBER (ACTIVE)</span>
+                        </div>
+                      </section>
 
-                      <div className="space-y-2">
-                        <h4 className="font-bold text-[10px] text-gray-400">Saved Addresses</h4>
-                        {savedAddresses.map(addr => (
-                          <div key={addr.id} className="bg-[#12121A] border border-white/5 p-2.5 rounded-lg text-xs">
-                            <span className="font-bold text-white block">{addr.tag}</span>
-                            <p className="text-[10px] text-gray-400 mt-1 leading-snug">{addr.detail}</p>
+                      {/* Co-Branded Card Showcase */}
+                      <section className="w-full relative">
+                        <div className="w-full h-[180px] rounded-2xl bg-gradient-to-br from-[#FF0077] via-[#8F00FF] to-[#00D4AA] p-4 flex flex-col justify-between relative overflow-hidden shadow-lg select-none">
+                          <div className="absolute -right-16 -top-16 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+                          <div className="absolute -left-8 -bottom-8 w-32 h-32 bg-black/20 rounded-full blur-xl"></div>
+                          
+                          <div className="flex justify-between items-start relative z-10">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-bold text-white/90 uppercase tracking-widest leading-none">District Identity</span>
+                              <span className="text-sm font-bold text-white tracking-tight mt-1">VIP Platinum Elite</span>
+                            </div>
+                            <span className="material-symbols-outlined text-white/80 text-[24px]">contactless</span>
                           </div>
-                        ))}
-                      </div>
+                          
+                          <div className="relative z-10 w-full flex justify-end mb-2">
+                            <div className="bg-black/35 border border-white/20 px-2 py-0.5 rounded-md inline-flex items-center gap-0.5 backdrop-blur-md">
+                              <span className="material-symbols-outlined text-[#00E676] text-[12px]">loyalty</span>
+                              <span className="text-[9px] font-mono text-[#00E676] font-bold">10% Flat Cashback</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-end relative z-10">
+                            <div className="flex flex-col">
+                              <span className="text-[8px] text-white/60 uppercase tracking-wider mb-0.5 leading-none">Cardholder</span>
+                              <span className="text-xs font-mono tracking-widest text-white">GAURAV NAYAK</span>
+                            </div>
+                            <span className="text-sm font-bold italic tracking-tighter text-white opacity-85">District</span>
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Spend Progress Bar */}
+                      <section className="bg-[#12121A] border border-white/5 rounded-xl p-3 flex flex-col gap-2">
+                        <div className="flex justify-between items-end text-xs">
+                          <span className="font-bold text-gray-300">Spend Progress</span>
+                          <div className="flex items-baseline gap-0.5">
+                            <span className="font-bold font-mono text-white">₹2,580</span>
+                            <span className="text-[10px] text-gray-500 font-mono">/₹10,000</span>
+                          </div>
+                        </div>
+                        <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden relative">
+                          <div className="absolute top-0 left-0 h-full bg-[#FF0077] w-[25.8%] rounded-full shadow-[0_0_8px_rgba(255,0,119,0.5)]"></div>
+                        </div>
+                        <p className="text-[10px] text-gray-400 text-center leading-normal">
+                          Spend <span className="text-[#FF0077] font-bold">₹7,420</span> more to auto-unlock <span className="text-white font-semibold">VIP Platinum Elite Card</span>!
+                        </p>
+                      </section>
+
+                      {/* Bento Perks Grid */}
+                      <section className="flex flex-col gap-2">
+                        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Benefits</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-[#12121A] border border-white/5 rounded-xl p-2.5 flex flex-col items-center justify-center text-center gap-1.5 aspect-square hover:bg-white/5 transition-colors">
+                            <div className="w-9 h-9 rounded-full bg-[#00E676]/10 flex items-center justify-center border border-[#00E676]/20">
+                              <span className="material-symbols-outlined text-[#00E676] text-[20px]">savings</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-white">10% Flat<br/>Cashback</span>
+                          </div>
+                          
+                          <div className="bg-[#12121A] border border-white/5 rounded-xl p-2.5 flex flex-col items-center justify-center text-center gap-1.5 aspect-square hover:bg-white/5 transition-colors">
+                            <div className="w-9 h-9 rounded-full bg-[#8F00FF]/10 flex items-center justify-center border border-[#8F00FF]/20">
+                              <span className="material-symbols-outlined text-[#8F00FF] text-[20px]">two_wheeler</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-white">Zero Delivery<br/>Fees</span>
+                          </div>
+
+                          <div className="bg-[#12121A] border border-white/5 rounded-xl p-2.5 flex flex-col items-center justify-center text-center gap-1.5 aspect-square hover:bg-white/5 transition-colors">
+                            <div className="w-9 h-9 rounded-full bg-warning/10 flex items-center justify-center border border-warning/20">
+                              <span className="material-symbols-outlined text-warning text-[20px]">bolt</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-white">Instant Refund<br/>Triage</span>
+                          </div>
+
+                          <div className="bg-[#12121A] border border-white/5 rounded-xl p-2.5 flex flex-col items-center justify-center text-center gap-1.5 aspect-square hover:bg-white/5 transition-colors">
+                            <div className="w-9 h-9 rounded-full bg-[#FF0077]/10 flex items-center justify-center border border-[#FF0077]/20">
+                              <span className="material-symbols-outlined text-[#FF0077] text-[20px]">support_agent</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-white">Priority Agent<br/>Care</span>
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Reservations & Addresses sections */}
+                      <section className="bg-[#12121A] border border-white/5 p-3 rounded-xl flex flex-col gap-3">
+                        <div className="space-y-1.5">
+                          <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Dineout Reservations</h4>
+                          {reservations.map(res => (
+                            <div key={res.id} className="bg-black/35 border border-white/5 p-2 rounded flex justify-between items-center text-[10px]">
+                              <div>
+                                <span className="font-bold text-white block">{res.hotel}</span>
+                                <span className="text-[9px] text-gray-500 font-mono">Time: {res.time} · Party: {res.party}</span>
+                              </div>
+                              <span className="text-[8px] bg-green-500/10 text-green-500 border border-green-500/20 px-1.5 py-0.5 rounded font-mono font-bold">{res.status}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Saved Addresses</h4>
+                          {savedAddresses.map(addr => (
+                            <div key={addr.id} className="bg-black/35 border border-white/5 p-2 rounded text-[10px] leading-tight">
+                              <span className="font-bold text-white block">{addr.tag}</span>
+                              <p className="text-[9px] text-gray-500 mt-0.5 truncate">{addr.detail}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
                     </div>
                   )}
 
@@ -2872,154 +3436,180 @@ export default function App() {
             {/* CONDITIONAL SUB-TABS RENDERING */}
             {adminSubTab === 'system' && (
               <>
-                {/* Catalog Additions and Coupon Creators */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Creator Card 1: Add New Restaurant */}
-                  <div className="glass-panel p-5 rounded-xl flex flex-col gap-3">
-                    <h3 className="font-bold text-xs uppercase tracking-wider text-[#6C63FF] flex items-center gap-1.5">
-                      <Settings className="w-4 h-4 text-[#6C63FF]" />
-                      Merchant Restaurant Creator
-                    </h3>
-                    <form onSubmit={handleCreateRestaurant} className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[9px] text-gray-400 uppercase font-mono">Restaurant Name</label>
-                          <input 
-                            type="text" 
-                            placeholder="e.g. Subway Patia" 
-                            value={newRestName}
-                            onChange={(e) => setNewRestName(e.target.value)}
-                            className="bg-black/40 border border-white/10 rounded w-full text-xs p-2 text-white outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[9px] text-gray-400 uppercase font-mono">Cuisine Tags</label>
-                          <input 
-                            type="text" 
-                            placeholder="e.g. Salads · Healthy" 
-                            value={newRestCuisine}
-                            onChange={(e) => setNewRestCuisine(e.target.value)}
-                            className="bg-black/40 border border-white/10 rounded w-full text-xs p-2 text-white outline-none"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-[9px] text-gray-400 uppercase font-mono">Image URL (Optional)</label>
+                {/* Two-Column Top Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  
+                  {/* Merchant Restaurant Creator */}
+                  <section className="glass-panel p-5 flex flex-col gap-4 rounded-xl border border-white/5 bg-[#0A0A0F]">
+                    <header className="flex items-center justify-between pb-2 border-b border-white/5">
+                      <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-wider">
+                        <span className="material-symbols-outlined text-[#FF0077] text-[18px]">storefront</span>
+                        Merchant Restaurant Creator
+                      </h2>
+                    </header>
+                    <form onSubmit={handleCreateRestaurant} className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] text-gray-400 font-bold uppercase font-mono">Restaurant Name</label>
                         <input 
                           type="text" 
-                          placeholder="https://..." 
-                          value={newRestImage}
-                          onChange={(e) => setNewRestImage(e.target.value)}
-                          className="bg-black/40 border border-white/10 rounded w-full text-xs p-2 text-white outline-none"
+                          placeholder="e.g. Subway Patia" 
+                          value={newRestName}
+                          onChange={(e) => setNewRestName(e.target.value)}
+                          className="px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-[#FF0077]/50 focus:border-[#FF0077] transition-all"
                         />
                       </div>
-                      <div className="flex justify-between items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <label className="text-[9px] text-gray-400 uppercase font-mono">SLA Prep Time (min)</label>
-                          <input 
-                            type="number" 
-                            value={newRestSLA}
-                            onChange={(e) => setNewRestSLA(parseInt(e.target.value) || 20)}
-                            className="bg-black/40 border border-white/10 rounded w-16 text-center text-xs p-1 text-white outline-none"
-                          />
-                        </div>
-                        <label className="flex items-center gap-2 text-xs cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            checked={newRestExclusive}
-                            onChange={() => setNewRestExclusive(!newRestExclusive)}
-                            className="rounded border-white/10 bg-black/40 text-[#6C63FF] focus:ring-0"
-                          />
-                          <span>Exclusive Partner?</span>
-                        </label>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] text-gray-400 font-bold uppercase font-mono">Cuisine Tags</label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. Mughlai, North Indian" 
+                          value={newRestCuisine}
+                          onChange={(e) => setNewRestCuisine(e.target.value)}
+                          className="px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-[#FF0077]/50 focus:border-[#FF0077] transition-all"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 col-span-2">
+                        <label className="text-[9px] text-gray-400 font-bold uppercase font-mono">Image URL</label>
+                        <input 
+                          type="text" 
+                          placeholder="https://images.unsplash.com/..." 
+                          value={newRestImage}
+                          onChange={(e) => setNewRestImage(e.target.value)}
+                          className="px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-[#FF0077]/50 focus:border-[#FF0077] transition-all font-mono"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] text-gray-400 font-bold uppercase font-mono">SLA Prep (min)</label>
+                        <input 
+                          type="number" 
+                          value={newRestSLA}
+                          onChange={(e) => setNewRestSLA(parseInt(e.target.value) || 20)}
+                          className="px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-[#FF0077]/50 focus:border-[#FF0077] transition-all font-mono"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 pt-5 select-none">
+                        <input 
+                          type="checkbox" 
+                          checked={newRestExclusive}
+                          onChange={() => setNewRestExclusive(!newRestExclusive)}
+                          className="w-4 h-4 rounded bg-white/5 border border-white/10 text-[#FF0077] focus:ring-0 cursor-pointer"
+                          id="exclusivePartner"
+                        />
+                        <label htmlFor="exclusivePartner" className="text-xs font-bold text-gray-300 cursor-pointer">Exclusive Partner</label>
                       </div>
                       <button 
                         type="submit" 
-                        className="w-full bg-[#6C63FF] text-white text-xs font-bold py-2 rounded-lg mt-2 active:scale-95 transition-all shadow"
+                        className="mt-2 w-full col-span-2 bg-[#FF0077] hover:bg-[#FF0077]/80 text-white text-xs py-2.5 rounded-full shadow-[0_0_12px_rgba(255,0,119,0.3)] transition-all flex items-center justify-center gap-1.5 relative overflow-hidden group active:scale-95"
                       >
-                        Add Restaurant to Swiggy Feed
+                        <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                        <span>Provision Merchant</span>
+                        <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 -skew-x-12 -translate-x-full group-hover:animate-shimmer"></div>
                       </button>
                     </form>
-                  </div>
+                  </section>
 
-                  {/* Creator Card 2: Coupon Manager */}
-                  <div className="glass-panel p-5 rounded-xl flex flex-col gap-3">
-                    <h3 className="font-bold text-xs uppercase tracking-wider text-[#00D4AA] flex items-center gap-1.5">
-                      <Award className="w-4 h-4 text-[#00D4AA]" />
-                      Coupon & Offer Builder
-                    </h3>
-                    <form onSubmit={handleCreateCoupon} className="space-y-3">
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="col-span-2">
-                          <label className="text-[9px] text-gray-400 uppercase font-mono">Coupon Code</label>
-                          <input 
-                            type="text" 
-                            placeholder="e.g. FESTIVAL60" 
-                            value={newCouponCode}
-                            onChange={(e) => setNewCouponCode(e.target.value)}
-                            className="bg-black/40 border border-white/10 rounded w-full text-xs p-2 text-white outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[9px] text-gray-400 uppercase font-mono">Discount %</label>
-                          <input 
-                            type="number" 
-                            value={newCouponPct}
-                            onChange={(e) => setNewCouponPct(parseInt(e.target.value) || 10)}
-                            className="bg-black/40 border border-white/10 rounded w-full text-xs p-2 text-white outline-none text-center"
-                          />
-                        </div>
+                  {/* Coupon & Offer Builder */}
+                  <section className="glass-panel p-5 flex flex-col gap-4 rounded-xl border border-white/5 bg-[#0A0A0F]">
+                    <header className="flex items-center justify-between pb-2 border-b border-white/5">
+                      <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-wider">
+                        <span className="material-symbols-outlined text-[#8F00FF] text-[18px]">local_offer</span>
+                        Coupon & Offer Builder
+                      </h2>
+                    </header>
+                    <form onSubmit={handleCreateCoupon} className="grid grid-cols-2 gap-3 flex-grow justify-between">
+                      <div className="flex flex-col gap-1 col-span-2">
+                        <label className="text-[9px] text-gray-400 font-bold uppercase font-mono">Coupon Code</label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. FESTIVAL60" 
+                          value={newCouponCode}
+                          onChange={(e) => setNewCouponCode(e.target.value.toUpperCase())}
+                          className="px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-[#8F00FF]/50 focus:border-[#8F00FF] transition-all font-mono uppercase"
+                        />
                       </div>
-                      <div>
-                        <label className="text-[9px] text-gray-400 uppercase font-mono">Minimum Order Value (₹)</label>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] text-gray-400 font-bold uppercase font-mono">Discount %</label>
+                        <input 
+                          type="number" 
+                          value={newCouponPct}
+                          onChange={(e) => setNewCouponPct(parseInt(e.target.value) || 10)}
+                          className="px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-[#8F00FF]/50 focus:border-[#8F00FF] transition-all font-mono"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] text-gray-400 font-bold uppercase font-mono">Min Order (₹)</label>
                         <input 
                           type="number" 
                           value={newCouponMin}
                           onChange={(e) => setNewCouponMin(parseInt(e.target.value) || 200)}
-                          className="bg-black/40 border border-white/10 rounded w-full text-xs p-2 text-white outline-none"
+                          className="px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-[#8F00FF]/50 focus:border-[#8F00FF] transition-all font-mono"
                         />
                       </div>
                       <button 
                         type="submit" 
-                        className="w-full bg-[#00D4AA] text-black text-xs font-bold py-2 rounded-lg mt-2 active:scale-95 transition-all shadow"
+                        className="mt-2 w-full col-span-2 bg-[#8F00FF] hover:bg-[#8F00FF]/80 text-white text-xs py-2.5 rounded-full shadow-[0_0_12px_rgba(143,0,255,0.3)] transition-all flex items-center justify-center gap-1.5 relative overflow-hidden group active:scale-95"
                       >
-                        Generate & Publish Coupon
+                        <span className="material-symbols-outlined text-[16px]">publish</span>
+                        <span>Deploy Campaign</span>
+                        <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 -skew-x-12 -translate-x-full group-hover:animate-shimmer"></div>
                       </button>
                     </form>
-                  </div>
+                  </section>
                 </div>
 
-                {/* Existing Stock, Dispute, and Festival settings */}
+                {/* Three-Column Bottom Configurator Row */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow">
-                  {/* Column 1: Catalog Stock Controls */}
-                  <div className="glass-panel p-5 rounded-xl flex flex-col gap-4">
-                    <h3 className="font-bold text-xs uppercase tracking-wider text-gray-400">Instamart Stock Management</h3>
-                    <div className="space-y-3 overflow-y-auto max-h-[380px]">
+                  
+                  {/* Column 1: Instamart Stock Controls */}
+                  <section className="glass-panel p-5 rounded-xl border border-white/5 bg-[#0A0A0F] flex flex-col">
+                    <header className="pb-3 border-b border-white/5 mb-3">
+                      <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-wider">
+                        <span className="material-symbols-outlined text-[#00E676] text-[18px]">inventory_2</span>
+                        Instamart Stock Sync
+                      </h2>
+                    </header>
+                    <div className="flex flex-col gap-2.5 overflow-y-auto pr-1">
                       {groceries.map(item => (
-                        <div key={item.id} className="bg-white/5 border border-white/5 p-3 rounded-lg flex justify-between items-center">
-                          <span className="font-bold text-xs text-white">{item.name}</span>
+                        <div key={item.id} className="bg-[#12121A] border border-white/5 p-2.5 rounded-lg flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center border border-white/5">
+                              <span className="material-symbols-outlined text-gray-400 text-[14px]">local_drink</span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-white leading-tight">{item.name}</span>
+                              <span className="text-[8px] text-gray-400 font-mono">SKU: SKU-{item.id.toUpperCase()}</span>
+                            </div>
+                          </div>
                           <button 
-                            className={`px-3 py-1 rounded text-[10px] font-bold ${item.stock > 0 ? 'bg-[#00D4AA]/10 text-[#00D4AA]' : 'bg-red-500/10 text-red-500'}`}
+                            className={`px-3 py-1 rounded-full text-[9px] font-mono font-bold transition-all border ${
+                              item.stock > 0 
+                                ? 'bg-[#00E676]/10 text-[#00E676] border-[#00E676]/30 hover:bg-[#00E676]/25' 
+                                : 'bg-red-500/10 text-red-500 border-red-500/30 hover:bg-red-500/25'
+                            }`}
                             onClick={() => handleToggleGroceryStock(item.id)}
                           >
-                            {item.stock > 0 ? 'Stock: IN' : 'Stock: OUT'}
+                            <span className="flex items-center gap-1">
+                              <span className={`w-1.5 h-1.5 rounded-full ${item.stock > 0 ? 'bg-[#00E676]' : 'bg-red-500'}`} />
+                              {item.stock > 0 ? 'IN' : 'OUT'}
+                            </span>
                           </button>
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </section>
 
-                  {/* Column 2: System Settings & Festive themes */}
-                  <div className="glass-panel p-5 rounded-xl flex flex-col gap-4">
-                    <h3 className="font-bold text-xs uppercase tracking-wider text-gray-400">System Parameters & Overrides</h3>
+                  {/* Column 2: System Parameters & Overrides */}
+                  <section className="glass-panel p-5 rounded-xl border border-white/5 bg-[#0A0A0F] flex flex-col gap-4">
+                    <header className="pb-3 border-b border-white/5">
+                      <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-wider">
+                        <span className="material-symbols-outlined text-[#FF9900] text-[18px]">tune</span>
+                        Global Overrides
+                      </h2>
+                    </header>
                     
-                    {/* Festival Override selections */}
-                    <div className="bg-white/5 border border-white/5 p-4 rounded-xl flex flex-col gap-2.5">
-                      <div>
-                        <span className="font-bold text-xs text-white block">Festival Overlay Overrides</span>
-                        <span className="text-[9px] text-gray-500 font-mono">Dynamically injects visual themes</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[9px] text-gray-400 font-bold uppercase font-mono tracking-wider">Festival Surge Profiles</label>
+                      <div className="bg-white/5 border border-white/5 p-1 rounded-lg flex gap-1">
                         {['nominal', 'diwali', 'holi'].map(tName => (
                           <button 
                             key={tName}
@@ -3030,10 +3620,10 @@ export default function App() {
                                 ...prev
                               ]);
                             }}
-                            className={`py-1.5 rounded text-[10px] font-bold uppercase transition-all active:scale-95 ${
+                            className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase transition-all active:scale-95 ${
                               festivalTheme === tName 
                                 ? 'bg-[#6C63FF] text-white font-bold shadow' 
-                                : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                : 'bg-transparent text-gray-400 hover:text-white'
                             }`}
                           >
                             {tName}
@@ -3042,45 +3632,62 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="bg-white/5 border border-white/5 p-4 rounded-xl flex justify-between items-center">
-                      <div>
-                        <span className="font-bold text-xs text-white block">Monsoon Surge</span>
+                    <div className="bg-red-500/5 border border-red-500/20 p-3 rounded-xl flex flex-col gap-2">
+                      <div className="flex justify-between items-center select-none">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-red-500 text-[18px] animate-pulse">thunderstorm</span>
+                          <span className="text-xs font-bold text-red-500">Monsoon Surge Alert</span>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={stormSurge} 
+                            onChange={() => setStormSurge(!stormSurge)}
+                            className="sr-only peer"
+                            id="stormSurgeToggle"
+                          />
+                          <div className="w-9 h-5 bg-white/10 rounded-full peer peer-checked:bg-red-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full border border-white/5"></div>
+                        </label>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={stormSurge} 
-                          onChange={() => setStormSurge(!stormSurge)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-9 h-5 bg-white/10 rounded-full peer peer-checked:bg-[#FF4757] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
-                      </label>
+                      <p className="text-[10px] text-gray-400 leading-normal">Activates dynamic pricing multiplier +1.5x across delivery fleet.</p>
                     </div>
-                  </div>
+                  </section>
 
                   {/* Column 3: Refund Disputes */}
-                  <div className="glass-panel p-5 rounded-xl flex flex-col gap-4">
-                    <h3 className="font-bold text-xs uppercase tracking-wider text-gray-400">Refund Disputes Triage</h3>
-                    <div className="space-y-3 overflow-y-auto max-h-[380px]">
+                  <section className="glass-panel p-5 rounded-xl border border-white/5 bg-[#0A0A0F] flex flex-col">
+                    <header className="pb-3 border-b border-white/5 mb-3">
+                      <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-wider">
+                        <span className="material-symbols-outlined text-[#FF0077] text-[18px]">support_agent</span>
+                        Dispute Triage
+                      </h2>
+                    </header>
+                    <div className="flex flex-col gap-3 overflow-y-auto pr-1">
                       {disputesQueue.map(disp => (
-                        <div key={disp.id} className="bg-white/5 border border-white/5 p-3 rounded-lg flex flex-col gap-2">
-                          <div className="flex justify-between items-center">
-                            <span className="font-bold text-xs text-white">{disp.customer}</span>
-                            <span className="text-[9px] font-mono">{disp.status}</span>
+                        <div key={disp.id} className="bg-[#12121A] border border-white/5 p-3 rounded-lg flex flex-col gap-2.5">
+                          <div className="flex justify-between items-center text-[10px]">
+                            <span className="font-bold text-white font-mono">{disp.id || 'ORD-9921-A'}</span>
+                            <span className="text-gray-400 bg-white/5 px-2 py-0.5 rounded border border-white/5 font-mono">2m ago</span>
                           </div>
-                          <p className="text-[10px] text-gray-400">"{disp.text}"</p>
-                          {disp.status === 'PENDING' && (
-                            <button 
-                              className="bg-[#6C63FF] text-white text-[10px] font-bold py-1 rounded"
-                              onClick={() => processRefundTriage(disp.id)}
-                            >
-                              Run Triage
-                            </button>
-                          )}
+                          <p className="text-[10px] text-gray-300 leading-snug">"{disp.text}"</p>
+                          <button 
+                            className={`w-full py-1.5 rounded-full text-xs font-bold transition-all border flex items-center justify-center gap-1.5 active:scale-95 ${
+                              disp.status === 'APPROVED' 
+                                ? 'bg-[#00E676]/10 border-[#00E676]/20 text-[#00E676]' 
+                                : 'bg-[#FF3366]/10 border-[#FF3366]/30 text-[#FF3366] hover:bg-[#FF3366]/20'
+                            }`}
+                            onClick={() => {
+                              if (disp.status === 'PENDING') {
+                                processRefundTriage(disp.id);
+                              }
+                            }}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">psychology</span>
+                            <span>{disp.status === 'APPROVED' ? 'Triage Approved' : 'Run AI Triage'}</span>
+                          </button>
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </section>
                 </div>
               </>
             )}
@@ -3441,157 +4048,182 @@ export default function App() {
         </div>
       )}
 
-      {/* ─── PAYMENT GATEWAY MODAL ─── */}
+      {/* ─── PAYMENT GATEWAY MODAL (Stitch Mockup) ─── */}
       {paymentScreenOpen && checkoutPayload && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4 animate-fade-in" onClick={() => setPaymentScreenOpen(false)}>
-          <div className="bg-[#0A0A0F] border border-white/10 rounded-2xl max-w-sm w-full p-5 relative flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[#040406] border border-white/10 rounded-[32px] max-w-sm w-full h-[700px] relative overflow-hidden flex flex-col shadow-[0_8px_32px_rgba(0,0,0,0.85)]" onClick={(e) => e.stopPropagation()}>
             
             {/* Header */}
-            <div className="flex justify-between items-center pb-3 border-b border-white/5 mb-4">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-[#6C63FF]" />
-                <span className="font-bold text-sm tracking-tight text-white font-mono">Secure Payment Gateway</span>
-              </div>
+            <div className="flex items-center justify-between px-4 pt-5 pb-3 border-b border-white/5 bg-[#0A0A0F]/80 backdrop-blur-xl z-20">
+              <h1 className="text-base font-bold text-white tracking-tight">Checkout</h1>
               <button 
-                className="text-gray-400 hover:text-white"
+                className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
                 onClick={() => setPaymentScreenOpen(false)}
               >
-                <X className="w-4 h-4" />
+                <span className="material-symbols-outlined text-gray-400 text-[16px]">close</span>
               </button>
             </div>
 
-            {/* If Processing/Loading payment */}
-            {paymentProcessing ? (
-              <div className="py-8 flex flex-col items-center justify-center text-center space-y-4">
-                <div className="w-12 h-12 rounded-full border-2 border-t-[#6C63FF] border-white/10 animate-spin"></div>
-                <div>
-                  <h4 className="font-bold text-sm text-white">Processing Secure Payment</h4>
-                  <p className="text-[10px] text-gray-500 mt-1">Please do not refresh or close the page</p>
-                </div>
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/20 text-[#00D4AA] rounded-full text-[9px] font-mono">
-                  <span>🔒 PCI-DSS 256-Bit SSL Encrypted</span>
-                </div>
-              </div>
-            ) : paymentSuccess ? (
-              <div className="py-8 flex flex-col items-center justify-center text-center space-y-4 animate-scale-up">
-                <div className="w-12 h-12 rounded-full bg-[#00D4AA] flex items-center justify-center text-black shadow-[0_0_20px_rgba(0,212,170,0.4)]">
-                  <Check className="w-6 h-6 stroke-[3]" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm text-white">Payment Successful!</h4>
-                  <p className="text-[10px] text-gray-400 mt-1">Order placed with {checkoutPayload.restaurantName}</p>
-                </div>
-              </div>
-            ) : (
-              /* Payment Options selection list */
-              <div className="space-y-4">
-                
-                {/* Cart summary */}
-                <div className="bg-white/5 p-3 rounded-xl border border-white/5 flex justify-between items-center text-xs">
+            {/* Scrollable Content Canvas */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4 relative z-10 pb-28">
+              
+              {/* If Processing/Loading payment */}
+              {paymentProcessing ? (
+                <div className="flex-grow flex flex-col items-center justify-center text-center space-y-4 my-auto py-12">
+                  <div className="w-12 h-12 rounded-full border-2 border-t-[#FF0077] border-white/10 animate-spin"></div>
                   <div>
-                    <span className="text-gray-400 block text-[9px]">TOTAL PAYABLE</span>
-                    <span className="font-bold text-sm text-[#00D4AA] font-mono">₹{checkoutPayload.total}</span>
+                    <h4 className="font-bold text-sm text-white">Processing Secure Payment</h4>
+                    <p className="text-[10px] text-gray-500 mt-1">Please do not refresh or close this view</p>
                   </div>
-                  <span className="text-[10px] text-gray-400 font-semibold">{checkoutPayload.items.length} Item(s)</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/20 text-[#00E676] rounded-full text-[9px] font-mono">
+                    <span>🔒 PCI-DSS 256-Bit SSL Encrypted</span>
+                  </div>
                 </div>
-
-                {/* Options List */}
-                <div className="space-y-2.5">
-                  <span className="text-[9px] text-gray-500 uppercase tracking-widest block font-bold">Choose Payment Method</span>
-
-                  {/* Co-Branded Card */}
-                  <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${selectedPaymentMethod === 'cobranded' ? 'bg-[#6C63FF]/10 border-[#6C63FF]' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="radio" 
-                        name="payment_opt" 
-                        value="cobranded"
-                        checked={selectedPaymentMethod === 'cobranded'}
-                        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                        className="hidden"
-                      />
-                      <CreditCard className="w-4 h-4 text-[#6C63FF]" />
-                      <div className="text-left">
-                        <span className="text-xs font-bold text-white block">HyperFlow Co-Branded Card</span>
-                        <span className="text-[9px] text-[#00D4AA] font-semibold">{currentTier.cashback}% Cashback Active</span>
-                      </div>
-                    </div>
-                    <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${selectedPaymentMethod === 'cobranded' ? 'border-[#6C63FF]' : 'border-gray-500'}`}>
-                      {selectedPaymentMethod === 'cobranded' && <span className="w-1.5 h-1.5 rounded-full bg-[#6C63FF]"></span>}
-                    </span>
-                  </label>
-
-                  {/* UPI */}
-                  <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${selectedPaymentMethod === 'upi_gpay' ? 'bg-[#6C63FF]/10 border-[#6C63FF]' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="radio" 
-                        name="payment_opt" 
-                        value="upi_gpay"
-                        checked={selectedPaymentMethod === 'upi_gpay'}
-                        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                        className="hidden"
-                      />
-                      <Wallet className="w-4 h-4 text-[#00D4AA]" />
-                      <div className="text-left">
-                        <span className="text-xs font-bold text-white block">Google Pay / UPI</span>
-                        <span className="text-[9px] text-gray-400">Direct instant transfer</span>
-                      </div>
-                    </div>
-                    <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${selectedPaymentMethod === 'upi_gpay' ? 'border-[#6C63FF]' : 'border-gray-500'}`}>
-                      {selectedPaymentMethod === 'upi_gpay' && <span className="w-1.5 h-1.5 rounded-full bg-[#6C63FF]"></span>}
-                    </span>
-                  </label>
-
-                  {/* Credit Card */}
-                  <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${selectedPaymentMethod === 'cc_visa' ? 'bg-[#6C63FF]/10 border-[#6C63FF]' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="radio" 
-                        name="payment_opt" 
-                        value="cc_visa"
-                        checked={selectedPaymentMethod === 'cc_visa'}
-                        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                        className="hidden"
-                      />
-                      <CreditCard className="w-4 h-4 text-amber-500" />
-                      <div className="text-left">
-                        <span className="text-xs font-bold text-white block">Credit or Debit Card</span>
-                        <span className="text-[9px] text-gray-400">Visa, MasterCard, RuPay</span>
-                      </div>
-                    </div>
-                    <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${selectedPaymentMethod === 'cc_visa' ? 'border-[#6C63FF]' : 'border-gray-500'}`}>
-                      {selectedPaymentMethod === 'cc_visa' && <span className="w-1.5 h-1.5 rounded-full bg-[#6C63FF]"></span>}
-                    </span>
-                  </label>
-
-                  {/* Cash on Delivery */}
-                  <label className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${selectedPaymentMethod === 'cod' ? 'bg-[#6C63FF]/10 border-[#6C63FF]' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="radio" 
-                        name="payment_opt" 
-                        value="cod"
-                        checked={selectedPaymentMethod === 'cod'}
-                        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                        className="hidden"
-                      />
-                      <Smartphone className="w-4 h-4 text-gray-400" />
-                      <div className="text-left">
-                        <span className="text-xs font-bold text-white block">Cash on Delivery (COD)</span>
-                        <span className="text-[9px] text-gray-400">Pay on doorstep</span>
-                      </div>
-                    </div>
-                    <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${selectedPaymentMethod === 'cod' ? 'border-[#6C63FF]' : 'border-gray-500'}`}>
-                      {selectedPaymentMethod === 'cod' && <span className="w-1.5 h-1.5 rounded-full bg-[#6C63FF]"></span>}
-                    </span>
-                  </label>
-
+              ) : paymentSuccess ? (
+                <div className="flex-grow flex flex-col items-center justify-center text-center space-y-5 my-auto py-12 animate-scale-up">
+                  {/* Confetti Particle Blasts */}
+                  <div className="w-20 h-20 bg-[#12121A] border border-[#00E676] rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(0,230,118,0.35)] relative z-10">
+                    <span className="material-symbols-outlined text-[#00E676] text-[40px] font-bold">check</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-base text-white">Payment Successful!</h4>
+                    <p className="text-[10px] text-gray-400 mt-1">Order initialized at {checkoutPayload.restaurantName}</p>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  {/* 1. Order Summary Card */}
+                  <section className="animate-fade-in">
+                    <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Order Summary</h2>
+                    <div className="bg-[#0A0A0F] border border-white/5 rounded-xl p-3 flex flex-col gap-2 font-mono text-[10px] text-gray-400">
+                      <div className="flex justify-between items-center">
+                        <span>Subtotal</span>
+                        <span className="text-white">₹{getCartSubtotal()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Restaurant Packing Charges</span>
+                        <span className="text-white">₹{getPackingFee()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>GST and Restaurant Taxes</span>
+                        <span className="text-white">₹{getGSTAmount()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex flex-col">
+                          <span>Delivery Partner Fee</span>
+                          <span className="text-[#00D4AA] text-[8px]">Free via Platinum Membership</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="line-through opacity-50">₹30.00</span>
+                          <span className="text-[#00D4AA]">-₹30.00</span>
+                        </div>
+                      </div>
+                      {donateClimate && (
+                        <div className="flex justify-between items-center">
+                          <span>Donation for Climate Change</span>
+                          <span className="text-white">+₹2.00</span>
+                        </div>
+                      )}
+                      {donateFoodSafety && (
+                        <div className="flex justify-between items-center">
+                          <span>Donation for Food Safety</span>
+                          <span className="text-white">+₹2.00</span>
+                        </div>
+                      )}
+                      {appliedCoupon && (
+                        <div className="flex justify-between items-center py-1 border-y border-white/5 border-dashed text-[#00D4AA] font-bold">
+                          <span>Coupon Discount ({appliedCoupon.code})</span>
+                          <span>-₹{getDiscountAmount()}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                        <span className="text-xs font-bold text-white font-sans">Grand Total</span>
+                        <span className="text-sm font-bold text-[#FF0077]">₹{checkoutPayload.total}</span>
+                      </div>
+                    </div>
+                  </section>
 
-                {/* Confirm Pay Button */}
+                  {/* 2. Payment Methods */}
+                  <section className="flex flex-col gap-2.5">
+                    <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Payment Methods</h2>
+                    
+                    {/* Co-Branded Card */}
+                    <div 
+                      onClick={() => setSelectedPaymentMethod('cobranded')}
+                      className={`relative rounded-xl p-[1px] cursor-pointer transition-all ${
+                        selectedPaymentMethod === 'cobranded' 
+                          ? 'bg-gradient-to-br from-[#FF0077] via-[#8F00FF] to-[#00D4AA] shadow-[0_8px_24px_rgba(255,0,119,0.2)] scale-[1.01]' 
+                          : 'bg-white/10'
+                      }`}
+                    >
+                      <div className="bg-[#12121A] rounded-xl p-3 relative overflow-hidden flex flex-col gap-2">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-[#FF0077]/15 rounded-full blur-xl"></div>
+                        <div className="flex items-center justify-between relative z-10">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-5 bg-gradient-to-r from-[#FF0077] to-[#8F00FF] rounded flex items-center justify-center border border-white/20 shadow-inner">
+                              <span className="material-symbols-outlined text-white text-[11px]" style={{ fontVariationSettings: "'FILL' 1" }}>contactless</span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-white">HyperFlow Card</span>
+                              <span className="text-[9px] text-gray-400 font-mono">•••• 4092</span>
+                            </div>
+                          </div>
+                          {selectedPaymentMethod === 'cobranded' && (
+                            <span className="material-symbols-outlined text-[#00E676] text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                          )}
+                        </div>
+                        <div className="relative z-10 bg-[#FF0077]/10 border border-[#FF0077]/20 rounded-md px-2 py-0.5 inline-flex items-center gap-1 self-start">
+                          <span className="material-symbols-outlined text-[#FF0077] text-[10px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
+                          <span className="text-[8px] text-[#FF0077] font-bold tracking-wide">10% Cashback Active</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Google Pay / UPI */}
+                    <div 
+                      onClick={() => setSelectedPaymentMethod('upi_gpay')}
+                      className={`bg-[#12121A] border rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all hover:bg-white/5 ${
+                        selectedPaymentMethod === 'upi_gpay' ? 'border-[#FF0077]' : 'border-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-white/5 border border-white/5 flex items-center justify-center overflow-hidden p-1">
+                          <img className="w-full h-full object-cover rounded-full opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZQdcnKLmFJfbffukQKV5Z7ouL61_HCYpAE7Q9rfu4CQm9oCmy4v-Kte3E69JUqm4SLGBT4A7pgoyiXo0INZA0n6E52daetoTdNMGUhM9jIyqCVHvJg52jZH59qsQXHHaQnNIbeK5SH0c35YPEHQ4T19zBgkubhUXX7H1-R5dQXUzjBbvjihnf_NXgZo46UGdRBx8gJtLAcEY5ZjZulgNoC2I6K01VXH5_4jDawPbrCtQ-inyheJQrg7tZi4TEGZ34HsG-C6OTLFsb" alt="GPay" />
+                        </div>
+                        <span className="text-xs font-bold text-white">Google Pay / UPI</span>
+                      </div>
+                      {selectedPaymentMethod === 'upi_gpay' && (
+                        <span className="material-symbols-outlined text-[#00E676] text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      )}
+                    </div>
+
+                    {/* Cash on Delivery */}
+                    <div 
+                      onClick={() => setSelectedPaymentMethod('cod')}
+                      className={`bg-[#12121A] border rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all hover:bg-white/5 ${
+                        selectedPaymentMethod === 'cod' ? 'border-[#FF0077]' : 'border-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-gray-400 text-[16px]">payments</span>
+                        </div>
+                        <span className="text-xs font-bold text-white">Cash on Delivery (COD)</span>
+                      </div>
+                      {selectedPaymentMethod === 'cod' && (
+                        <span className="material-symbols-outlined text-[#00E676] text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      )}
+                    </div>
+                  </section>
+                </>
+              )}
+            </div>
+
+            {/* Sticky Action Footer */}
+            {!paymentProcessing && !paymentSuccess && (
+              <div className="absolute bottom-0 left-0 w-full bg-[#0A0A0F]/90 backdrop-blur-2xl border-t border-white/5 p-4 flex flex-col gap-2 z-35 shadow-[0_-20px_40px_rgba(0,0,0,0.5)] select-none">
                 <button 
-                  className="w-full bg-[#6C63FF] hover:bg-[#574FEB] text-white text-xs py-2.5 rounded-xl font-bold mt-2 shadow active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                  className="w-full relative overflow-hidden bg-[#FF0077] text-white rounded-full py-3 px-4 flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(255,0,119,0.3)] border border-white/20 animate-shimmer active:scale-95 transition-all"
                   onClick={() => {
                     setPaymentProcessing(true);
                     setTimeout(() => {
@@ -3601,13 +4233,16 @@ export default function App() {
                         setPaymentSuccess(false);
                         setPaymentScreenOpen(false);
                         executePaymentSuccess();
-                      }, 1000);
+                      }, 1200);
                     }, 1500);
                   }}
                 >
-                  <ShieldCheck className="w-4 h-4" />
-                  Pay & Confirm Order
+                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">Lock and Pay ₹{checkoutPayload.total}</span>
                 </button>
+                <div className="flex items-center justify-center gap-1 opacity-50">
+                  <span className="text-[8px] text-gray-400 text-center font-mono">🔒 PCI-DSS Compliant 256-Bit SSL Encryption</span>
+                </div>
               </div>
             )}
 
