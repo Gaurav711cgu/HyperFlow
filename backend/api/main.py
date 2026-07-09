@@ -11,8 +11,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 # DB imports
-from backend.db.session import get_db, DATABASE_ACTIVE, engine
-from backend.db.models import DarkStore, Inventory, SalesEvent, ForecastResult, InventoryReservation, ReservationOutcome, OutboxEvent
+from backend.db.session import get_db, engine
+from backend.db.models import DarkStore, Inventory, SalesEvent, ForecastResult, InventoryReservation, ReservationOutcome, OutboxEvent, Restaurant, Coupon, DineoutReservation, ExpenseLog, SystemSetting
 from sqlalchemy.exc import OperationalError
 import json
 import threading
@@ -57,21 +57,7 @@ y_init = np_sales
 cens_init = y_init >= 30.0
 demand_forecaster.fit(X_init, y_init, cens_init)
 
-# Mock in-memory DB for fallback mode
-mock_db = {
-    "stores": {
-        "store_01": {"id": "store_01", "name": "Whitefield Dark Store", "city": "Bengaluru", "lat": 12.9716, "lng": 77.5946},
-        "store_02": {"id": "store_02", "name": "Koramangala Hub", "city": "Bengaluru", "lat": 12.9345, "lng": 77.6265},
-        "store_03": {"id": "store_03", "name": "Indiranagar Dark Store", "city": "Bengaluru", "lat": 12.9784, "lng": 77.6408}
-    },
-    "inventory": {
-        ("store_01", "g1"): {"qty": 0, "name": "Fresh Toned Milk 1L"},
-        ("store_01", "g2"): {"qty": 0, "name": "Organic Bananas 1 Dozen"},
-        ("store_01", "g3"): {"qty": 25, "name": "Whole Wheat Bread 400g"},
-        ("store_01", "g4"): {"qty": 15, "name": "Spiced Chicken Burger Patty 4pcs"}
-    },
-    "reservations": []
-}
+# Production Database models used for state tracking
 
 class ReserveRequest(BaseModel):
     order_id: str
@@ -88,7 +74,7 @@ async def reserve_inventory(req: ReserveRequest, db: Session = Depends(get_db)):
     
     # 1. Acquire Lock
     acquired = False
-    if lock_backend == "postgres" and DATABASE_ACTIVE and db:
+    if lock_backend == "postgres" and db:
         # PostgreSQL SELECT FOR UPDATE locking with NOWAIT to fail fast
         try:
             inventory_row = db.query(Inventory).filter(
@@ -116,78 +102,60 @@ async def reserve_inventory(req: ReserveRequest, db: Session = Depends(get_db)):
     if not acquired:
         # Log timeout reservation entry
         latency = (time.time() - t0) * 1000
-        if DATABASE_ACTIVE and db:
-            res_entry = InventoryReservation(
-                order_id=req.order_id, store_id=req.store_id, sku_id=req.sku_id,
-                qty_requested=req.qty_requested, outcome=ReservationOutcome.LOCK_TIMEOUT, latency_ms=latency
-            )
-            db.add(res_entry)
-            db.commit()
-        else:
-            mock_db["reservations"].append({"order_id": req.order_id, "outcome": "lock_timeout", "latency_ms": latency})
+        res_entry = InventoryReservation(
+            order_id=req.order_id, store_id=req.store_id, sku_id=req.sku_id,
+            qty_requested=req.qty_requested, outcome=ReservationOutcome.LOCK_TIMEOUT, latency_ms=latency
+        )
+        db.add(res_entry)
+        db.commit()
         raise HTTPException(status_code=409, detail="Lock acquisition timeout. Another transaction is active.")
 
     # 2. Check and Update Inventory
     try:
         latency = (time.time() - t0) * 1000
-        if DATABASE_ACTIVE and db:
-            # Postgres flow
-            if lock_backend != "postgres":
-                inventory_row = db.query(Inventory).filter(
-                    Inventory.store_id == req.store_id,
-                    Inventory.sku_id == req.sku_id
-                ).first()
-                
-            if not inventory_row:
-                raise HTTPException(status_code=404, detail="SKU inventory not found.")
-                
-            if inventory_row.qty_available < req.qty_requested:
-                res_entry = InventoryReservation(
-                    order_id=req.order_id, store_id=req.store_id, sku_id=req.sku_id,
-                    qty_requested=req.qty_requested, outcome=ReservationOutcome.INSUFFICIENT_STOCK, latency_ms=latency
-                )
-                db.add(res_entry)
-                db.commit()
-                raise HTTPException(status_code=400, detail="Insufficient stock available.")
-                
-            # Perform decrement
-            inventory_row.qty_available -= req.qty_requested
+        # Postgres flow
+        if lock_backend != "postgres":
+            inventory_row = db.query(Inventory).filter(
+                Inventory.store_id == req.store_id,
+                Inventory.sku_id == req.sku_id
+            ).first()
+            
+        if not inventory_row:
+            raise HTTPException(status_code=404, detail="SKU inventory not found.")
+            
+        if inventory_row.qty_available < req.qty_requested:
             res_entry = InventoryReservation(
                 order_id=req.order_id, store_id=req.store_id, sku_id=req.sku_id,
-                qty_requested=req.qty_requested, outcome=ReservationOutcome.SUCCESS, latency_ms=latency
+                qty_requested=req.qty_requested, outcome=ReservationOutcome.INSUFFICIENT_STOCK, latency_ms=latency
             )
             db.add(res_entry)
-            
-            # --- Transactional Outbox Pattern ---
-            # Construct event payload and write to outbox within the same database transaction
-            event_payload = {
-                "order_id": req.order_id,
-                "store_id": req.store_id,
-                "sku_id": req.sku_id,
-                "qty_requested": req.qty_requested,
-                "timestamp": datetime.datetime.now().isoformat()
-            }
-            outbox_entry = OutboxEvent(
-                event_type="inventory_reserved",
-                payload=json.dumps(event_payload)
-            )
-            db.add(outbox_entry)
             db.commit()
-            print(f"TRANSACTIONAL OUTBOX: Recorded 'inventory_reserved' outbox event for order {req.order_id}")
-        else:
-            # Mock memory fallback
-            inv_key = (req.store_id, req.sku_id)
-            if inv_key not in mock_db["inventory"]:
-                raise HTTPException(status_code=404, detail="SKU inventory not found.")
-                
-            item = mock_db["inventory"][inv_key]
-            if item["qty"] < req.qty_requested:
-                mock_db["reservations"].append({"order_id": req.order_id, "outcome": "insufficient_stock", "latency_ms": latency})
-                raise HTTPException(status_code=400, detail="Insufficient stock available.")
-                
-            item["qty"] -= req.qty_requested
-            mock_db["reservations"].append({"order_id": req.order_id, "outcome": "success", "latency_ms": latency})
-            print(f"MOCK OUTBOX: Logged mock outbox event for order {req.order_id} in local memory.")
+            raise HTTPException(status_code=400, detail="Insufficient stock available.")
+            
+        # Perform decrement
+        inventory_row.qty_available -= req.qty_requested
+        res_entry = InventoryReservation(
+            order_id=req.order_id, store_id=req.store_id, sku_id=req.sku_id,
+            qty_requested=req.qty_requested, outcome=ReservationOutcome.SUCCESS, latency_ms=latency
+        )
+        db.add(res_entry)
+        
+        # --- Transactional Outbox Pattern ---
+        # Construct event payload and write to outbox within the same database transaction
+        event_payload = {
+            "order_id": req.order_id,
+            "store_id": req.store_id,
+            "sku_id": req.sku_id,
+            "qty_requested": req.qty_requested,
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+        outbox_entry = OutboxEvent(
+            event_type="inventory_reserved",
+            payload=json.dumps(event_payload)
+        )
+        db.add(outbox_entry)
+        db.commit()
+        print(f"TRANSACTIONAL OUTBOX: Recorded 'inventory_reserved' outbox event for order {req.order_id}")
 
         return {"status": "success", "message": "Inventory reserved.", "latency_ms": round(latency, 2)}
     finally:
@@ -238,24 +206,17 @@ async def get_forecast(store_id: str, sku_id: str):
 @app.get("/api/v1/forecast/{store_id}/restock-alerts")
 async def get_restock_alerts(store_id: str, db: Session = Depends(get_db)):
     alerts = []
-    # Seed default alerts
-    mock_alerts = [
-        {"sku_id": "g1", "sku_name": "Fresh Toned Milk 1L", "stock": 0, "safety_stock": 45, "suggested_restock": 45},
-        {"sku_id": "g2", "sku_name": "Organic Bananas 1 Dozen", "stock": 0, "safety_stock": 60, "suggested_restock": 60}
-    ]
-    if DATABASE_ACTIVE and db:
-        inv_rows = db.query(Inventory).filter(Inventory.store_id == store_id).all()
-        for item in inv_rows:
-            if item.qty_available <= 5: # Critical threshold
-                alerts.append({
-                    "sku_id": item.sku_id,
-                    "sku_name": item.sku_name,
-                    "stock": item.qty_available,
-                    "safety_stock": 50,
-                    "suggested_restock": 50 - item.qty_available
-                })
-        return alerts if alerts else mock_alerts
-    return mock_alerts
+    inv_rows = db.query(Inventory).filter(Inventory.store_id == store_id).all()
+    for item in inv_rows:
+        if item.qty_available <= 5: # Critical threshold
+            alerts.append({
+                "sku_id": item.sku_id,
+                "sku_name": item.sku_name,
+                "stock": item.qty_available,
+                "safety_stock": 50,
+                "suggested_restock": 50 - item.qty_available
+            })
+    return alerts
 
 @app.get("/api/v1/metrics/availability/{store_id}")
 async def get_availability_metrics(store_id: str):
@@ -396,9 +357,9 @@ def poll_outbox_events_task():
     Simulates a database transaction log tailer (e.g. Debezium / Kafka Connect)
     polling outbox_events every 3 seconds to push inventory reservation transactions downstream to Kafka.
     """
-    from backend.db.session import SessionLocal, DATABASE_ACTIVE
+    from backend.db.session import SessionLocal
     while True:
-        if DATABASE_ACTIVE and SessionLocal:
+        if SessionLocal:
             db = SessionLocal()
             try:
                 from backend.db.models import OutboxEvent
@@ -562,116 +523,154 @@ class DineoutReserve(BaseModel):
     time: str
     party: int
 
-# Initialize new mock_db structures if not present
-if "restaurants" not in mock_db:
-    mock_db["restaurants"] = [
-        {
-          "id": "rest_behrouz",
-          "name": "Behrouz Biryani",
-          "cuisine": "Biryani · Mughlai · Royal",
-          "rating": 4.6,
-          "distance": "2.1 km",
-          "time": "28 min",
-          "slaConfidence": 97,
-          "isAIPick": True,
-          "isExclusive": True,
-          "image": "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop&q=60"
-        },
-        {
-          "id": "rest_tandoor",
-          "name": "Tandoor Imperial",
-          "cuisine": "North Indian · Kababs",
-          "rating": 4.3,
-          "distance": "1.4 km",
-          "time": "22 min",
-          "slaConfidence": 94,
-          "isAIPick": False,
-          "isExclusive": False,
-          "image": "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=300&auto=format&fit=crop&q=60"
-        }
-    ]
-if "coupons" not in mock_db:
-    mock_db["coupons"] = [
-        { "code": "HYPERPRO", "pct": 15, "minOrder": 300, "desc": "15% off above ₹300" },
-        { "code": "DIWALI50", "pct": 50, "minOrder": 500, "desc": "Festive 50% off above ₹500" }
-    ]
-if "dineout_reservations" not in mock_db:
-    mock_db["dineout_reservations"] = []
-if "festival_theme" not in mock_db:
-    mock_db["festival_theme"] = "nominal"
-if "expense_logs" not in mock_db:
-    mock_db["expense_logs"] = [
-        { "id": 1, "date": "July 04", "amount": 480, "calories": 1250 },
-        { "id": 2, "date": "July 05", "amount": 620, "calories": 1800 },
-        { "id": 3, "date": "July 06", "amount": 290, "calories": 950 },
-        { "id": 4, "date": "July 07", "amount": 840, "calories": 2100 },
-        { "id": 5, "date": "July 08", "amount": 350, "calories": 1100 }
-    ]
-
 @app.get("/api/v1/restaurants", response_model=List[dict])
-async def list_restaurants():
-    return mock_db["restaurants"]
+async def list_restaurants(db: Session = Depends(get_db)):
+    rows = db.query(Restaurant).all()
+    return [
+        {
+            "id": r.id,
+            "name": r.name,
+            "cuisine": r.cuisine,
+            "rating": r.rating,
+            "distance": r.distance,
+            "time": r.time,
+            "slaConfidence": r.slaConfidence,
+            "isAIPick": r.isAIPick,
+            "isExclusive": r.isExclusive,
+            "image": r.image
+        } for r in rows
+    ]
 
 @app.post("/api/v1/restaurants")
-async def create_restaurant(req: RestaurantCreate):
+async def create_restaurant(req: RestaurantCreate, db: Session = Depends(get_db)):
     new_id = f"rest_{int(time.time() * 1000)}"
-    new_restObj = {
-        "id": new_id,
-        "name": req.name,
-        "cuisine": req.cuisine,
-        "rating": req.rating,
-        "distance": req.distance,
-        "time": req.time,
-        "slaConfidence": req.slaConfidence,
-        "isAIPick": req.isAIPick,
-        "isExclusive": req.isExclusive,
-        "image": req.image or "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&auto=format&fit=crop&q=60"
+    new_rest = Restaurant(
+        id=new_id,
+        name=req.name,
+        cuisine=req.cuisine,
+        rating=req.rating,
+        distance=req.distance,
+        time=req.time,
+        slaConfidence=req.slaConfidence,
+        isAIPick=req.isAIPick,
+        isExclusive=req.isExclusive,
+        image=req.image or "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&auto=format&fit=crop&q=60"
+    )
+    db.add(new_rest)
+    db.commit()
+    db.refresh(new_rest)
+    return {
+        "status": "success",
+        "restaurant": {
+            "id": new_rest.id,
+            "name": new_rest.name,
+            "cuisine": new_rest.cuisine,
+            "rating": new_rest.rating,
+            "distance": new_rest.distance,
+            "time": new_rest.time,
+            "slaConfidence": new_rest.slaConfidence,
+            "isAIPick": new_rest.isAIPick,
+            "isExclusive": new_rest.isExclusive,
+            "image": new_rest.image
+        }
     }
-    mock_db["restaurants"].append(new_restObj)
-    return {"status": "success", "restaurant": new_restObj}
 
 @app.get("/api/v1/coupons", response_model=List[dict])
-async def list_coupons():
-    return mock_db["coupons"]
+async def list_coupons(db: Session = Depends(get_db)):
+    rows = db.query(Coupon).all()
+    return [
+        {
+            "code": c.code,
+            "pct": c.discount_percentage,
+            "minOrder": int(c.min_cart_value),
+            "desc": f"{c.discount_percentage}% off above ₹{c.min_cart_value}"
+        } for c in rows
+    ]
 
 @app.post("/api/v1/coupons")
-async def create_coupon(req: CouponCreate):
-    new_cop = {
-        "code": req.code.upper(),
-        "pct": req.pct,
-        "minOrder": req.minOrder,
-        "desc": req.desc
+async def create_coupon(req: CouponCreate, db: Session = Depends(get_db)):
+    new_cop = Coupon(
+        code=req.code.upper(),
+        discount_percentage=req.pct,
+        min_cart_value=req.minOrder,
+        active=True
+    )
+    db.add(new_cop)
+    db.commit()
+    db.refresh(new_cop)
+    return {
+        "status": "success",
+        "coupon": {
+            "code": new_cop.code,
+            "pct": new_cop.discount_percentage,
+            "minOrder": int(new_cop.min_cart_value),
+            "desc": f"{new_cop.discount_percentage}% off above ₹{new_cop.min_cart_value}"
+        }
     }
-    mock_db["coupons"].append(new_cop)
-    return {"status": "success", "coupon": new_cop}
 
 @app.get("/api/v1/dineout/reservations", response_model=List[dict])
-async def list_dineout_reservations():
-    return mock_db["dineout_reservations"]
+async def list_dineout_reservations(db: Session = Depends(get_db)):
+    rows = db.query(DineoutReservation).all()
+    return [
+        {
+            "id": f"res_{r.id}",
+            "hotel": r.restaurant_id,
+            "time": r.time_slot,
+            "party": r.guests,
+            "status": "CONFIRMED"
+        } for r in rows
+    ]
 
 @app.post("/api/v1/dineout/reserve")
-async def reserve_dineout(req: DineoutReserve):
-    new_res = {
-        "id": f"res_{random.randint(10000, 99999)}",
-        "hotel": req.hotel,
-        "time": req.time,
-        "party": req.party,
-        "status": "CONFIRMED"
+async def reserve_dineout(req: DineoutReserve, db: Session = Depends(get_db)):
+    new_res = DineoutReservation(
+        customer_name="HyperFlow Customer",
+        restaurant_id=req.hotel,
+        time_slot=req.time,
+        guests=req.party
+    )
+    db.add(new_res)
+    db.commit()
+    db.refresh(new_res)
+    return {
+        "status": "success",
+        "reservation": {
+            "id": f"res_{new_res.id}",
+            "hotel": new_res.restaurant_id,
+            "time": new_res.time_slot,
+            "party": new_res.guests,
+            "status": "CONFIRMED"
+        }
     }
-    mock_db["dineout_reservations"].append(new_res)
-    return {"status": "success", "reservation": new_res}
 
 @app.get("/api/v1/user/expenses", response_model=List[dict])
-async def list_user_expenses():
-    return mock_db["expense_logs"]
+async def list_user_expenses(db: Session = Depends(get_db)):
+    rows = db.query(ExpenseLog).all()
+    return [
+        {
+            "id": e.id,
+            "date": e.timestamp.strftime("%b %d") if e.timestamp else "Today",
+            "amount": int(e.amount),
+            "category": e.category,
+            "desc": e.description
+        } for e in rows
+    ]
 
 @app.get("/api/v1/settings/festival")
-async def get_festival_settings():
-    return {"festival_theme": mock_db["festival_theme"]}
+async def get_festival_settings(db: Session = Depends(get_db)):
+    setting = db.query(SystemSetting).filter(SystemSetting.key == "festival_theme").first()
+    theme = setting.value if setting else "nominal"
+    return {"festival_theme": theme}
 
 @app.post("/api/v1/settings/festival")
-async def update_festival_settings(theme_name: str):
+async def update_festival_settings(theme_name: str, db: Session = Depends(get_db)):
     if theme_name not in ["nominal", "diwali", "holi"]:
         raise HTTPException(status_code=400, detail="Invalid festival theme.")
-    mock_db["festival_theme"] = theme_name
+    setting = db.query(SystemSetting).filter(SystemSetting.key == "festival_theme").first()
+    if not setting:
+        setting = SystemSetting(key="festival_theme", value=theme_name)
+        db.add(setting)
+    else:
+        setting.value = theme_name
+    db.commit()
     return {"status": "success", "festival_theme": theme_name}
