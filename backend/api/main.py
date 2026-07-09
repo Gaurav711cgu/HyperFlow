@@ -17,6 +17,7 @@ from sqlalchemy.exc import OperationalError
 import json
 import threading
 import numpy as np
+import pandas as pd
 
 
 # Services / ML imports
@@ -536,3 +537,141 @@ async def websocket_endpoint(websocket: WebSocket):
             await asyncio.sleep(3)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+
+# --- Dynamic Catalog & Operations Endpoints ---
+
+class RestaurantCreate(BaseModel):
+    name: str
+    cuisine: str
+    rating: float
+    distance: str
+    time: str
+    slaConfidence: int
+    isAIPick: bool
+    isExclusive: bool
+    image: Optional[str] = None
+
+class CouponCreate(BaseModel):
+    code: str
+    pct: int
+    minOrder: int
+    desc: str
+
+class DineoutReserve(BaseModel):
+    hotel: str
+    time: str
+    party: int
+
+# Initialize new mock_db structures if not present
+if "restaurants" not in mock_db:
+    mock_db["restaurants"] = [
+        {
+          "id": "rest_behrouz",
+          "name": "Behrouz Biryani",
+          "cuisine": "Biryani · Mughlai · Royal",
+          "rating": 4.6,
+          "distance": "2.1 km",
+          "time": "28 min",
+          "slaConfidence": 97,
+          "isAIPick": True,
+          "isExclusive": True,
+          "image": "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop&q=60"
+        },
+        {
+          "id": "rest_tandoor",
+          "name": "Tandoor Imperial",
+          "cuisine": "North Indian · Kababs",
+          "rating": 4.3,
+          "distance": "1.4 km",
+          "time": "22 min",
+          "slaConfidence": 94,
+          "isAIPick": False,
+          "isExclusive": False,
+          "image": "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=300&auto=format&fit=crop&q=60"
+        }
+    ]
+if "coupons" not in mock_db:
+    mock_db["coupons"] = [
+        { "code": "HYPERPRO", "pct": 15, "minOrder": 300, "desc": "15% off above ₹300" },
+        { "code": "DIWALI50", "pct": 50, "minOrder": 500, "desc": "Festive 50% off above ₹500" }
+    ]
+if "dineout_reservations" not in mock_db:
+    mock_db["dineout_reservations"] = []
+if "festival_theme" not in mock_db:
+    mock_db["festival_theme"] = "nominal"
+if "expense_logs" not in mock_db:
+    mock_db["expense_logs"] = [
+        { "id": 1, "date": "July 04", "amount": 480, "calories": 1250 },
+        { "id": 2, "date": "July 05", "amount": 620, "calories": 1800 },
+        { "id": 3, "date": "July 06", "amount": 290, "calories": 950 },
+        { "id": 4, "date": "July 07", "amount": 840, "calories": 2100 },
+        { "id": 5, "date": "July 08", "amount": 350, "calories": 1100 }
+    ]
+
+@app.get("/api/v1/restaurants", response_model=List[dict])
+async def list_restaurants():
+    return mock_db["restaurants"]
+
+@app.post("/api/v1/restaurants")
+async def create_restaurant(req: RestaurantCreate):
+    new_id = f"rest_{int(time.time() * 1000)}"
+    new_restObj = {
+        "id": new_id,
+        "name": req.name,
+        "cuisine": req.cuisine,
+        "rating": req.rating,
+        "distance": req.distance,
+        "time": req.time,
+        "slaConfidence": req.slaConfidence,
+        "isAIPick": req.isAIPick,
+        "isExclusive": req.isExclusive,
+        "image": req.image or "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&auto=format&fit=crop&q=60"
+    }
+    mock_db["restaurants"].append(new_restObj)
+    return {"status": "success", "restaurant": new_restObj}
+
+@app.get("/api/v1/coupons", response_model=List[dict])
+async def list_coupons():
+    return mock_db["coupons"]
+
+@app.post("/api/v1/coupons")
+async def create_coupon(req: CouponCreate):
+    new_cop = {
+        "code": req.code.upper(),
+        "pct": req.pct,
+        "minOrder": req.minOrder,
+        "desc": req.desc
+    }
+    mock_db["coupons"].append(new_cop)
+    return {"status": "success", "coupon": new_cop}
+
+@app.get("/api/v1/dineout/reservations", response_model=List[dict])
+async def list_dineout_reservations():
+    return mock_db["dineout_reservations"]
+
+@app.post("/api/v1/dineout/reserve")
+async def reserve_dineout(req: DineoutReserve):
+    new_res = {
+        "id": f"res_{random.randint(10000, 99999)}",
+        "hotel": req.hotel,
+        "time": req.time,
+        "party": req.party,
+        "status": "CONFIRMED"
+    }
+    mock_db["dineout_reservations"].append(new_res)
+    return {"status": "success", "reservation": new_res}
+
+@app.get("/api/v1/user/expenses", response_model=List[dict])
+async def list_user_expenses():
+    return mock_db["expense_logs"]
+
+@app.get("/api/v1/settings/festival")
+async def get_festival_settings():
+    return {"festival_theme": mock_db["festival_theme"]}
+
+@app.post("/api/v1/settings/festival")
+async def update_festival_settings(theme_name: str):
+    if theme_name not in ["nominal", "diwali", "holi"]:
+        raise HTTPException(status_code=400, detail="Invalid festival theme.")
+    mock_db["festival_theme"] = theme_name
+    return {"status": "success", "festival_theme": theme_name}

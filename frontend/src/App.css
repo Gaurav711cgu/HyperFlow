@@ -1,183 +1,192 @@
-/* Custom High-Fidelity Styles from Stitch Design System */
-
-.material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-
-.glass-panel {
-    background: rgba(10, 10, 15, 0.75);
-    backdrop-filter: blur(20px);
-    border: 1px solid #262626;
-}
-
-.glass-panel-accent {
-    background: rgba(10, 10, 15, 0.85);
-    backdrop-filter: blur(24px);
-    border: 1px solid #262626;
-    border-top: 1px solid #333333;
-}
-
-.inner-glow {
-    border-top: 1px solid #333333;
-}
-
-.phone-frame {
-    width: 370px;
-    height: 650px;
-    border: 10px solid #1f1f25;
-    border-radius: 40px;
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 0 40px rgba(0,0,0,0.5);
-    flex-shrink: 0;
-}
-
-.hide-scrollbar::-webkit-scrollbar { display: none; }
-.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-.log-container::-webkit-scrollbar {
-    width: 4px;
-}
-.log-container::-webkit-scrollbar-track {
-    background: transparent;
-}
-.log-container::-webkit-scrollbar-thumb {
-    background: #35343a;
-    border-radius: 2px;
-}
-
-@keyframes flow {
-    0% { stroke-dashoffset: 100; }
-    100% { stroke-dashoffset: 0; }
-}
-
-.route-path {
-    stroke-dasharray: 10;
-    animation: flow 5s linear infinite;
-}
-
-@keyframes rain {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100%); }
-}
-
-.rain-layer {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%);
-    background-size: 2px 50px;
-    animation: rain 1s linear infinite;
-    opacity: 0.3;
-}
-
-.map-satellite {
-    background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBF18rsQAlmDpAeolyjt-_l3Jln4UGMBvm5ZI1wuaRY6vUZAWPWJuMXN26qjzglBWyVuw_DnsudvUxzgYRCYXkJHNvzue-rI8ofjTRSN9WTsNADq6ATcYAQPqIEhbSPRnnNzE_1ldIC-jauBjyJtOXbkrGJ2YhdDWMnW0jJTrDGthBauNwUWqFzdqWRvB--uDFhvekzvDMdK6E6zvXGvTMVB6EQj_4nwD47xvkq10wignU5GCp4dFGJmVBqoteQzUYrM4wVih7L_w8');
-    background-size: cover;
-    background-position: center;
-}
-
-@keyframes scan {
-    0% { top: -100px; }
-    100% { top: 100%; }
-}
-
-.scan-line {
-    background: linear-gradient(to bottom, transparent, rgba(255, 179, 177, 0.05), transparent);
-    height: 100px;
-    width: 100%;
-    position: absolute;
-    top: -100px;
-    animation: scan 4s linear infinite;
-    pointer-events: none;
-}
-
-/* Height-based responsive scaling for the smartphone simulator to prevent clipping */
-@media (max-height: 820px) {
-    .phone-frame {
-        transform: scale(0.85);
-        transform-origin: top center;
-        margin-bottom: -98px; /* Counter-act the layout space collapse from scaling */
-    }
-}
-
-@media (max-height: 720px) {
-    .phone-frame {
-        transform: scale(0.75);
-        transform-origin: top center;
-        margin-bottom: -162px;
-    }
-}
-
-@media (max-height: 640px) {
-    .phone-frame {
-        transform: scale(0.68);
-        transform-origin: top center;
-        margin-bottom: -208px;
-    }
-}
+/* ─── HyperFlow 3.0 Brand Design System ─────────────────────────── */
 
 :root {
-    --map-land: #f1f3f4;
-    --map-road: #ffffff;
-    --map-park: #e6f4ea;
-    --map-water: #e8f0fe;
-    --map-border: #dadce0;
+  --hf-primary: #FF0077;     /* Zomato District Hot Pink/Crimson */
+  --hf-accent: #8F00FF;      /* Zomato District Neon Indigo/Violet */
+  --hf-success: #00E676;     /* Vivid Emerald Green */
+  --hf-danger: #FF3366;      /* Alert Red */
+  --hf-warn: #FFB300;        /* Warning Gold */
+  --hf-surface-0: #040406;   /* Zomato District Deep Obsidian Black */
+  --hf-surface-1: #0A0A0F;   /* Obsidian Card Backplate */
+  --hf-surface-2: #14141F;   /* Elevated Panel */
+  --hf-glass: rgba(255, 255, 255, 0.04);
+  --hf-border: rgba(255, 255, 255, 0.06);
 }
 
-body[data-theme='dark'] {
-    --map-land: #1f1f23;
-    --map-road: #2d2d34;
-    --map-park: #1b261b;
-    --map-water: #1a2333;
-    --map-border: #3c4043;
+/* Material Symbols Outlined Custom Config */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
-.map-google {
-    background-color: var(--map-land);
-    background-image: 
-        /* Primary road grid */
-        linear-gradient(90deg, transparent 95%, var(--map-road) 95%, var(--map-road) 100%),
-        linear-gradient(180deg, transparent 95%, var(--map-road) 95%, var(--map-road) 100%),
-        /* Secondary road grid */
-        linear-gradient(90deg, transparent 98%, var(--map-road) 98%, var(--map-road) 100%),
-        linear-gradient(180deg, transparent 98%, var(--map-road) 98%, var(--map-road) 100%),
-        /* Green park spaces */
-        radial-gradient(circle at 20% 30%, var(--map-park) 35%, transparent 35%),
-        radial-gradient(circle at 80% 75%, var(--map-park) 28%, transparent 28%),
-        /* Blue lakes / water bodies */
-        radial-gradient(circle at 65% 15%, var(--map-water) 22%, transparent 22%);
-    background-size: 80px 80px, 80px 80px, 40px 40px, 40px 40px, 100% 100%, 100% 100%, 100% 100%;
-    background-position: 0 0, 0 0, 20px 20px, 20px 20px, 0 0, 0 0, 0 0;
-    border: 1px solid var(--map-border);
+/* Smooth Transitions & Scrolling */
+* {
+  transition: background-color 0.25s cubic-bezier(0.23, 1, 0.32, 1), 
+              border-color 0.25s cubic-bezier(0.23, 1, 0.32, 1),
+              box-shadow 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+  scroll-behavior: smooth;
 }
 
-.map-iframe {
-    border: 0;
-    opacity: 0.65;
-    transition: all 0.3s ease;
+/* Glassmorphism Panel */
+.glass-panel {
+  background: rgba(18, 18, 26, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-body[data-theme='dark'] .map-iframe {
-    filter: grayscale(1) invert(1) contrast(1.2) opacity(0.4) hue-rotate(180deg);
+/* Floating Glows */
+.glow-primary {
+  box-shadow: 0 0 25px rgba(108, 99, 255, 0.15);
 }
 
-body[data-theme='light'] .map-iframe {
-    filter: grayscale(0.25) contrast(0.95) opacity(0.75);
+.glow-primary-strong {
+  box-shadow: 0 0 30px rgba(108, 99, 255, 0.4);
 }
 
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(255, 83, 90, 0.7);
-    }
-    70% {
-        transform: scale(1.15);
-        box-shadow: 0 0 0 8px rgba(255, 83, 90, 0);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(255, 83, 90, 0);
-    }
+.glow-accent {
+  box-shadow: 0 0 20px rgba(0, 212, 170, 0.15);
 }
+
+/* Scrollbar Resets */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Latency sparkline flow animation */
+@keyframes flow {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+.route-path {
+  stroke-dasharray: 10;
+  animation: flow 5s linear infinite;
+}
+
+/* Neon Pulse Indicator */
+@keyframes neonPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.7);
+  }
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 8px rgba(0, 212, 170, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(0, 212, 170, 0);
+  }
+}
+.pulse-neon {
+  animation: neonPulse 2s infinite;
+}
+
+/* Skeleton Loading Shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #12121A 25%, #1A1A26 50%, #12121A 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* Interactive card lifts */
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5), 0 0 15px rgba(108, 99, 255, 0.1);
+  border-color: rgba(108, 99, 255, 0.2);
+}
+
+/* Festive theme variable overrides */
+body[data-festival='diwali'] {
+  --hf-primary: #FF9900 !important;   /* Marigold Gold */
+  --hf-accent: #E23E00 !important;    /* Terracotta Orange */
+  --hf-success: #00E676 !important;
+  --hf-surface-0: #140700 !important;  /* Warm Charcoal */
+  --hf-surface-1: #200D00 !important;  /* Deep Gold-Bronze Panel */
+  --hf-surface-2: #2E1500 !important;
+  --hf-border: rgba(255, 153, 0, 0.1) !important;
+}
+
+body[data-festival='holi'] {
+  --hf-primary: #FF00FF !important;   /* Neon Magenta Splatter */
+  --hf-accent: #00F0FF !important;    /* Splash Cyan */
+  --hf-success: #39FF14 !important;   /* Neon Lime */
+  --hf-surface-0: #060B12 !important;  /* Ink Blue */
+  --hf-surface-1: #0C1522 !important;
+  --hf-surface-2: #152235 !important;
+  --hf-border: rgba(0, 240, 255, 0.1) !important;
+}
+
+body[data-festival='christmas'] {
+  --hf-primary: #D32F2F !important;   /* Poinsettia Crimson */
+  --hf-accent: #2E7D32 !important;    /* Pine Forest Green */
+  --hf-success: #FFD700 !important;   /* Sparkle Gold */
+  --hf-surface-0: #020804 !important;  /* Spruce Black */
+  --hf-surface-1: #06180C !important;
+  --hf-surface-2: #0C2815 !important;
+  --hf-border: rgba(46, 125, 50, 0.1) !important;
+}
+
+body[data-festival='monsoon'] {
+  --hf-primary: #00B0FF !important;   /* Torrential Cyan Rain */
+  --hf-accent: #5C6BC0 !important;    /* Stormy Slate Gray-Blue */
+  --hf-success: #4CAF50 !important;   /* Fresh Moss Green */
+  --hf-surface-0: #0A0F14 !important;  /* Deep Ocean Blue-Black */
+  --hf-surface-1: #101820 !important;
+  --hf-surface-2: #17222E !important;
+  --hf-border: rgba(0, 176, 255, 0.1) !important;
+}
+
+@keyframes diwaliFlicker {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); filter: drop-shadow(0 0 12px #FF9900); }
+}
+.diwali-light {
+  animation: diwaliFlicker 1.8s infinite ease-in-out;
+}
+
+@keyframes holiFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(6px, -6px) scale(1.04); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+.holi-splatter {
+  animation: holiFloat 5s infinite ease-in-out;
+}
+
+/* Embossed Credit Card styling */
+.text-embossed {
+  text-shadow: -0.5px -0.5px 0px rgba(255,255,255,0.4), 0.5px 0.5px 0.5px rgba(0,0,0,0.9);
+  color: #E2C96C !important;
+}
+
+.gold-chip-shimmer {
+  background: linear-gradient(135deg, #f3e092 0%, #e2c96c 50%, #c4a73b 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.benefit-outline-purple {
+  border: 1px solid rgba(143, 0, 255, 0.4) !important;
+}
+.benefit-outline-green {
+  border: 1px solid rgba(0, 230, 76, 0.4) !important;
+}
+.benefit-outline-red {
+  border: 1px solid rgba(255, 51, 102, 0.4) !important;
+}
+
+/* Custom card gradients */
+.premium-card-grad {
+  background: linear-gradient(135deg, rgba(20, 20, 31, 0.9) 0%, rgba(10, 10, 15, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+
 
