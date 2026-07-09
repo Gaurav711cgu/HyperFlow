@@ -78,3 +78,55 @@ class OutboxEvent(Base):
     processed = Column(Boolean, default=False, nullable=False)
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
+
+class Restaurant(Base):
+    __tablename__ = 'restaurants'
+    
+    id = Column(String(50), primary_key=True)
+    name = Column(String(100), nullable=False)
+    cuisine = Column(String(100), nullable=False)
+    rating = Column(Float, nullable=False)
+    distance = Column(String(50), nullable=False)
+    time = Column(String(50), nullable=False)
+    slaConfidence = Column(Integer, default=95)
+    isAIPick = Column(Boolean, default=False)
+    isExclusive = Column(Boolean, default=False)
+    image = Column(String(500), nullable=True)
+
+
+class Coupon(Base):
+    __tablename__ = 'coupons'
+    
+    code = Column(String(50), primary_key=True)
+    discount_percentage = Column(Integer, nullable=False)
+    min_cart_value = Column(Float, nullable=False)
+    active = Column(Boolean, default=True)
+
+
+class DineoutReservation(Base):
+    __tablename__ = 'dineout_reservations'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    customer_name = Column(String(100), nullable=False)
+    restaurant_id = Column(String(50), nullable=False)
+    time_slot = Column(String(50), nullable=False)
+    guests = Column(Integer, nullable=False)
+
+
+class ExpenseLog(Base):
+    __tablename__ = 'expense_logs'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    category = Column(String(100), nullable=False)
+    amount = Column(Float, nullable=False)
+    description = Column(String(500), nullable=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class SystemSetting(Base):
+    __tablename__ = 'system_settings'
+    
+    key = Column(String(100), primary_key=True)
+    value = Column(String(500), nullable=False)
+
+

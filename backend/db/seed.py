@@ -3,7 +3,7 @@ import datetime
 import random
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.db.models import Base, DarkStore, Inventory, SalesEvent
+from backend.db.models import Base, DarkStore, Inventory, SalesEvent, Restaurant, Coupon, ExpenseLog, SystemSetting
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://hyperflow_admin:hyperflow_secure_pass@localhost:5432/hyperflow_db")
 
@@ -26,12 +26,9 @@ def seed_database():
     session = Session()
     
     try:
-        # Check if already seeded
-        if session.query(DarkStore).first() is not None:
-            print("Database already seeded. Skipping.")
-            return
-            
-        print("Seeding DarkStore records...")
+        # Seed DarkStore records
+        if session.query(DarkStore).first() is None:
+            print("Seeding DarkStore records...")
         stores = [
             DarkStore(id="store_01", name="Whitefield Dark Store", city="Bengaluru", lat=12.9716, lng=77.5946),
             DarkStore(id="store_02", name="Koramangala Hub", city="Bengaluru", lat=12.9345, lng=77.6265),
@@ -40,9 +37,10 @@ def seed_database():
         session.add_all(stores)
         session.commit()
         
-        print("Seeding Inventory records...")
-        # Add items. Make sure Amul Milk and Organic Bananas have 0 stock to trigger OOS
-        inventory_items = [
+        if session.query(Inventory).first() is None:
+            print("Seeding Inventory records...")
+            # Add items. Make sure Amul Milk and Organic Bananas have 0 stock to trigger OOS
+            inventory_items = [
             # store_01
             Inventory(store_id="store_01", sku_id="g1", sku_name="Fresh Toned Milk 1L", qty_available=0),
             Inventory(store_id="store_01", sku_id="g2", sku_name="Organic Bananas 1 Dozen", qty_available=0),
@@ -60,7 +58,8 @@ def seed_database():
         session.add_all(inventory_items)
         session.commit()
         
-        print("Seeding SalesEvent historical records (30 days of data per SKU)...")
+        if session.query(SalesEvent).first() is None:
+            print("Seeding SalesEvent historical records (30 days of data per SKU)...")
         start_date = datetime.date.today() - datetime.timedelta(days=30)
         
         sales_events = []
@@ -90,9 +89,71 @@ def seed_database():
                         event_date=current_date,
                         hour_bucket=hour
                     ))
-        session.add_all(sales_events)
-        session.commit()
-        print("Database successfully seeded with historical operation parameters!")
+            session.add_all(sales_events)
+            session.commit()
+
+        # Seed Restaurants
+        if session.query(Restaurant).first() is None:
+            print("Seeding Restaurant records...")
+            rests = [
+                Restaurant(
+                    id="rest_behrouz",
+                    name="Behrouz Biryani",
+                    cuisine="Biryani · Mughlai · Royal",
+                    rating=4.6,
+                    distance="2.1 km",
+                    time="28 min",
+                    slaConfidence=97,
+                    isAIPick=True,
+                    isExclusive=True,
+                    image="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop&q=60"
+                ),
+                Restaurant(
+                    id="rest_tandoor",
+                    name="Tandoor Imperial",
+                    cuisine="North Indian · Kababs",
+                    rating=4.3,
+                    distance="1.4 km",
+                    time="22 min",
+                    slaConfidence=94,
+                    isAIPick=False,
+                    isExclusive=False,
+                    image="https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=300&auto=format&fit=crop&q=60"
+                )
+            ]
+            session.add_all(rests)
+            session.commit()
+
+        # Seed Coupons
+        if session.query(Coupon).first() is None:
+            print("Seeding Coupon records...")
+            coupons = [
+                Coupon(code="SWIGGYIT", discount_percentage=50, min_cart_value=199.0, active=True),
+                Coupon(code="JUMBO75", discount_percentage=75, min_cart_value=399.0, active=True)
+            ]
+            session.add_all(coupons)
+            session.commit()
+
+        # Seed Expense Logs
+        if session.query(ExpenseLog).first() is None:
+            print("Seeding ExpenseLog records...")
+            expenses = [
+                ExpenseLog(category="Food wastage claim", amount=2400.0, description="OOS threshold cleanup Whitefield Store"),
+                ExpenseLog(category="Logistics rain incentive surge", amount=4120.0, description="Monsoon Storm Surge Fleet Payout")
+            ]
+            session.add_all(expenses)
+            session.commit()
+
+        # Seed System Settings
+        if session.query(SystemSetting).first() is None:
+            print("Seeding SystemSetting records...")
+            settings = [
+                SystemSetting(key="festival_theme", value="nominal")
+            ]
+            session.add_all(settings)
+            session.commit()
+
+        print("Database successfully seeded with historical operation parameters and admin baselines!")
     except Exception as e:
         session.rollback()
         print(f"Error during seeding: {e}")
