@@ -229,9 +229,9 @@ export default function CartCheckout({ cart = [], onBack, onUpdateQuantity, onPl
         </div>
       </header>
 
-      <main className="mt-24 max-w-[1440px] mx-auto px-8 grid grid-cols-12 gap-8 pb-24">
+      <main className="mt-24 max-w-[1440px] mx-auto px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-24">
         {/* Left Column: Order Review */}
-        <div className="col-span-7 flex flex-col gap-6">
+        <div className="col-span-1 lg:col-span-7 flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-[#FF0077]">Review Your Order</h2>
             <span className="font-mono text-[#FF0077] text-xs bg-[#FF0077]/10 px-3 py-1 rounded-full border border-[#FF0077]/20">
@@ -313,7 +313,7 @@ export default function CartCheckout({ cart = [], onBack, onUpdateQuantity, onPl
         </div>
 
         {/* Right Column: Secure Payment Gateway */}
-        <div className="col-span-5 flex flex-col gap-6">
+        <div className="col-span-1 lg:col-span-5 flex flex-col gap-6">
           <h2 className="text-xl font-bold text-[#FF0077]">Payment</h2>
           
           {/* Card Mockup */}

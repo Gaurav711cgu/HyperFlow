@@ -40,12 +40,21 @@ export default function DiscoveryHub({ restaurants = [], onSelectRestaurant, onA
                   <span className="text-[10px] text-gray-400 truncate max-w-[200px]">Plot LP 60, Prasanti Vihar, Patia, Bhubaneswar</span>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10">
-                <img 
-                  className="w-full h-full object-cover" 
-                  alt="User Avatar"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0Uznd5BrEakyqV03TSlFHCHXw_TTR9NoiZrjWMX83oPzfPL86grMqD13aKT0QDWtFtRURT0zxK0U5PGph0YE-85gH0kYqPFNrxkJIVv-A-5FLYfmnTzXRUmurQzKSzdHPdwjaAcqq98ciPnMiyXrRP9vtJhGxu3_5vDomtUxqdJ03ATOOMMFCXPpnh4C90ZilJDpgsImzdQdVL2Adtcs8rV177FsVEfoveZebaPCjJOWo3BNAj7ReXUAukbuMudxED_8wA4AHUbhC"
-                />
+              <div className="flex items-center gap-2.5">
+                <button 
+                  onClick={() => onOpenOps && onOpenOps()} 
+                  className="p-1.5 rounded-xl bg-[#6C63FF]/20 border border-[#6C63FF]/40 text-[#00D4AA] active:scale-95 transition-transform"
+                  title="Ops Desk"
+                >
+                  <span className="material-symbols-outlined text-[18px] block">analytics</span>
+                </button>
+                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10 shrink-0">
+                  <img 
+                    className="w-full h-full object-cover" 
+                    alt="User Avatar"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0Uznd5BrEakyqV03TSlFHCHXw_TTR9NoiZrjWMX83oPzfPL86grMqD13aKT0QDWtFtRURT0zxK0U5PGph0YE-85gH0kYqPFNrxkJIVv-A-5FLYfmnTzXRUmurQzKSzdHPdwjaAcqq98ciPnMiyXrRP9vtJhGxu3_5vDomtUxqdJ03ATOOMMFCXPpnh4C90ZilJDpgsImzdQdVL2Adtcs8rV177FsVEfoveZebaPCjJOWo3BNAj7ReXUAukbuMudxED_8wA4AHUbhC"
+                  />
+                </div>
               </div>
             </div>
             {/* Search Input */}
@@ -303,7 +312,14 @@ export default function DiscoveryHub({ restaurants = [], onSelectRestaurant, onA
               <span className="material-symbols-outlined text-[#FF0077] text-[18px]">location_on</span>
               <span className="text-xs font-semibold text-white">Patia, Bhubaneswar</span>
             </div>
-            <div className="w-9 h-9 rounded-full border border-[#FF0077]/30 p-0.5 overflow-hidden">
+            <button 
+              onClick={() => onOpenOps && onOpenOps()} 
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6C63FF]/20 hover:bg-[#6C63FF]/30 border border-[#6C63FF]/40 text-[#00D4AA] rounded-full text-xs font-bold tracking-tight shadow-md hover:scale-105 active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-[16px]">analytics</span>
+              Ops Dashboard
+            </button>
+            <div className="w-9 h-9 rounded-full border border-[#FF0077]/30 p-0.5 overflow-hidden shrink-0">
               <img 
                 className="w-full h-full rounded-full object-cover" 
                 alt="Profile Avatar"
@@ -315,11 +331,11 @@ export default function DiscoveryHub({ restaurants = [], onSelectRestaurant, onA
       </header>
 
       {/* Main Container */}
-      <main className="pt-20 min-h-screen max-w-[1440px] mx-auto px-8 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-[240px_1fr_320px] gap-8 h-[calc(100vh-100px)]">
+      <main className="pt-24 min-h-screen max-w-[1440px] mx-auto px-8 pb-8 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_320px] gap-8 w-full">
           
           {/* Left Sidebar */}
-          <aside className="flex flex-col gap-6 overflow-y-auto pr-2">
+          <aside className="flex flex-col gap-6 pr-2">
             <nav className="flex flex-col gap-2">
               <button 
                 onClick={() => setActiveTab('home')}
@@ -412,7 +428,7 @@ export default function DiscoveryHub({ restaurants = [], onSelectRestaurant, onA
           </aside>
 
           {/* Center Panel */}
-          <section className="flex flex-col gap-6 overflow-y-auto pr-1">
+          <section className="flex flex-col gap-6 pr-1">
             {/* Streak Hero Card */}
             <div className="relative w-full h-44 rounded-3xl overflow-hidden bg-[#0A0A0F] border border-[#FF0077]/20 p-6 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-2">
@@ -471,7 +487,7 @@ export default function DiscoveryHub({ restaurants = [], onSelectRestaurant, onA
           </section>
 
           {/* Right Sidebar */}
-          <aside className="flex flex-col gap-6">
+          <aside className="hidden xl:flex flex-col gap-6">
             {/* Your Usual Section */}
             <div className="bg-[#0A0A0F] border border-white/5 rounded-3xl p-5 flex flex-col gap-4">
               <div className="flex items-center justify-between">

@@ -247,9 +247,9 @@ export default function RestaurantDetail({ restaurant, onBack, onAddToCart, cart
       </header>
 
       {/* Main Grid */}
-      <main className="pt-20 max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-[240px_1fr_340px] gap-8 h-[calc(100vh-80px)] px-8 overflow-hidden">
+      <main className="pt-24 max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-[220px_1fr] xl:grid-cols-[240px_1fr_340px] gap-8 px-8 w-full pb-16">
         {/* Left Sidebar Menu Collections */}
-        <aside className="hidden md:flex flex-col py-6 overflow-y-auto pr-2">
+        <aside className="hidden lg:flex flex-col py-6 pr-2">
           <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Collections</h3>
           <div className="flex flex-col gap-2">
             <button 
@@ -273,7 +273,7 @@ export default function RestaurantDetail({ restaurant, onBack, onAddToCart, cart
         </aside>
 
         {/* Center Panel menu items */}
-        <section className="flex flex-col py-6 overflow-y-auto pr-4">
+        <section className="flex flex-col py-6 pr-4">
           {/* Parallax Banner */}
           <div className="relative w-full h-[220px] rounded-2xl overflow-hidden mb-6 group">
             <div className="absolute inset-0 bg-gradient-to-t from-[#040406] via-transparent to-transparent z-10"></div>
@@ -390,7 +390,7 @@ export default function RestaurantDetail({ restaurant, onBack, onAddToCart, cart
         </section>
 
         {/* Right Sidebar: Basket Summary */}
-        <aside className="hidden md:flex flex-col py-6 overflow-hidden">
+        <aside className="hidden xl:flex flex-col py-6">
           <div className="bg-[#0A0A0F] border border-white/5 flex-1 rounded-2xl flex flex-col overflow-hidden relative shadow-2xl">
             <div className="p-5 border-b border-white/5">
               <div className="flex items-center justify-between mb-2">

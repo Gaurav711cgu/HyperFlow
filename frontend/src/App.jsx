@@ -1168,6 +1168,24 @@ export default function App() {
     );
   }
 
+  if (appView === 'consumer') {
+    return (
+      <DiscoveryHub 
+        restaurants={restaurants} 
+        groceries={groceries} 
+        selectedAddress={selectedAddress} 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onSelectRestaurant={handleSelectRestaurant} 
+        onAddToCart={handleAddToCart} 
+        onOpenChat={() => setChatOpen(true)} 
+        onOpenCheckout={() => setPaymentScreenOpen(true)} 
+        onOpenOps={() => setAppView('intel')} 
+        cart={cart}
+      />
+    );
+  }
+
   return (
     <div className="bg-[#0A0A0F] text-white min-h-screen font-body-md overflow-hidden relative">
       
