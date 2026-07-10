@@ -238,7 +238,7 @@ export default function App() {
   const [donateClimate, setDonateClimate] = useState(true);
   const [donateFoodSafety, setDonateFoodSafety] = useState(true);
   const [showSplash, setShowSplash] = useState(false);
-  const [showLockScreen, setShowLockScreen] = useState(true);
+  const [showLockScreen, setShowLockScreen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
