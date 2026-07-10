@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function DiscoveryHub({ restaurants = [], onSelectRestaurant, onAddToCart, activeTab, setActiveTab, cart = [] }) {
+export default function DiscoveryHub({ restaurants = [], groceries = [], selectedAddress, activeTab, setActiveTab, onSelectRestaurant, onAddToCart, onOpenChat, onOpenCheckout, onOpenOps, onOpenProfile, cart = [] }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [selectedCuisine, setSelectedCuisine] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -279,6 +279,30 @@ export default function DiscoveryHub({ restaurants = [], onSelectRestaurant, onA
             </div>
           </div>
         </main>
+
+        {/* Persistent Bottom Bar matching other layouts */}
+        <footer className="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0F]/90 backdrop-blur-xl border-t border-white/5 py-2 flex justify-around items-center">
+          <div onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-0.5 cursor-pointer ${activeTab === 'home' ? 'text-[#FF0077]' : 'text-gray-400 hover:text-white'}`}>
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: activeTab === 'home' ? "'FILL' 1" : "'FILL' 0" }}>delivery_dining</span>
+            <span className="text-[8px] font-medium font-sans">Delivery</span>
+          </div>
+          <div onClick={() => setActiveTab('dineout')} className={`flex flex-col items-center gap-0.5 cursor-pointer ${activeTab === 'dineout' ? 'text-[#FFB300]' : 'text-gray-400 hover:text-white'}`}>
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: activeTab === 'dineout' ? "'FILL' 1" : "'FILL' 0" }}>restaurant</span>
+            <span className="text-[8px] font-medium font-sans">Dining</span>
+          </div>
+          <div onClick={() => setActiveTab('quick')} className={`flex flex-col items-center gap-0.5 cursor-pointer ${activeTab === 'quick' ? 'text-[#00D4AA]' : 'text-gray-400 hover:text-white'}`}>
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: activeTab === 'quick' ? "'FILL' 1" : "'FILL' 0" }}>local_mall</span>
+            <span className="text-[8px] font-medium font-sans">Groceries</span>
+          </div>
+          <div onClick={() => onOpenChat && onOpenChat()} className="flex flex-col items-center gap-0.5 text-gray-400 cursor-pointer hover:text-white">
+            <span className="material-symbols-outlined text-[20px]">smart_toy</span>
+            <span className="text-[8px] font-medium font-sans">AI Agent</span>
+          </div>
+          <div onClick={() => onOpenProfile && onOpenProfile()} className="flex flex-col items-center gap-0.5 text-gray-400 cursor-pointer hover:text-white">
+            <span className="material-symbols-outlined text-[20px]">person</span>
+            <span className="text-[8px] font-medium font-sans">Profile</span>
+          </div>
+        </footer>
       </div>
     );
   }
@@ -319,7 +343,10 @@ export default function DiscoveryHub({ restaurants = [], onSelectRestaurant, onA
               <span className="material-symbols-outlined text-[16px]">analytics</span>
               Ops Dashboard
             </button>
-            <div className="w-9 h-9 rounded-full border border-[#FF0077]/30 p-0.5 overflow-hidden shrink-0">
+            <div 
+              onClick={() => onOpenProfile && onOpenProfile()} 
+              className="w-9 h-9 rounded-full border border-[#FF0077]/30 p-0.5 overflow-hidden shrink-0 cursor-pointer hover:border-[#FF0077] transition-colors"
+            >
               <img 
                 className="w-full h-full rounded-full object-cover" 
                 alt="Profile Avatar"
@@ -365,12 +392,10 @@ export default function DiscoveryHub({ restaurants = [], onSelectRestaurant, onA
                 <span className="text-xs font-semibold">Groceries</span>
               </button>
               <button 
-                onClick={() => setActiveTab('agent_chat')}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all relative ${
-                  activeTab === 'agent_chat' ? 'bg-[#8F00FF]/10 text-[#8F00FF] font-bold border border-[#8F00FF]/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                }`}
+                onClick={() => onOpenChat && onOpenChat()}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all relative text-gray-400 hover:bg-white/5 hover:text-white"
               >
-                <span className="absolute top-3 right-4 w-2 h-2 bg-[#8F00FF] rounded-full animate-pulse"></span>
+                <span className="absolute top-3 right-4 w-2 h-2 bg-[#FF0077] rounded-full animate-pulse"></span>
                 <span className="material-symbols-outlined">smart_toy</span>
                 <span className="text-xs font-semibold">AI Agent</span>
               </button>

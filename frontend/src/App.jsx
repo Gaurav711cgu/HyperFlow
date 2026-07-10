@@ -21,6 +21,7 @@ import RealTimeTracking from './components/RealTimeTracking.jsx';
 import AICommerceAgent from './components/AICommerceAgent.jsx';
 import OpsControlPanel from './components/OpsControlPanel.jsx';
 import LockScreen from './components/LockScreen.jsx';
+import LoyaltyAnalytics from './components/LoyaltyAnalytics.jsx';
 
 // Real coordinates in Bhubaneswar (Patia / Prasanti Vihar area)
 const HUB_COORDINATES = {
@@ -755,8 +756,9 @@ export default function App() {
     setPaymentScreenOpen(true);
   };
 
-  const executePaymentSuccess = async () => {
-    if (!checkoutPayload) return;
+  const executePaymentSuccess = async (directPayload = null) => {
+    const payload = directPayload || checkoutPayload;
+    if (!payload) return;
     
     const orderId = `HF-${Math.floor(Math.random() * 8999) + 1000}`;
     const timestamp = new Date().toLocaleTimeString();
@@ -769,7 +771,7 @@ export default function App() {
     });
 
     // Wire to backend inventory reserve lock manager
-    for (const item of checkoutPayload.items) {
+    for (const item of payload.items) {
       // Map frontend item IDs to backend SKU IDs
       let skuId = "g4"; // default mock restaurant item
       if (item.id === "g_milk") skuId = "g1";
@@ -1112,6 +1114,30 @@ export default function App() {
     return <OpsControlPanel onBack={() => setAppView('consumer')} />;
   }
 
+  if (appView === 'loyalty') {
+    return (
+      <LoyaltyAnalytics 
+        onBack={() => setAppView('consumer')} 
+        onNavigate={(tab) => {
+          if (tab === 'home') {
+            setAppView('consumer');
+            setActiveTab('home');
+          } else if (tab === 'dineout') {
+            setAppView('consumer');
+            setActiveTab('dineout');
+          } else if (tab === 'quick') {
+            setAppView('consumer');
+            setActiveTab('quick');
+          } else if (tab === 'agent_chat') {
+            setAppView('consumer');
+            setChatOpen(true);
+          }
+        }}
+        cartCount={cart.reduce((acc, item) => acc + (item.quantity || 1), 0)}
+      />
+    );
+  }
+
   if (chatOpen) {
     return (
       <AICommerceAgent 
@@ -1142,14 +1168,23 @@ export default function App() {
         onBack={() => setPaymentScreenOpen(false)} 
         onUpdateQuantity={updateCartQty} 
         onPlaceOrder={(payload) => {
-          setCheckoutPayload({
+          const directPayload = {
             items: cart,
             restaurantName: cart[0]?.restaurantName || 'Instamart Store',
             restaurantId: cart[0]?.restaurantId || 'im_store',
             total: payload.grandTotal
-          });
+          };
+          setCheckoutPayload(directPayload);
+          setCart([]);
           setPaymentScreenOpen(false);
-          executePaymentSuccess();
+          setActiveOrder({
+            id: 'ORD-' + (Math.floor(Math.random() * 89999) + 10000),
+            items: cart,
+            total: payload.grandTotal,
+            status: 'Preparing your meal'
+          });
+          setRiderProgress(0);
+          executePaymentSuccess(directPayload);
         }} 
         coupons={coupons} 
       />
@@ -1181,6 +1216,7 @@ export default function App() {
         onOpenChat={() => setChatOpen(true)} 
         onOpenCheckout={() => setPaymentScreenOpen(true)} 
         onOpenOps={() => setAppView('intel')} 
+        onOpenProfile={() => setAppView('loyalty')} 
         cart={cart}
       />
     );
