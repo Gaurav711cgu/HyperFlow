@@ -176,8 +176,9 @@ export async function updateFestivalSettings(theme_name) {
  * @returns {WebSocket} - call .close() to disconnect
  */
 export function connectLiveMetrics(onMessage) {
-  const wsBase = BASE
-    ? BASE.replace(/^http/, 'ws')
+  const base = getBaseUrl();
+  const wsBase = base
+    ? base.replace(/^http/, 'ws')
     : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`;
   const ws = new WebSocket(`${wsBase}/ws/live-metrics`);
   ws.onmessage = (e) => {
