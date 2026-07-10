@@ -4,11 +4,36 @@
  * All endpoints proxied via Vite dev server → /api → http://localhost:8000
  */
 
-const BASE = import.meta.env.VITE_BACKEND_URL || '';
+const getBaseUrl = () => {
+  const override = localStorage.getItem('hyperflow_backend_url');
+  if (override) return override;
+  const envUrl = import.meta.env.VITE_BACKEND_URL;
+  if (envUrl) return envUrl;
+  if (typeof window !== 'undefined') {
+    const hn = window.location.hostname;
+    if (hn === 'localhost' || hn === '127.0.0.1') {
+      return 'http://127.0.0.1:8000';
+    }
+  }
+  return '';
+};
+
+export function setBackendUrl(url) {
+  if (url) {
+    localStorage.setItem('hyperflow_backend_url', url.replace(/\/$/, ''));
+  } else {
+    localStorage.removeItem('hyperflow_backend_url');
+  }
+}
+
+export function getBackendUrl() {
+  return getBaseUrl();
+}
 
 async function apiFetch(path, options = {}) {
   try {
-    const url = BASE ? `${BASE}${path}` : path;
+    const base = getBaseUrl();
+    const url = base ? `${base}${path}` : path;
     const headers = { 'Content-Type': 'application/json', ...options.headers };
     
     // Inject personal Swiggy token from localStorage if available

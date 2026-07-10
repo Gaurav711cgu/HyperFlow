@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import * as API from '../api.js';
 
 export default function AuthPortal({ onLoginSuccess }) {
+  const [showUrlSettings, setShowUrlSettings] = useState(false);
+  const [backendUrl, setBackendUrlState] = useState(localStorage.getItem('hyperflow_backend_url') || '');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [phoneNumber, setPhoneNumber] = useState('9876543210');
   const [otpSent, setOtpSent] = useState(false);
@@ -27,19 +30,17 @@ export default function AuthPortal({ onLoginSuccess }) {
 
   const handleSwiggyConnect = async () => {
     try {
-      const res = await fetch('/api/v1/auth/login-url');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.auth_url) {
-          // Store state token for CSRF check during callback
-          localStorage.setItem('swiggy_oauth_state', data.state);
-          window.location.href = data.auth_url;
-        }
+      const data = await API.fetchLoginUrl();
+      if (data && data.auth_url) {
+        localStorage.setItem('swiggy_oauth_state', data.state);
+        window.location.href = data.auth_url;
       } else {
-        alert("Failed to start Swiggy OAuth flow. Ensure the backend server is running.");
+        setShowUrlSettings(true);
+        alert("Failed to start Swiggy OAuth flow. Please configure your backend server URL below.");
       }
     } catch (err) {
       console.error(err);
+      setShowUrlSettings(true);
       alert("Error starting Swiggy OAuth: " + err.message);
     }
   };
@@ -168,7 +169,34 @@ export default function AuthPortal({ onLoginSuccess }) {
             Connect Swiggy (Real OTP)
           </button>
 
-          <div className="flex items-center space-x-2 my-2 opacity-50">
+          {showUrlSettings && (
+            <div className="bg-[#14141F] border border-white/5 rounded-2xl p-4 space-y-3 mt-4 text-left w-full">
+              <label className="block text-[10px] font-mono text-gray-500 uppercase">Custom Backend URL override</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  className="flex-1 bg-black border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#FF0077] font-mono"
+                  placeholder="http://localhost:8000"
+                  value={backendUrl}
+                  onChange={(e) => {
+                    setBackendUrlState(e.target.value);
+                    API.setBackendUrl(e.target.value);
+                  }}
+                />
+                <button 
+                  onClick={() => setShowUrlSettings(false)}
+                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-semibold text-white hover:bg-white/10"
+                >
+                  Save
+                </button>
+              </div>
+              <p className="text-[9px] text-gray-600 leading-normal">
+                Configure if your FastAPI backend runs locally (localhost:8000) or on a custom domain while testing.
+              </p>
+            </div>
+          )}
+
+          <div className="flex items-center space-x-2 my-2 opacity-50 w-full">
             <div className="flex-1 h-[1px] bg-white/10"></div>
             <span className="text-[9px] tracking-widest uppercase text-gray-400">Or Local Bypass</span>
             <div className="flex-1 h-[1px] bg-white/10"></div>
@@ -302,6 +330,33 @@ export default function AuthPortal({ onLoginSuccess }) {
                 <span className="material-symbols-outlined text-[18px]">smart_screen</span>
                 Connect Swiggy (Real OTP)
               </button>
+
+              {showUrlSettings && (
+                <div className="bg-[#14141F] border border-white/5 rounded-2xl p-4 space-y-3 mt-4 text-left w-full">
+                  <label className="block text-[10px] font-mono text-gray-500 uppercase">Custom Backend URL override</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      className="flex-1 bg-black border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#FF0077] font-mono"
+                      placeholder="http://localhost:8000"
+                      value={backendUrl}
+                      onChange={(e) => {
+                        setBackendUrlState(e.target.value);
+                        API.setBackendUrl(e.target.value);
+                      }}
+                    />
+                    <button 
+                      onClick={() => setShowUrlSettings(false)}
+                      className="px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-semibold text-white hover:bg-white/10"
+                    >
+                      Save
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-gray-600 leading-normal">
+                    Configure if your FastAPI backend runs locally (localhost:8000) or on a custom domain while testing.
+                  </p>
+                </div>
+              )}
 
               <div className="flex items-center space-x-2 my-2 opacity-50">
                 <div className="flex-1 h-[1px] bg-white/10"></div>
