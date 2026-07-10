@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function OpsControlPanel({ onBack }) {
+export default function OpsControlPanel({ onBack, onNavigateView }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [isEvSurge, setIsEvSurge] = useState(true);
   const [demandThreshold, setDemandThreshold] = useState(65);
@@ -146,33 +146,109 @@ export default function OpsControlPanel({ onBack }) {
       {/* Main Container */}
       <main className="pt-16 flex h-screen overflow-hidden">
         {/* Left Side Navigation Panel */}
-        <nav className="w-64 h-full bg-[#131318] border-r border-[#262626] flex flex-col py-6 shrink-0">
-          <div className="px-6 mb-8">
-            <p className="text-sm font-bold text-white tracking-wide uppercase">Operator Console</p>
-            <p className="font-mono text-[9px] text-gray-500 mt-1">SYSADMIN DIRECTORY</p>
+        <nav className="w-64 h-full bg-[#0A0A0F] border-r border-[#262626] flex flex-col py-6 shrink-0 overflow-y-auto">
+          <div className="px-6 mb-6">
+            <p className="text-xs font-bold text-white tracking-wider uppercase font-mono">HYPERFLOW CONTROL</p>
+            <p className="font-mono text-[9px] text-gray-500 mt-1">OPERATOR SYSTEM CORE</p>
           </div>
-          <div className="flex flex-col gap-1 flex-grow">
-            <a className="flex items-center gap-4 px-6 py-3 text-[#ff535a] border-r-4 border-[#ff535a] bg-[#1f1f25] transition-all" href="#">
-              <span className="material-symbols-outlined">monitoring</span>
-              <span className="font-mono text-xs">Real-time Monitor</span>
-            </a>
-            <a className="flex items-center gap-4 px-6 py-3 text-gray-400 hover:bg-[#1f1f25] transition-all" href="#">
-              <span className="material-symbols-outlined">local_shipping</span>
-              <span className="font-mono text-xs">Fleet Logistics</span>
-            </a>
-            <a className="flex items-center gap-4 px-6 py-3 text-gray-400 hover:bg-[#1f1f25] transition-all" href="#">
-              <span className="material-symbols-outlined">model_training</span>
-              <span className="font-mono text-xs">ML Training</span>
-            </a>
+
+          <div className="flex flex-col gap-6 px-3">
+            {/* Category 1: Real-time Core */}
+            <div>
+              <p className="px-3 text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2 font-mono">Real-Time Core</p>
+              <div className="flex flex-col gap-1">
+                <button className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-[#ff535a] bg-[#1f1f25] border-r-2 border-[#ff535a] text-left">
+                  <span className="material-symbols-outlined text-[16px]">monitoring</span>
+                  Monitor Dashboard
+                </button>
+              </div>
+            </div>
+
+            {/* Category 2: Admin Surfaces */}
+            <div>
+              <p className="px-3 text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2 font-mono">Admin Panels</p>
+              <div className="flex flex-col gap-1">
+                <button 
+                  onClick={() => onNavigateView && onNavigateView('merchant_stock_admin')}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-left"
+                >
+                  <span className="material-symbols-outlined text-[16px]">inventory_2</span>
+                  Merchant & Stock
+                </button>
+                <button 
+                  onClick={() => onNavigateView && onNavigateView('fleet_logistics_admin')}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-left"
+                >
+                  <span className="material-symbols-outlined text-[16px]">local_shipping</span>
+                  Fleet & Logistics
+                </button>
+                <button 
+                  onClick={() => onNavigateView && onNavigateView('financial_ops_admin')}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-left"
+                >
+                  <span className="material-symbols-outlined text-[16px]">payments</span>
+                  Financial Ops
+                </button>
+                <button 
+                  onClick={() => onNavigateView && onNavigateView('growth_analytics_admin')}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-left"
+                >
+                  <span className="material-symbols-outlined text-[16px]">trending_up</span>
+                  Growth & Analytics
+                </button>
+              </div>
+            </div>
+
+            {/* Category 3: Customer Support */}
+            <div>
+              <p className="px-3 text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2 font-mono">User Support</p>
+              <div className="flex flex-col gap-1">
+                <button 
+                  onClick={() => onNavigateView && onNavigateView('refund_status')}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-left"
+                >
+                  <span className="material-symbols-outlined text-[16px]">currency_exchange</span>
+                  Refund Tracker
+                </button>
+                <button 
+                  onClick={() => onNavigateView && onNavigateView('help_support')}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-left"
+                >
+                  <span className="material-symbols-outlined text-[16px]">support_agent</span>
+                  Support Center
+                </button>
+                <button 
+                  onClick={() => onNavigateView && onNavigateView('chatbot_help')}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-left"
+                >
+                  <span className="material-symbols-outlined text-[16px]">rate_review</span>
+                  Order Review
+                </button>
+              </div>
+            </div>
+
+            {/* Category 4: Theme Settings */}
+            <div>
+              <p className="px-3 text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2 font-mono">Platform Design</p>
+              <div className="flex flex-col gap-1">
+                <button 
+                  onClick={() => onNavigateView && onNavigateView('festival_theme_manager')}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-left"
+                >
+                  <span className="material-symbols-outlined text-[16px]">palette</span>
+                  Festival Themes
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="px-6 pb-6">
-            <button className="w-full bg-[#1f1f25] border border-[#262626] py-3 rounded-xl font-mono text-xs text-white hover:bg-white/5 transition-colors">
-              DEPLOY SYSTEM UPDATE
+
+          <div className="mt-auto px-6 pb-6 pt-4 shrink-0">
+            <button className="w-full bg-[#1c1c24] border border-[#262626] py-2.5 rounded-xl font-mono text-[10px] text-white hover:bg-white/5 transition-colors uppercase tracking-wider">
+              System Settings
             </button>
           </div>
         </nav>
 
-        {/* Content Canvas */}
         <div className="flex-grow flex p-8 gap-8 overflow-y-auto bg-[#0e0e13]">
           {/* Left Panel: Simulated phone view */}
           <div className="w-[410px] h-[760px] border-[12px] border-[#1f1f25] rounded-[48px] overflow-hidden relative shadow-2xl shrink-0 bg-[#0f0f14] flex flex-col">

@@ -25,6 +25,25 @@ export default function AuthPortal({ onLoginSuccess }) {
     return () => clearInterval(interval);
   }, [otpSent, resendTimer]);
 
+  const handleSwiggyConnect = async () => {
+    try {
+      const res = await fetch('/api/v1/auth/login-url');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.auth_url) {
+          // Store state token for CSRF check during callback
+          localStorage.setItem('swiggy_oauth_state', data.state);
+          window.location.href = data.auth_url;
+        }
+      } else {
+        alert("Failed to start Swiggy OAuth flow. Ensure the backend server is running.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error starting Swiggy OAuth: " + err.message);
+    }
+  };
+
   const handleSendOtp = (e) => {
     if (e) e.preventDefault();
     setOtpSent(true);
@@ -39,7 +58,7 @@ export default function AuthPortal({ onLoginSuccess }) {
 
     // Auto-focus next input
     if (value !== '' && index < 3) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
+      const nextInput = document.getElementById(isMobile ? `otp-${index + 1}` : `otp-desktop-${index + 1}`);
       if (nextInput) nextInput.focus();
     }
 
@@ -141,24 +160,35 @@ export default function AuthPortal({ onLoginSuccess }) {
           </div>
 
           {/* 4. Action Button */}
+          <button 
+            onClick={handleSwiggyConnect}
+            className="w-full h-14 rounded-full bg-gradient-to-r from-[#FF0077] to-[#8F00FF] flex items-center justify-center shadow-[0_8px_24px_rgba(255,0,119,0.35)] hover:scale-[0.98] transition-transform text-white font-bold text-base tracking-wide gap-2"
+          >
+            <span className="material-symbols-outlined text-[20px]">smart_screen</span>
+            Connect Swiggy (Real OTP)
+          </button>
+
+          <div className="flex items-center space-x-2 my-2 opacity-50">
+            <div className="flex-1 h-[1px] bg-white/10"></div>
+            <span className="text-[9px] tracking-widest uppercase text-gray-400">Or Local Bypass</span>
+            <div className="flex-1 h-[1px] bg-white/10"></div>
+          </div>
+
           {!otpSent ? (
             <button 
               onClick={handleSendOtp}
-              className="w-full h-14 rounded-full bg-gradient-to-r from-[#FF0077] to-[#8F00FF] flex items-center justify-center shadow-[0_8px_24px_rgba(255,0,119,0.25)] hover:scale-[0.98] transition-transform"
+              className="w-full h-12 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all text-xs font-semibold"
             >
-              <span className="text-white font-bold text-base tracking-wide flex items-center">
-                Continue Securely
-                <span className="material-symbols-outlined ml-2 text-[20px]">chevron_right</span>
-              </span>
+              Simulate Login (SMS Bypass)
             </button>
           ) : (
             <button 
               onClick={() => handleAuthenticate()}
-              className="w-full h-14 rounded-full bg-[#8F00FF] flex items-center justify-center shadow-[0_8px_24px_rgba(143,0,255,0.25)] hover:scale-[0.98] transition-transform"
+              className="w-full h-12 rounded-full bg-[#8F00FF] flex items-center justify-center shadow-[0_8px_24px_rgba(143,0,255,0.25)] hover:scale-[0.98] transition-transform"
             >
-              <span className="text-white font-bold text-base tracking-wide flex items-center">
-                Authenticate Access
-                <span className="material-symbols-outlined ml-2 text-[20px]">lock</span>
+              <span className="text-white font-bold text-xs tracking-wide flex items-center">
+                Authenticate Mock Access
+                <span className="material-symbols-outlined ml-2 text-[16px]">lock</span>
               </span>
             </button>
           )}
@@ -263,61 +293,72 @@ export default function AuthPortal({ onLoginSuccess }) {
               <p className="text-xs text-gray-400">Enter your credentials to access your dashboard.</p>
             </div>
             
-            {/* Form Section */}
-            <form onSubmit={handleSendOtp} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-white px-1 block">Phone Number</label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-[20px]">smartphone</span>
-                  <input 
-                    className="w-full bg-[#0A0A0F] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white font-medium placeholder-gray-600 focus:border-[#FF0077] focus:ring-1 focus:ring-[#FF0077] outline-none transition-all" 
-                    placeholder="+91 98765 43210" 
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              {!otpSent && (
-                <button 
-                  className="w-full py-3 bg-[#FF0077] text-white rounded-full font-semibold hover:bg-[#FF0077]/90 transition-all flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(255,0,119,0.3)]" 
-                  type="submit"
-                >
-                  Request OTP
-                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                </button>
-              )}
-            </form>
+             {/* Form Section */}
+            <div className="space-y-6">
+              <button 
+                onClick={handleSwiggyConnect}
+                className="w-full py-3 bg-gradient-to-r from-[#FF0077] to-[#8F00FF] text-white rounded-full font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(255,0,119,0.3)]"
+              >
+                <span className="material-symbols-outlined text-[18px]">smart_screen</span>
+                Connect Swiggy (Real OTP)
+              </button>
 
-            {/* OTP Hidden Section */}
-            {otpSent && (
-              <div className="mt-6 space-y-6 animate-fade-in">
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-white px-1 block">Verification Code</label>
-                  <div className="flex justify-between gap-2">
-                    {otp.map((digit, idx) => (
-                      <input 
-                        key={idx}
-                        id={`otp-desktop-${idx}`}
-                        className="w-14 h-16 bg-[#0A0A0F] border border-white/10 rounded-xl text-center text-xl font-bold text-white focus:outline-none focus:border-[#FF0077] focus:ring-1 focus:ring-[#FF0077]"
-                        maxLength="1"
-                        type="text"
-                        value={digit}
-                        onChange={(e) => handleOtpChange(idx, e.target.value)}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <button 
-                  onClick={() => handleAuthenticate()}
-                  className="w-full py-3 bg-[#8F00FF] text-white rounded-full font-semibold hover:bg-[#8F00FF]/90 transition-all flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(143,0,255,0.3)]"
-                >
-                  Authenticate Access
-                  <span className="material-symbols-outlined text-[18px]">lock</span>
-                </button>
+              <div className="flex items-center space-x-2 my-2 opacity-50">
+                <div className="flex-1 h-[1px] bg-white/10"></div>
+                <span className="text-[9px] tracking-widest uppercase text-gray-400">Or Local Bypass</span>
+                <div className="flex-1 h-[1px] bg-white/10"></div>
               </div>
-            )}
+
+              {!otpSent ? (
+                <form onSubmit={handleSendOtp} className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-white px-1 block">Phone Number</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-[20px]">smartphone</span>
+                      <input 
+                        className="w-full bg-[#0A0A0F] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white font-medium placeholder-gray-600 focus:border-[#FF0077] focus:ring-1 focus:ring-[#FF0077] outline-none transition-all" 
+                        placeholder="+91 98765 43210" 
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <button 
+                    className="w-full py-2 bg-white/5 border border-white/15 text-white rounded-full text-xs font-semibold hover:bg-white/10 transition-all" 
+                    type="submit"
+                  >
+                    Simulate Quick Login
+                  </button>
+                </form>
+              ) : (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-white px-1 block">Verification Code</label>
+                    <div className="flex justify-between gap-2">
+                      {otp.map((digit, idx) => (
+                        <input 
+                          key={idx}
+                          id={`otp-desktop-${idx}`}
+                          className="w-14 h-16 bg-[#0A0A0F] border border-white/10 rounded-xl text-center text-xl font-bold text-white focus:outline-none focus:border-[#FF0077] focus:ring-1 focus:ring-[#FF0077]"
+                          maxLength="1"
+                          type="text"
+                          value={digit}
+                          onChange={(e) => handleOtpChange(idx, e.target.value)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => handleAuthenticate()}
+                    className="w-full py-3 bg-[#8F00FF] text-white rounded-full font-semibold hover:bg-[#8F00FF]/90 transition-all flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(143,0,255,0.3)]"
+                  >
+                    Authenticate Mock Access
+                    <span className="material-symbols-outlined text-[18px]">lock</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Footer Links */}
             <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-4">

@@ -1,20 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import * as API from '../api';
 
 export default function RestaurantDetail({ restaurant, onBack, onAddToCart, cart = [], onCheckout }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [vegOnly, setVegOnly] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Recommended');
   const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  if (!restaurant) return null;
+  const [menu, setMenu] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Mock menu items dynamically adapted to the restaurant or default list
   const defaultMenu = [
@@ -65,8 +58,48 @@ export default function RestaurantDetail({ restaurant, onBack, onAddToCart, cart
     }
   ];
 
-  const menuItems = defaultMenu.filter(item => {
-    const matchesVeg = !vegOnly || item.isVeg;
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!restaurant) return;
+    setLoading(true);
+    API.fetchRestaurantMenu(restaurant.id)
+      .then(data => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          setMenu(data.map(item => ({
+            id: item.id || `item-${Math.random()}`,
+            name: item.name,
+            price: item.price,
+            rating: String(item.rating || '4.2'),
+            cuisine: item.cuisine || (item.veg ? 'Veg' : 'Non-Veg'),
+            desc: item.desc || item.description,
+            image: item.image || item.imageUrl,
+            isVeg: item.veg ?? item.isVeg ?? false,
+            isBestSeller: item.rating >= 4.5
+          })));
+        } else {
+          setMenu(defaultMenu);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.warn("[Menu API] Failed to fetch menu, falling back:", err);
+        setMenu(defaultMenu);
+        setLoading(false);
+      });
+  }, [restaurant?.id]);
+
+  if (!restaurant) return null;
+
+  const menuItems = menu.filter(item => {
+    const isVeg = item.isVeg ?? item.veg;
+    const matchesVeg = !vegOnly || isVeg;
     const matchesSearch = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesVeg && matchesSearch;
   });

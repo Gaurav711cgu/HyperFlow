@@ -1,8 +1,14 @@
 from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import List, Optional
 import os
+from dotenv import load_dotenv
+
+# Load workspace .env variables
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"))
+
 import time
 import random
 import datetime
@@ -26,6 +32,8 @@ from backend.ml.censored_demand import CensoredDemandForecaster
 from backend.ml.store_profitability import DarkStoreProfitabilityScorer
 from backend.ml.production_safeguards import ProductionSafeguards
 
+security = HTTPBearer(auto_error=False)
+
 app = FastAPI(
     title="HyperFlow Operations & Security API Gateway",
     description="Hyperlocal quick-commerce backend gateway executing Tobit censored regression, Cox time-to-profitability, and atomic locking protocols.",
@@ -39,6 +47,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from backend.api.swiggy_mcp_routes import router as swiggy_router
+app.include_router(swiggy_router)
 
 # Initialize engines
 lock_manager = RedisLockManager()
@@ -523,47 +534,14 @@ class DineoutReserve(BaseModel):
     time: str
     party: int
 
-def call_swiggy_mcp_sync(server: str, tool_name: str, arguments: dict) -> dict:
-    import urllib.request
-    import urllib.error
-    token = os.getenv("SWIGGY_ACCESS_TOKEN")
-    if not token:
-        raise ValueError("SWIGGY_ACCESS_TOKEN not set")
-    
-    url = f"https://mcp.swiggy.com/{server}"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-        "Accept": "application/json, text/event-stream",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-    payload = {
-        "jsonrpc": "2.0",
-        "method": "tools/call",
-        "params": {
-            "name": tool_name,
-            "arguments": arguments
-        },
-        "id": 1
-    }
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers=headers,
-        method="POST"
-    )
-    with urllib.request.urlopen(req, timeout=5) as response:
-        if response.status == 200:
-            res_body = json.loads(response.read().decode("utf-8"))
-            if "error" in res_body:
-                raise ValueError(res_body["error"].get("message", "Unknown JSON-RPC error"))
-            return res_body.get("result", {})
-        else:
-            raise ValueError(f"HTTP {response.status}")
+from backend.api.utils import call_swiggy_mcp_sync
 
 @app.get("/api/v1/restaurants", response_model=List[dict])
-async def list_restaurants(db: Session = Depends(get_db)):
-    token = os.getenv("SWIGGY_ACCESS_TOKEN")
+async def list_restaurants(
+    db: Session = Depends(get_db),
+    authorization: Optional[HTTPAuthorizationCredentials] = Depends(security)
+):
+    token = authorization.credentials if authorization else os.getenv("SWIGGY_ACCESS_TOKEN")
     if token and len(token) > 50 and not token.startswith("YOUR_") and "INVALID" not in token:
         try:
             loop = asyncio.get_event_loop()
@@ -636,8 +614,12 @@ async def list_restaurants(db: Session = Depends(get_db)):
     ]
 
 @app.get("/api/v1/restaurants/{restaurant_id}/menu", response_model=List[dict])
-async def list_restaurant_menu(restaurant_id: str, db: Session = Depends(get_db)):
-    token = os.getenv("SWIGGY_ACCESS_TOKEN")
+async def list_restaurant_menu(
+    restaurant_id: str, 
+    db: Session = Depends(get_db),
+    authorization: Optional[HTTPAuthorizationCredentials] = Depends(security)
+):
+    token = authorization.credentials if authorization else os.getenv("SWIGGY_ACCESS_TOKEN")
     if token and len(token) > 50 and not token.startswith("YOUR_") and "INVALID" not in token:
         try:
             loop = asyncio.get_event_loop()

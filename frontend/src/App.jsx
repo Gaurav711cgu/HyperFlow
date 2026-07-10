@@ -23,6 +23,16 @@ import OpsControlPanel from './components/OpsControlPanel.jsx';
 import LockScreen from './components/LockScreen.jsx';
 import LoyaltyAnalytics from './components/LoyaltyAnalytics.jsx';
 
+// Import New Admin & Support Components
+import MerchantStockAdmin from './components/MerchantStockAdmin.jsx';
+import FleetLogisticsAdmin from './components/FleetLogisticsAdmin.jsx';
+import FinancialOpsAdmin from './components/FinancialOpsAdmin.jsx';
+import GrowthAnalyticsAdmin from './components/GrowthAnalyticsAdmin.jsx';
+import RefundStatus from './components/RefundStatus.jsx';
+import HelpSupport from './components/HelpSupport.jsx';
+import ChatbotHelp from './components/ChatbotHelp.jsx';
+import FestivalThemeManager from './components/FestivalThemeManager.jsx';
+
 // Real coordinates in Bhubaneswar (Patia / Prasanti Vihar area)
 const HUB_COORDINATES = {
   Bhubaneswar: {
@@ -542,6 +552,39 @@ export default function App() {
     return () => clearInterval(interval);
   }, [activeOrder]);
 
+  // ─── OAuth Redirect Callback Handler ───────────────────────────────────────
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    
+    if (code && state) {
+      const savedState = localStorage.getItem('swiggy_oauth_state');
+      if (state !== savedState) {
+        console.warn("[OAuth] CSRF state mismatch!");
+      }
+      
+      // Clean up state
+      localStorage.removeItem('swiggy_oauth_state');
+      
+      // Exchange code for token
+      API.exchangeCode(code, state).then(data => {
+        if (data && data.access_token) {
+          localStorage.setItem('swiggy_access_token', data.access_token);
+          setPhone('Swiggy Connected');
+          setLoggedIn(true);
+          setAppView('hub');
+        } else {
+          alert("Swiggy connection failed: " + (data?.error_description || "Unknown error"));
+        }
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }).catch(err => {
+        console.error("[OAuth] Exchange error:", err);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      });
+    }
+  }, []);
+
   // ─── Backend Integration — on-mount data sync ─────────────────────────────
   useEffect(() => {
     // 1. Hydrate restaurants from backend
@@ -760,7 +803,8 @@ export default function App() {
     const payload = directPayload || checkoutPayload;
     if (!payload) return;
     
-    const orderId = `HF-${Math.floor(Math.random() * 8999) + 1000}`;
+    let orderId = `HF-${Math.floor(Math.random() * 8999) + 1000}`;
+    let isRealOrder = false;
     const timestamp = new Date().toLocaleTimeString();
 
     // Fire Confetti Blast
@@ -770,51 +814,97 @@ export default function App() {
       origin: { y: 0.6 }
     });
 
-    // Wire to backend inventory reserve lock manager
-    for (const item of payload.items) {
-      // Map frontend item IDs to backend SKU IDs
-      let skuId = "g4"; // default mock restaurant item
-      if (item.id === "g_milk") skuId = "g1";
-      else if (item.id === "g_bananas") skuId = "g2";
-      else if (item.id === "g_tomatoes") skuId = "g3";
-
+    const isSwiggyAuth = !!localStorage.getItem('swiggy_access_token');
+    
+    if (isSwiggyAuth) {
       try {
-        const res = await API.reserveInventory({
-          order_id: orderId,
-          store_id: "store_01",
-          sku_id: skuId,
-          qty_requested: item.quantity
-        });
-        if (res) {
-          setSecurityLogs(prev => [
-            { time: timestamp, event: `LOCK MANAGER: Reserved ${item.quantity}x ${item.name} (SKU: ${skuId}) via ${res.latency_ms ? `p99 Redis lock (${res.latency_ms}ms)` : 'lock manager'}.`, type: 'success' },
-            ...prev
-          ]);
+        setSecurityLogs(prev => [
+          { time: timestamp, event: `SWIGGY REALTIME: Starting Swiggy Food MCP order placement flow...`, type: 'info' },
+          ...prev
+        ]);
+        
+        // 1. Fetch Swiggy address
+        const addrRes = await API.fetchFoodAddresses();
+        const addressId = addrRes?.structuredContent?.addresses?.[0]?.id;
+        
+        if (addressId) {
+          // 2. Format items for cart update
+          const swiggyItems = payload.items.map(item => ({
+            id: item.id,
+            quantity: item.quantity || 1
+          }));
+          
+          // 3. Update Swiggy cart
+          await API.updateFoodCart({ addressId, items: swiggyItems });
+          
+          // 4. Place Swiggy order
+          const placeRes = await API.placeFoodOrder({ addressId, paymentMethod: "COD" });
+          
+          if (placeRes?.structuredContent?.orderId) {
+            orderId = placeRes.structuredContent.orderId;
+            isRealOrder = true;
+            setSecurityLogs(prev => [
+              { time: timestamp, event: `SWIGGY ORDER PLACED: Placed real checkout order ${orderId} via COD.`, type: 'success' },
+              ...prev
+            ]);
+          }
         }
       } catch (err) {
+        console.warn("[Swiggy Order placing failed, falling back to mock reservation]:", err);
         setSecurityLogs(prev => [
-          { time: timestamp, event: `LOCK CONFLICT: Failed to reserve ${item.name}. Lock acquisition timeout or insufficient stock.`, type: 'error' },
+          { time: timestamp, event: `SWIGGY ORDER ERROR: Realtime order failed. Falling back to local lock manager: ${err.message}`, type: 'error' },
           ...prev
         ]);
       }
     }
 
+    // Lock manager execution for local state validation & mock tracking
+    if (!isRealOrder) {
+      for (const item of payload.items) {
+        let skuId = "g4"; // default mock restaurant item
+        if (item.id === "g_milk") skuId = "g1";
+        else if (item.id === "g_bananas") skuId = "g2";
+        else if (item.id === "g_tomatoes") skuId = "g3";
+
+        try {
+          const res = await API.reserveInventory({
+            order_id: orderId,
+            store_id: "store_01",
+            sku_id: skuId,
+            qty_requested: item.quantity
+          });
+          if (res) {
+            setSecurityLogs(prev => [
+              { time: timestamp, event: `LOCK MANAGER: Reserved ${item.quantity}x ${item.name} (SKU: ${skuId}) via ${res.latency_ms ? `p99 Redis lock (${res.latency_ms}ms)` : 'lock manager'}.`, type: 'success' },
+              ...prev
+            ]);
+          }
+        } catch (err) {
+          setSecurityLogs(prev => [
+            { time: timestamp, event: `LOCK CONFLICT: Failed to reserve ${item.name}. Lock acquisition timeout or insufficient stock.`, type: 'error' },
+            ...prev
+          ]);
+        }
+      }
+    }
+
     setActiveOrder({
       id: orderId,
-      items: checkoutPayload.items,
-      status: "Preparing at kitchen",
-      restaurantName: checkoutPayload.restaurantName
+      items: payload.items,
+      status: isRealOrder ? "Order Confirmed by Swiggy" : "Preparing at kitchen",
+      restaurantName: payload.restaurantName || "District Merchant",
+      isRealOrder
     });
     
-    if (checkoutPayload.items.length > 0) {
+    if (payload.items.length > 0) {
       setLastOrderedItem({
-        id: checkoutPayload.items[0].id,
-        name: checkoutPayload.items[0].name,
-        price: checkoutPayload.items[0].price,
-        restaurantName: checkoutPayload.restaurantName,
-        restaurantId: checkoutPayload.restaurantId,
-        protein: checkoutPayload.items[0].protein,
-        calories: checkoutPayload.items[0].calories
+        id: payload.items[0].id,
+        name: payload.items[0].name,
+        price: payload.items[0].price,
+        restaurantName: payload.restaurantName,
+        restaurantId: payload.restaurantId,
+        protein: payload.items[0].protein,
+        calories: payload.items[0].calories
       });
     }
 
@@ -1111,7 +1201,47 @@ export default function App() {
   }
 
   if (appView === 'admin') {
-    return <OpsControlPanel onBack={() => setAppView('consumer')} />;
+    return <OpsControlPanel onBack={() => setAppView('consumer')} onNavigateView={(view) => setAppView(view)} />;
+  }
+
+  if (appView === 'merchant_stock_admin') {
+    return <MerchantStockAdmin onBack={() => setAppView('admin')} />;
+  }
+
+  if (appView === 'fleet_logistics_admin') {
+    return <FleetLogisticsAdmin onBack={() => setAppView('admin')} />;
+  }
+
+  if (appView === 'financial_ops_admin') {
+    return <FinancialOpsAdmin onBack={() => setAppView('admin')} />;
+  }
+
+  if (appView === 'growth_analytics_admin') {
+    return <GrowthAnalyticsAdmin onBack={() => setAppView('admin')} />;
+  }
+
+  if (appView === 'refund_status') {
+    return <RefundStatus onBack={() => setAppView('admin')} />;
+  }
+
+  if (appView === 'help_support') {
+    return <HelpSupport onBack={() => setAppView('admin')} onOpenChatbot={() => setAppView('chatbot_help')} />;
+  }
+
+  if (appView === 'chatbot_help') {
+    return <ChatbotHelp onBack={() => setAppView('help_support')} />;
+  }
+
+  if (appView === 'festival_theme_manager') {
+    return (
+      <FestivalThemeManager 
+        activeTheme={festivalTheme} 
+        onThemeChange={(newTheme) => {
+          setFestivalTheme(newTheme);
+        }}
+        onBack={() => setAppView('admin')} 
+      />
+    );
   }
 
   if (appView === 'loyalty') {

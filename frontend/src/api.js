@@ -9,8 +9,16 @@ const BASE = import.meta.env.VITE_BACKEND_URL || '';
 async function apiFetch(path, options = {}) {
   try {
     const url = BASE ? `${BASE}${path}` : path;
+    const headers = { 'Content-Type': 'application/json', ...options.headers };
+    
+    // Inject personal Swiggy token from localStorage if available
+    const personalToken = localStorage.getItem('swiggy_access_token');
+    if (personalToken) {
+      headers['Authorization'] = `Bearer ${personalToken}`;
+    }
+
     const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json', ...options.headers },
+      headers,
       ...options,
     });
     if (!res.ok) {
@@ -22,6 +30,19 @@ async function apiFetch(path, options = {}) {
     console.warn(`[API] ${path} failed (offline fallback):`, err.message);
     return null; // caller uses null to fall back to local state
   }
+}
+
+// ─── OAuth 2.1 + PKCE ─────────────────────────────────────────────────────────
+
+export async function fetchLoginUrl() {
+  return apiFetch('/api/v1/auth/login-url');
+}
+
+export async function exchangeCode(code, state) {
+  return apiFetch('/api/v1/auth/exchange', {
+    method: 'POST',
+    body: JSON.stringify({ code, state }),
+  });
 }
 
 // ─── Dark Store / Inventory ───────────────────────────────────────────────────
@@ -141,4 +162,28 @@ export function connectLiveMetrics(onMessage) {
   };
   ws.onerror = (e) => console.warn('[WS] live-metrics error', e);
   return ws;
+}
+
+// ─── Swiggy Food MCP Direct Tool Calls ────────────────────────────────────────
+
+export async function fetchFoodAddresses() {
+  return apiFetch('/api/v1/food/addresses');
+}
+
+export async function updateFoodCart({ addressId, items, couponCode }) {
+  return apiFetch('/api/v1/food/cart', {
+    method: 'POST',
+    body: JSON.stringify({ addressId, items, couponCode }),
+  });
+}
+
+export async function placeFoodOrder({ addressId, paymentMethod }) {
+  return apiFetch('/api/v1/food/orders', {
+    method: 'POST',
+    body: JSON.stringify({ addressId, paymentMethod }),
+  });
+}
+
+export async function trackFoodOrder(orderId) {
+  return apiFetch(`/api/v1/food/orders/${orderId}/track`);
 }
