@@ -1,86 +1,107 @@
 import React from 'react';
 
-export default function RefundStatus({ onBack }) {
-  const refunds = [
-    { id: 1, merchant: 'WOW! Bhubaneswar', method: 'LazyPay', date: '24 Aug 2026', amount: 'Rs 420.00', status: 'Completed', icon: 'storefront' },
-    { id: 2, merchant: 'Four Spoon', method: 'Visa ending in 4242', date: '22 Aug 2026', amount: 'Rs 290.00', status: 'Completed', icon: 'restaurant' },
-    { id: 3, merchant: 'Behrouz Biryani', method: 'Paytm Wallet', date: '19 Aug 2026', amount: 'Rs 349.00', status: 'Completed', icon: 'lunch_dining' }
-  ];
-
+const RefundStatus = () => {
   return (
-    <div className="w-full min-h-screen bg-[#080808] text-[#e5e1e6] font-sans antialiased pb-20">
-      {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-[#0A0A0F]/90 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-6 h-16">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={onBack}
-            className="text-[#ffb1c2] hover:opacity-80 transition-opacity flex items-center justify-center p-1 rounded-full hover:bg-white/5"
-          >
-            <span className="material-symbols-outlined text-[24px]">arrow_back</span>
-          </button>
-          <h1 className="font-bold text-base text-[#ffb1c2] tracking-tighter">Refund Status</h1>
-        </div>
-        <button 
-          onClick={onBack}
-          className="text-xs font-mono text-gray-500 hover:text-white px-3 py-1 border border-white/10 rounded-full transition-colors"
-        >
-          CLOSE
-        </button>
-      </header>
+    <>
 
-      {/* Main Content */}
-      <main className="w-full max-w-[600px] mx-auto mt-24 px-4 flex flex-col gap-6">
-        <div className="flex flex-col items-center justify-center gap-2 mb-4">
-          <h2 className="text-xl font-bold text-white text-center">HyperFlow Refund Status</h2>
-          <div className="w-12 h-1 bg-[#FF2D78]"></div>
-        </div>
+{/* Top Navigation (Shared Component implementation based on rules, adjusted for desktop) */}
+<header className="fixed top-0 w-full z-50 bg-surface-container-lowest/90 backdrop-blur-xl border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between px-xl h-16 shadow-[0_-8px_24px_rgba(255,76,135,0.05)]">
+<div className="flex items-center gap-md">
+<button className="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center">
+<span className="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 className="font-hero-display text-hero-display text-primary tracking-tighter">Order Review</h1>
+</div>
+<div className="hidden md:flex gap-xl font-label-small text-label-small items-center">
+<div className="flex items-center gap-xs text-on-surface-variant/60 hover:text-primary/80 transition-all cursor-pointer">
+<span className="material-symbols-outlined text-[16px]">grid_view</span>
+<span>Feed</span>
+</div>
+<div className="flex items-center gap-xs text-on-surface-variant/60 hover:text-primary/80 transition-all cursor-pointer">
+<span className="material-symbols-outlined text-[16px]">receipt_long</span>
+<span>Orders</span>
+</div>
+<div className="flex items-center gap-xs text-on-surface-variant/60 hover:text-primary/80 transition-all cursor-pointer">
+<span className="material-symbols-outlined text-[16px]">military_tech</span>
+<span>Rewards</span>
+</div>
+<div className="flex items-center gap-xs text-primary font-bold hover:text-primary/80 transition-all cursor-pointer">
+<span className="material-symbols-outlined text-[16px]">person</span>
+<span>Profile</span>
+</div>
+</div>
+<button className="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center">
+<span className="material-symbols-outlined">support_agent</span>
+</button>
+</header>
+<main className="w-full max-w-[800px] mt-24 px-lg flex flex-col gap-xl relative z-10">
+{/* Header */}
+<div className="flex flex-col items-center justify-center gap-sm mb-lg">
+<h2 className="font-hero-display text-hero-display text-on-surface text-center">HyperFlow Refund Status</h2>
+<div className="w-12 h-1 bg-hyper-pink mt-sm"></div>
+</div>
+{/* Info Banner */}
+<div className="bg-surface-panel border border-[rgba(255,255,255,0.08)] rounded-lg p-lg flex items-start gap-md">
+<span className="material-symbols-outlined text-primary mt-[2px]">info</span>
+<p className="font-body-medium text-body-medium text-on-surface-variant">
+                Refunds will be processed and returned to your original HyperFlow payment source within 3-5 business days.
+            </p>
+</div>
+{/* Completed Refunds Section */}
+<section className="flex flex-col gap-lg mt-md">
+<h3 className="font-section-header text-section-header text-on-surface uppercase tracking-widest text-on-surface-variant/80">Completed Refunds</h3>
+<div className="flex flex-col gap-md">
+{/* Refund Card 1 */}
+<div className="bg-surface-panel border border-[rgba(255,255,255,0.08)] rounded-lg p-lg flex items-center justify-between transition-colors hover:bg-surface-container-low">
+<div className="flex items-center gap-lg">
+<div className="w-10 h-10 rounded-full bg-surface-container-high border border-[rgba(255,255,255,0.08)] flex items-center justify-center flex-shrink-0">
+<span className="material-symbols-outlined text-on-surface text-[20px]">storefront</span>
+</div>
+<div className="flex flex-col gap-xs">
+<div className="font-body-medium text-body-medium text-on-surface">WOW! Bhubaneswar</div>
+<div className="font-metric-mono text-metric-mono text-on-surface-variant/60">LazyPay • 24 Aug 2026</div>
+</div>
+</div>
+<div className="flex flex-col items-end gap-xs">
+<div className="font-metric-mono text-metric-mono text-on-surface text-[14px]">$12.50</div>
+<div className="flex items-center gap-[4px] text-tertiary">
+<span className="material-symbols-outlined text-[14px]">check_circle</span>
+<span className="font-label-small text-label-small font-bold uppercase tracking-wide">Completed</span>
+</div>
+</div>
+</div>
+{/* Refund Card 2 */}
+<div className="bg-surface-panel border border-[rgba(255,255,255,0.08)] rounded-lg p-lg flex items-center justify-between transition-colors hover:bg-surface-container-low">
+<div className="flex items-center gap-lg">
+<div className="w-10 h-10 rounded-full bg-surface-container-high border border-[rgba(255,255,255,0.08)] flex items-center justify-center flex-shrink-0">
+<span className="material-symbols-outlined text-on-surface text-[20px]">restaurant</span>
+</div>
+<div className="flex flex-col gap-xs">
+<div className="font-body-medium text-body-medium text-on-surface">Four Spoon</div>
+<div className="font-metric-mono text-metric-mono text-on-surface-variant/60">Visa ending in 4242 • 22 Aug 2026</div>
+</div>
+</div>
+<div className="flex flex-col items-end gap-xs">
+<div className="font-metric-mono text-metric-mono text-on-surface text-[14px]">$8.75</div>
+<div className="flex items-center gap-[4px] text-tertiary">
+<span className="material-symbols-outlined text-[14px]">check_circle</span>
+<span className="font-label-small text-label-small font-bold uppercase tracking-wide">Completed</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+{/* CTA Button */}
+<div className="mt-xl flex justify-center w-full">
+<button className="bg-hyper-pink text-white font-section-header text-section-header py-[12px] px-xl rounded-full flex items-center justify-center gap-sm hover:opacity-90 transition-opacity active:scale-[0.98] w-full max-w-[320px]">
+<span className="material-symbols-outlined text-[18px]">history</span>
+                Show Older Refunds
+            </button>
+</div>
+</main>
 
-        {/* Info Banner */}
-        <div className="bg-[#0A0A0F] border border-white/5 rounded-xl p-4 flex items-start gap-3">
-          <span className="material-symbols-outlined text-[#ffb1c2] mt-0.5">info</span>
-          <p className="text-xs text-gray-400 leading-normal">
-            Refunds will be processed and returned to your original payment source within 3-5 business days.
-          </p>
-        </div>
-
-        {/* Refund Cards */}
-        <section className="flex flex-col gap-4">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Completed Refunds</h3>
-          <div className="flex flex-col gap-3">
-            {refunds.map(r => (
-              <div 
-                key={r.id} 
-                className="bg-[#0A0A0F] border border-white/5 rounded-xl p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-white text-[20px]">{r.icon}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-white leading-tight">{r.merchant}</span>
-                    <span className="text-[10px] text-gray-500 mt-1 font-mono">{r.method} • {r.date}</span>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className="font-mono text-xs font-bold text-white">{r.amount}</span>
-                  <div className="flex items-center gap-1 text-[#00E676]">
-                    <span className="material-symbols-outlined text-[12px]">check_circle</span>
-                    <span className="text-[9px] font-bold uppercase tracking-wider">{r.status}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Show Older Button */}
-        <div className="mt-8 flex justify-center">
-          <button className="w-full max-w-[280px] py-3 bg-[#FF2D78] text-white rounded-full text-xs font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">history</span>
-            Show Older Refunds
-          </button>
-        </div>
-      </main>
-    </div>
+    </>
   );
-}
+};
+
+export default RefundStatus;

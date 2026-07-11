@@ -37,6 +37,34 @@ def generate_synthetic_demand(n_days=365):
     return X, latent_demand, true_beta, true_sigma
 
 
+def generate_training_data(n_samples=500, seed=42):
+    """
+    Generates realistic training data with features: weather_temp, weather_rain, and time_elapsed_sec.
+    """
+    np.random.seed(seed)
+    
+    # Create features
+    weather_temp = np.random.normal(25, 5, n_samples)
+    weather_rain = np.random.binomial(1, 0.2, n_samples)
+    time_elapsed_sec = np.random.uniform(300, 3600, n_samples)
+    
+    X = np.column_stack([weather_temp, weather_rain, time_elapsed_sec])
+    
+    # True relationship: Base demand is 40 units.
+    true_beta = np.array([40.0, 0.8, -15.0, -0.01]) # Intercept, temp, rain, elapsed
+    true_sigma = 8.0
+    
+    # Calculate latent demand Y* = X*beta + epsilon
+    X_const = np.column_stack([np.ones(n_samples), X])
+    latent_demand = np.dot(X_const, true_beta) + np.random.normal(0, true_sigma, n_samples)
+    latent_demand = np.maximum(5.0, latent_demand) # Demand cannot drop below 5 units
+    
+    # Apply censoring (e.g. 30% late_day)
+    observed_sales, censored = apply_censoring(latent_demand, rate=0.30, pattern="late_day")
+    
+    return X, observed_sales, censored, true_beta, true_sigma
+
+
 def apply_censoring(latent_demand, rate, pattern="late_day"):
     """
     Applies right-censoring to latent demand to achieve a target censoring rate.
@@ -189,6 +217,8 @@ To validate recovery mathematically, we simulate **{len(latent_demand)} days** o
         
     print(f"Sensitivity Analysis completed. Report written to {report_path}")
     print(df_res.to_string(index=False))
+    
+    return df_res.to_dict(orient="records")
 
 
 if __name__ == "__main__":

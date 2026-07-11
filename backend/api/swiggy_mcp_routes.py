@@ -139,6 +139,15 @@ async def exchange_token(payload: ExchangePayload, db: Session = Depends(get_db)
         print(f"[OAuth] Token exchange failed: {e}")
         raise HTTPException(status_code=500, detail=f"OAuth exchange failed: {e}")
 
+@router.get("/api/v1/auth/pending-sessions")
+async def get_pending_sessions():
+    now = time.time()
+    sessions = [
+        {"state": state, "expires_in": max(0, data["expires_at"] - now)}
+        for state, data in OAUTH_PENDING_SESSIONS.items()
+    ]
+    return {"active_sessions": sessions, "count": len(sessions)}
+
 # ─── Food MCP Endpoints (14 Tools) ───────────────────────────────────────────
 
 @router.get("/api/v1/food/addresses")

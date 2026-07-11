@@ -250,6 +250,16 @@ This report documents the performance of the **Self-Supervised Gated ETA Smoothe
         f.write(report_content)
         
     print(f"ETA stability backtest completed. Report written to {report_path}")
+    
+    return {
+        "raw_mimo_bumps": raw_b_n + raw_b_s,
+        "gated_smoother_bumps": learn_b_n + learn_b_s,
+        "jitter_suppression_pct": round(((raw_b_n + raw_b_s) - (learn_b_n + learn_b_s)) / max(1, raw_b_n + raw_b_s) * 100, 1),
+        "zone_status": "Storm Surge Active" if raw_b_s > 0 else "Normal"
+    }
+
+def run_eta_benchmark():
+    return run_eta_backtest()
 
 
 if __name__ == "__main__":

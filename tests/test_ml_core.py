@@ -140,6 +140,14 @@ class TestFraudGuard(unittest.TestCase):
         is_valid_spill, _ = guard.check_semantic_plausibility("Gravy spilled completely", ["lays_chips", "oreo_biscuits"])
         self.assertFalse(is_valid_spill)
 
+        # Test case-insensitivity and substring matching
+        is_valid_case_insensitive, _ = guard.check_semantic_plausibility("My ICE CREAM was cold", ["Vanilla Ice Cream"])
+        self.assertFalse(is_valid_case_insensitive)
+        
+        # Test valid case (Pizza)
+        is_valid_pizza, _ = guard.check_semantic_plausibility("My Pizza was cold", ["Pepperoni Pizza"])
+        self.assertTrue(is_valid_pizza)
+
     def test_user_auto_refund_cap(self):
         """
         Asserts that users who exceed the monthly auto-refund limit under High Alert stores
@@ -191,6 +199,29 @@ class TestDispatchBatcher(unittest.TestCase):
         self.assertEqual(len(batches), 2)
         self.assertEqual(batches[0][0]["order_id"], "O_1")
         self.assertEqual(batches[1][0]["order_id"], "O_2")
+
+    def test_nn_search_efficiency(self):
+        """
+        Asserts that the nearest neighbor search effectively batches multiple close orders.
+        """
+        batcher = DispatchBatcher(max_batch_size=3, max_radius_km=5.0, sla_limit_min=15.0)
+        
+        store_lat, store_lng = 12.9716, 77.5946
+        
+        # Orders 1, 2, 3 are all very close together
+        orders = [
+            {"order_id": "O_1", "lat": 12.9717, "lng": 77.5947, "t_prep": 2},
+            {"order_id": "O_2", "lat": 12.9718, "lng": 77.5948, "t_prep": 2},
+            {"order_id": "O_3", "lat": 12.9719, "lng": 77.5949, "t_prep": 2},
+            {"order_id": "O_4", "lat": 12.9720, "lng": 77.5950, "t_prep": 2}
+        ]
+        
+        batches = batcher.optimize_batches(store_lat, store_lng, orders)
+        
+        # First 3 should be in one batch, the 4th in another
+        self.assertEqual(len(batches), 2)
+        self.assertEqual(len(batches[0]), 3)
+        self.assertEqual(len(batches[1]), 1)
 
 
 if __name__ == '__main__':

@@ -1,879 +1,261 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
-export default function DiscoveryHub({ restaurants = [], groceries = [], selectedAddress, activeTab, setActiveTab, onSelectRestaurant, onAddToCart, onOpenChat, onOpenCheckout, onOpenOps, onOpenProfile, cart = [] }) {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-  const [selectedCuisine, setSelectedCuisine] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showAutocomplete, setShowAutocomplete] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const filteredRestaurants = restaurants.filter(r => {
-    const matchesCuisine = !selectedCuisine || r.cuisine === selectedCuisine;
-    const matchesSearch = !searchQuery || r.name.toLowerCase().includes(searchQuery.toLowerCase()) || r.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCuisine && matchesSearch;
-  });
-
-  const cartTotalItems = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
-
-  if (isMobile) {
-    if (showAutocomplete) {
-      return (
-        <div className="fixed inset-0 bg-[#040406] z-[60] flex flex-col text-[#e5e1e6] font-sans p-4">
-          {/* Header bar */}
-          <div className="flex items-center gap-3 pt-4 pb-3 border-b border-white/5">
-            <button 
-              onClick={() => setShowAutocomplete(false)} 
-              className="text-gray-400 hover:text-white"
-            >
-              <span className="material-symbols-outlined text-[24px]">arrow_back</span>
-            </button>
-            <div className="relative flex-1 bg-white/5 rounded-xl h-11 flex items-center px-3 border border-[#FF0077] shadow-[0_0_12px_rgba(255,76,135,0.3)]">
-              <span className="material-symbols-outlined text-gray-500 mr-2 text-[20px]">search</span>
-              <input 
-                autoFocus
-                className="bg-transparent border-none w-full text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-0 h-full" 
-                placeholder="Search food, groceries, or dining..." 
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-gray-500 hover:text-white">
-                  <span className="material-symbols-outlined text-[16px]">close</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Service tags */}
-          <div className="flex gap-2 mt-4 px-2">
-            <span className="text-[10px] font-bold text-[#FF0077] bg-[#FF0077]/10 px-3 py-1 rounded-full border border-[#FF0077]/20">Food Delivery</span>
-            <span className="text-[10px] font-bold text-gray-400 bg-white/5 px-3 py-1 rounded-full border border-white/5">Instamart</span>
-            <span className="text-[10px] font-bold text-gray-400 bg-white/5 px-3 py-1 rounded-full border border-white/5">Dineout</span>
-          </div>
-
-          {/* Main scroll content */}
-          <div className="flex-1 overflow-y-auto mt-4 space-y-6">
-            {/* Autocomplete Suggestions list */}
-            {searchQuery && (
-              <div className="flex flex-col border-b border-white/5 pb-4">
-                <div 
-                  onClick={() => { setSelectedCuisine('Biryani'); setShowAutocomplete(false); }}
-                  className="flex items-center justify-between py-3 hover:bg-white/5 px-2 rounded-xl cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                      <span className="material-symbols-outlined text-[#FF0077] text-[16px]">search</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-white">Biryani</span>
-                      <span className="text-[10px] text-gray-500">in restaurants</span>
-                    </div>
-                  </div>
-                  <span className="material-symbols-outlined text-gray-500 text-[18px]">chevron_right</span>
-                </div>
-                <div 
-                  onClick={() => { setActiveTab('quick'); setShowAutocomplete(false); }}
-                  className="flex items-center justify-between py-3 hover:bg-white/5 px-2 rounded-xl cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                      <span className="material-symbols-outlined text-[#FF0077] text-[16px]">search</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-white">Milk</span>
-                      <span className="text-[10px] text-gray-500">in Instamart groceries</span>
-                    </div>
-                  </div>
-                  <span className="material-symbols-outlined text-gray-500 text-[18px]">chevron_right</span>
-                </div>
-              </div>
-            )}
-
-            {/* Trending Searches */}
-            <div>
-              <div className="flex items-center gap-2 mb-3 px-2">
-                <span className="material-symbols-outlined text-[#FF0077] text-[16px]">trending_up</span>
-                <h2 className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Trending</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { name: 'Dum Biryani', icon: 'local_fire_department', cuisine: 'Biryani' },
-                  { name: 'Pizza Combos', icon: 'local_pizza', cuisine: 'Pizzas' },
-                  { name: 'Healthy Salads', icon: 'eco', cuisine: 'Healthy' },
-                  { name: 'Fresh Milk', icon: 'water_drop', cuisine: 'Groceries' },
-                  { name: 'Desserts', icon: 'cake', cuisine: 'Desserts' },
-                  { name: 'Butter Chicken', icon: 'restaurant', cuisine: 'North Indian' }
-                ].map((term) => (
-                  <button 
-                    key={term.name}
-                    onClick={() => { 
-                      setSearchQuery(term.name); 
-                      setSelectedCuisine(term.cuisine === 'Groceries' ? null : term.cuisine);
-                      if (term.cuisine === 'Groceries') setActiveTab('quick');
-                      setShowAutocomplete(false); 
-                    }}
-                    className="bg-white/5 border border-white/5 rounded-xl py-3 px-3 flex items-center gap-2.5 hover:border-[#FF0077]/40 hover:bg-white/10 text-left transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[#FF0077] text-[16px]">{term.icon}</span>
-                    <span className="text-xs text-white truncate font-medium">{term.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Searches */}
-            <div>
-              <div className="flex items-center gap-2 mb-2 px-2">
-                <span className="material-symbols-outlined text-gray-500 text-[16px]">history</span>
-                <h2 className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Recent</h2>
-              </div>
-              <div className="flex flex-col gap-1">
-                {[
-                  { name: 'Behrouz Biryani', cuisine: 'Biryani' },
-                  { name: 'Tomatoes', cuisine: 'Groceries' }
-                ].map((search) => (
-                  <div 
-                    key={search.name}
-                    className="flex items-center justify-between py-2 hover:bg-white/5 px-2 rounded-xl cursor-pointer group"
-                  >
-                    <div 
-                      onClick={() => { 
-                        setSearchQuery(search.name);
-                        if (search.cuisine === 'Groceries') setActiveTab('quick');
-                        else setSelectedCuisine(search.cuisine);
-                        setShowAutocomplete(false);
-                      }}
-                      className="flex items-center gap-3 flex-grow"
-                    >
-                      <span className="material-symbols-outlined text-gray-500 text-[18px]">schedule</span>
-                      <span className="text-xs text-white font-medium">{search.name}</span>
-                    </div>
-                    <button className="text-gray-500 hover:text-white">
-                      <span className="material-symbols-outlined text-[16px]">close</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    /* ─── MOBILE VIEW LAYOUT (discovery_hub) ─── */
-    return (
-      <div className="relative bg-[#000] min-h-screen text-[#e5e1e6] select-none font-sans overflow-y-auto pb-24">
-        {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 pb-3 bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-white/5">
-          <div className="flex flex-col gap-3">
-            {/* Location & Profile */}
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 cursor-pointer">
-                <span className="material-symbols-outlined text-[#FF0077]">location_on</span>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs font-bold text-white">Home</span>
-                    <span className="material-symbols-outlined text-[16px]">expand_more</span>
-                  </div>
-                  <span className="text-[10px] text-gray-400 truncate max-w-[200px]">Plot LP 60, Prasanti Vihar, Patia, Bhubaneswar</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <button 
-                  onClick={() => onOpenOps && onOpenOps()} 
-                  className="p-1.5 rounded-xl bg-[#6C63FF]/20 border border-[#6C63FF]/40 text-[#00D4AA] active:scale-95 transition-transform"
-                  title="Ops Desk"
-                >
-                  <span className="material-symbols-outlined text-[18px] block">analytics</span>
-                </button>
-                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10 shrink-0">
-                  <img 
-                    className="w-full h-full object-cover" 
-                    alt="User Avatar"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkjIe7ftPr73AcnjOzX3-ui0Xbbho54xtdD5czbkz7DJ2mdigOasrDeMoDVaBjZSUFeCN0EAflCDpLXBD1NbzOvWFeB8YOQ9WGS0cnpYXWqc0urY7eRW76ES7_0Kla9qSWeTeKWvN-_g4r-xs7rFgIWOnskumKT1XW2XAuPWrFb5gaEsQDqj6mMVNQ4wZWCXFqRXTZSjMjOFa2xa8ph73fqXxyOKRPJ625oY-g_YuSygzfG0o6Vfy2GRwkO-e11nJSvyGZcjfHpsGS"
-                  />
-                </div>
-              </div>
-            </div>
-            {/* Search Input */}
-            <div 
-              onClick={() => setShowAutocomplete(true)}
-              className="relative bg-white/5 rounded-xl h-11 flex items-center px-3 border border-white/5 focus-within:border-[#FF0077] transition-all cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-gray-500 mr-2 text-[20px]">search</span>
-              <input 
-                readOnly
-                className="bg-transparent border-none w-full text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-0 h-full cursor-pointer" 
-                placeholder="Search foods, cuisines..." 
-                type="text"
-                value={searchQuery}
-              />
-              <div className="border-l border-white/10 pl-2 ml-2 flex items-center">
-                <span className="material-symbols-outlined text-[#FF0077] text-[18px]">mic</span>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content Canvas */}
-        <main className="pt-32 px-4 flex flex-col gap-6">
-          {/* Tab Selector */}
-          <div className="relative bg-white/5 rounded-full p-0.5 flex justify-between items-center border border-white/5 h-10 w-full">
-            <button 
-              onClick={() => setActiveTab('home')}
-              className={`relative z-10 flex-1 text-center text-xs font-semibold py-1.5 rounded-full transition-all ${
-                activeTab === 'home' ? 'bg-[#14141F] border border-white/5 text-[#FF0077]' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Delivery
-            </button>
-            <button 
-              onClick={() => setActiveTab('dineout')}
-              className="relative z-10 flex-1 text-center text-xs font-semibold py-1.5 rounded-full text-gray-400 hover:text-white transition-all"
-            >
-              Dine-in
-            </button>
-            <button 
-              onClick={() => setActiveTab('quick')}
-              className="relative z-10 flex-1 text-center text-xs font-semibold py-1.5 rounded-full text-gray-400 hover:text-white transition-all"
-            >
-              Groceries
-            </button>
-          </div>
-
-          {/* Gamified Streak Card */}
-          <div className="bg-white/5 border border-white/5 rounded-2xl p-4 flex flex-col gap-2 relative overflow-hidden">
-            <div className="flex justify-between items-start">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-bold text-white">Order 3 times to get Rs 100 cashback</span>
-                <span className="text-[10px] text-gray-400">Complete your streak today!</span>
-              </div>
-              <div className="bg-white/5 rounded-full p-1.5 border border-white/5">
-                <span className="material-symbols-outlined text-amber-400 text-[18px]">local_fire_department</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <div className="flex flex-col items-center gap-1 flex-1">
-                <div className="w-8 h-8 rounded-full border-2 border-[#00E676] flex items-center justify-center bg-[#00E676]/20">
-                  <span className="material-symbols-outlined text-[#00E676] text-[14px]">check</span>
-                </div>
-              </div>
-              <div className="h-[2px] flex-1 bg-white/5 relative">
-                <div className="absolute left-0 top-0 h-full w-1/2 bg-[#00E676]/50"></div>
-              </div>
-              <div className="flex flex-col items-center gap-1 flex-1">
-                <div className="w-8 h-8 rounded-full border-2 border-white/10 flex items-center justify-center bg-white/5">
-                  <span className="text-xs font-mono text-gray-400">2</span>
-                </div>
-              </div>
-              <div className="h-[2px] flex-1 bg-white/5"></div>
-              <div className="flex flex-col items-center gap-1 flex-1">
-                <div className="w-8 h-8 rounded-full border-2 border-white/10 flex items-center justify-center bg-white/5">
-                  <span className="text-xs font-mono text-gray-400">3</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Your Usual Strip (1-Tap Reorder) */}
-          {restaurants.length > 0 && (
-            <div 
-              onClick={() => onSelectRestaurant(restaurants[0])}
-              className="bg-gradient-to-r from-[#FF0077]/10 to-[#8F00FF]/10 border border-white/5 rounded-2xl p-4 flex flex-row items-center gap-3 relative overflow-hidden cursor-pointer"
-            >
-              <div className="w-14 h-14 rounded-xl overflow-hidden border border-white/10 flex-shrink-0">
-                <img 
-                  alt="Biryani" 
-                  className="w-full h-full object-cover" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5CheHwb8sioaAeAvp3l0AB6QATvndcTkqxZkN1AonTgWhN3joVjbb-3hK7t1Ql-cahz-DULgYM12XnK9hp63UKnQtN0ucl-v46abYTOlLn2lflDBEZ7hX93afqgO0TABZBuBwaV2fiZl_SYHyQ7-I1cjaNwzMDo1kopEcdN9pDavwBS-TKiHimUfBZP7T5TEva1p0OkBSQGPR-T8NxMJvu8WaZsYaNfB7zeJenmuUaqYPmysuRNhIP2AtQ6_3zfROGW-kZW9Qcy9M"
-                />
-              </div>
-              <div className="flex flex-col justify-center flex-1 min-w-0">
-                <span className="text-[8px] text-[#FF0077] font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[10px]">history</span> 1-Tap Reorder
-                </span>
-                <span className="text-xs font-bold text-white truncate">Dum Gosht Biryani</span>
-                <span className="text-[10px] text-gray-400 truncate">{restaurants[0].name}</span>
-                <div className="flex gap-2 mt-1">
-                  <span className="bg-[#0A0A0F] px-1.5 py-0.5 rounded text-[8px] font-mono text-[#8F00FF] border border-white/5">36g Protein</span>
-                  <span className="bg-[#0A0A0F] px-1.5 py-0.5 rounded text-[8px] font-mono text-white border border-white/5">Rs 349</span>
-                </div>
-              </div>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddToCart({
-                    id: 'usual-biryani',
-                    name: 'Dum Gosht Biryani',
-                    price: 349,
-                    restaurantName: restaurants[0].name,
-                    restaurantId: restaurants[0].id
-                  });
-                }}
-                className="bg-[#FF0077] text-white rounded-full w-9 h-9 flex items-center justify-center flex-shrink-0 relative overflow-hidden shadow-lg active:scale-95 transition-all"
-              >
-                <span className="material-symbols-outlined text-[18px]">bolt</span>
-              </button>
-            </div>
-          )}
-
-          {/* Categories Bento Grid */}
-          <div className="flex flex-col gap-3">
-            <div className="flex justify-between items-end">
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider">Explore Categories</h2>
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              <div 
-                onClick={() => setSelectedCuisine(selectedCuisine === 'Biryani' ? null : 'Biryani')}
-                className={`flex flex-col items-center gap-1.5 group cursor-pointer`}
-              >
-                <div className={`w-full aspect-square rounded-2xl bg-white/5 flex items-center justify-center border transition-all ${
-                  selectedCuisine === 'Biryani' ? 'border-[#FF0077] bg-[#FF0077]/10' : 'border-white/5'
-                }`}>
-                  <img src="/buttons/Frame (11).svg" alt="Biryani" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform" />
-                </div>
-                <span className="text-[9px] text-gray-400 group-hover:text-white text-center leading-tight font-sans">Biryani</span>
-              </div>
-              <div 
-                onClick={() => setSelectedCuisine(selectedCuisine === 'Pizzas' ? null : 'Pizzas')}
-                className="flex flex-col items-center gap-1.5 group cursor-pointer"
-              >
-                <div className={`w-full aspect-square rounded-2xl bg-white/5 flex items-center justify-center border transition-all ${
-                  selectedCuisine === 'Pizzas' ? 'border-[#FFB300] bg-[#FFB300]/10' : 'border-white/5'
-                }`}>
-                  <img src="/buttons/Frame (10).svg" alt="Pizzas" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform" />
-                </div>
-                <span className="text-[9px] text-gray-400 group-hover:text-white text-center leading-tight font-sans">Pizzas</span>
-              </div>
-              <div 
-                onClick={() => setSelectedCuisine(selectedCuisine === 'Healthy' ? null : 'Healthy')}
-                className="flex flex-col items-center gap-1.5 group cursor-pointer"
-              >
-                <div className={`w-full aspect-square rounded-2xl bg-white/5 flex items-center justify-center border transition-all ${
-                  selectedCuisine === 'Healthy' ? 'border-[#00E676] bg-[#00E676]/10' : 'border-white/5'
-                }`}>
-                  <img src="/buttons/Frame (3).svg" alt="Healthy" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform" />
-                </div>
-                <span className="text-[9px] text-gray-400 group-hover:text-white text-center leading-tight font-sans">Healthy</span>
-              </div>
-              <div 
-                onClick={() => setActiveTab('quick')}
-                className="flex flex-col items-center gap-1.5 group cursor-pointer"
-              >
-                <div className="w-full aspect-square rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 hover:border-white/20 transition-all">
-                  <img src="/buttons/Frame (8).svg" alt="Groceries" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform" />
-                </div>
-                <span className="text-[9px] text-gray-400 group-hover:text-white text-center leading-tight font-sans">Groceries</span>
-              </div>
-              <div 
-                onClick={() => setActiveTab('dineout')}
-                className="flex flex-col items-center gap-1.5 group cursor-pointer"
-              >
-                <div className="w-full aspect-square rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 hover:border-white/20 transition-all">
-                  <img src="/buttons/Frame (6).svg" alt="Dineout" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform" />
-                </div>
-                <span className="text-[9px] text-gray-400 group-hover:text-white text-center leading-tight font-sans">Dineout</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Curated Feed */}
-          <div className="flex flex-col gap-3">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider">Curated for You</h2>
-              <span className="material-symbols-outlined text-gray-400 text-[18px] cursor-pointer">tune</span>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {filteredRestaurants.map(rest => (
-                <div 
-                  key={rest.id}
-                  onClick={() => onSelectRestaurant(rest)}
-                  className="bg-white/5 rounded-2xl overflow-hidden flex flex-col group cursor-pointer relative border border-white/5 hover:border-[#FF0077]/40 transition-all"
-                >
-                  <div className="relative h-28 w-full overflow-hidden">
-                    <img 
-                      alt={rest.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                      src={rest.image || "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop&q=60"}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                    <div className="absolute top-2 right-2 bg-[#0A0A0F]/80 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-white/5 flex items-center gap-0.5">
-                      <span className="material-symbols-outlined text-amber-400 text-[10px] fill-current">star</span>
-                      <span className="text-[8px] font-mono text-white">{rest.rating || '4.0'}</span>
-                    </div>
-                    <div className="absolute bottom-2 left-2 flex gap-1">
-                      <span className="bg-[#14141F]/90 backdrop-blur-md px-1.5 py-0.5 rounded text-[8px] font-mono text-white border border-white/5">
-                        {rest.deliveryTime || '25 min'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-2.5 flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-white truncate">{rest.name}</span>
-                    <span className="text-[9px] text-gray-400 truncate">{rest.cuisine || 'North Indian'}</span>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#00E676]"></span>
-                      <span className="text-[8px] font-mono text-[#00E676]">SLA: {rest.sla || '97%'}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </main>
-
-        {/* Persistent Bottom Bar matching other layouts */}
-        <footer className="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0F]/90 backdrop-blur-xl border-t border-white/5 py-2 flex justify-around items-center">
-          <div onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-0.5 cursor-pointer ${activeTab === 'home' ? 'text-[#FF0077]' : 'text-gray-400 hover:text-white'}`}>
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: activeTab === 'home' ? "'FILL' 1" : "'FILL' 0" }}>delivery_dining</span>
-            <span className="text-[8px] font-medium font-sans">Delivery</span>
-          </div>
-          <div onClick={() => setActiveTab('dineout')} className={`flex flex-col items-center gap-0.5 cursor-pointer ${activeTab === 'dineout' ? 'text-[#FFB300]' : 'text-gray-400 hover:text-white'}`}>
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: activeTab === 'dineout' ? "'FILL' 1" : "'FILL' 0" }}>restaurant</span>
-            <span className="text-[8px] font-medium font-sans">Dining</span>
-          </div>
-          <div onClick={() => setActiveTab('quick')} className={`flex flex-col items-center gap-0.5 cursor-pointer ${activeTab === 'quick' ? 'text-[#00D4AA]' : 'text-gray-400 hover:text-white'}`}>
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: activeTab === 'quick' ? "'FILL' 1" : "'FILL' 0" }}>local_mall</span>
-            <span className="text-[8px] font-medium font-sans">Groceries</span>
-          </div>
-          <div onClick={() => onOpenChat && onOpenChat()} className="flex flex-col items-center gap-0.5 text-gray-400 cursor-pointer hover:text-white">
-            <span className="material-symbols-outlined text-[20px]">smart_toy</span>
-            <span className="text-[8px] font-medium font-sans">AI Agent</span>
-          </div>
-          <div onClick={() => onOpenProfile && onOpenProfile()} className="flex flex-col items-center gap-0.5 text-gray-400 cursor-pointer hover:text-white">
-                <span className="material-symbols-outlined text-[20px]">person</span>
-            <span className="text-[8px] font-medium font-sans">Profile</span>
-          </div>
-        </footer>
-      </div>
-    );
-  }
-
-  /* ─── DESKTOP VIEW LAYOUT (discovery_hub_desktop) ─── */
+const DiscoveryHub = () => {
   return (
-    <div className="w-full min-h-screen bg-[#040406] text-[#e5e1e6] select-none font-sans antialiased relative">
-      {/* TopAppBar */}
-      <header className="fixed top-0 left-0 w-full z-50 flex flex-col px-8 pt-2 pb-3 bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-white/5">
-        <div className="flex items-center justify-between max-w-[1440px] mx-auto w-full">
-          <div className="flex items-center gap-8">
-            <span 
-              onClick={() => setActiveTab('home')}
-              className="text-2xl font-extrabold text-[#FF0077] tracking-tighter cursor-pointer hover:opacity-85 transition-opacity"
-            >
-              HyperFlow
-            </span>
-            <div className="relative">
-              <div className="hidden md:flex items-center bg-[#131316] rounded-full px-4 py-1.5 border border-white/5 min-w-[400px] focus-within:border-[#FF0077] transition-all">
-                <span className="material-symbols-outlined text-gray-500 text-[20px] mr-2">search</span>
-                <input 
-                  className="bg-transparent border-none outline-none text-xs text-white placeholder:text-gray-600 w-full focus:ring-0" 
-                  placeholder="Search curated merchants or delivery slots..." 
-                  type="text"
-                  value={searchQuery}
-                  onFocus={() => setShowAutocomplete(true)}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {showAutocomplete && (
-                  <button 
-                    onClick={() => setShowAutocomplete(false)} 
-                    className="text-gray-500 hover:text-white focus:outline-none"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">close</span>
-                  </button>
-                )}
-              </div>
+    <>
 
-              {/* Desktop Autocomplete Popover Dropdown */}
-              {showAutocomplete && (
-                <div className="absolute left-0 mt-2 w-[400px] rounded-2xl p-4 bg-[#0A0A0F]/95 backdrop-blur-xl border border-white/10 shadow-2xl z-50 flex flex-col gap-4">
-                  <div className="flex gap-2">
-                    <span className="text-[10px] font-bold text-[#FF0077] bg-[#FF0077]/10 px-2.5 py-0.5 rounded-full border border-[#FF0077]/20">Food Delivery</span>
-                    <span className="text-[10px] font-bold text-gray-400 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">Instamart</span>
-                    <span className="text-[10px] font-bold text-gray-400 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">Dineout</span>
-                  </div>
+{/* TopAppBar */}
+<header className="fixed top-0 left-0 w-full z-50 flex flex-col px-xl pt-sm pb-md bg-surface-panel/80 backdrop-blur-xl border-b border-border-glass">
+<div className="flex items-center justify-between max-w-[1440px] mx-auto w-full">
+<div className="flex items-center gap-xl">
+<span className="text-hero-display font-hero-display font-bold text-primary tracking-tighter cursor-pointer hover:opacity-80 transition-opacity">District</span>
+<div className="hidden md:flex items-center bg-surface-container rounded-full px-lg py-sm border border-border-glass min-w-[400px]">
+<span className="material-symbols-outlined text-on-surface-variant text-[20px] mr-sm">search</span>
+<input className="bg-transparent border-none outline-none text-body-default text-on-surface placeholder:text-on-surface-variant/50 w-full" placeholder="Search curated merchants or delivery slots..." type="text"/>
+</div>
+</div>
+<div className="flex items-center gap-lg">
+<div className="flex items-center gap-xs px-md py-xs bg-surface-container-high rounded-lg border border-border-glass cursor-pointer hover:bg-surface-variant transition-colors">
+<span className="material-symbols-outlined text-primary text-[18px]">location_on</span>
+<span className="text-body-medium font-body-medium text-on-surface">Lower Manhattan, NY</span>
+</div>
+<div className="flex items-center gap-md">
+<div className="w-10 h-10 rounded-full border-2 border-primary-container p-0.5 overflow-hidden">
+<img className="w-full h-auto rounded-full object-cover" data-alt="A professional high-fidelity studio portrait of a tech-savvy executive in their late 20s. The lighting is moody and cinematic with hints of hot pink neon reflecting off their sharp features. The background is a blurred obsidian tech workspace with high-end hardware. The overall vibe is premium, exclusive, and hyper-modern, fitting a luxury digital platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkjIe7ftPr73AcnjOzX3-ui0Xbbho54xtdD5czbkz7DJ2mdigOasrDeMoDVaBjZSUFeCN0EAflCDpLXBD1NbzOvWFeB8YOQ9WGS0cnpYXWqc0urY7eRW76ES7_0Kla9qSWeTeKWvN-_g4r-xs7rFgIWOnskumKT1XW2XAuPWrFb5gaEsQDqj6mMVNQ4wZWCXFqRXTZSjMjOFa2xa8ph73fqXxyOKRPJ625oY-g_YuSygzfG0o6Vfy2GRwkO-e11nJSvyGZcjfHpsGS"/>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main className="pt-[84px] min-h-screen max-w-[1440px] mx-auto px-xl pb-xl">
+<div className="grid grid-cols-1 md:grid-cols-[240px_1fr_320px] gap-xl h-[calc(100vh-100px)]">
+{/* Left Sidebar: Categories & Navigation */}
+<aside className="flex flex-col gap-lg overflow-y-auto pr-xs">
+<nav className="flex flex-col gap-sm">
+<a className="flex items-center gap-md px-md py-sm rounded-xl bg-primary-container/10 text-primary font-bold transition-all" href="#">
+<span className="material-symbols-outlined">delivery_dining</span>
+<span className="text-section-header font-section-header">Delivery</span>
+</a>
+<a className="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container transition-all" href="#">
+<span className="material-symbols-outlined">restaurant</span>
+<span className="text-section-header font-section-header">Dining</span>
+</a>
+<a className="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container transition-all" href="#">
+<span className="material-symbols-outlined">local_mall</span>
+<span className="text-section-header font-section-header">Groceries</span>
+</a>
+<a className="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container transition-all" href="#">
+<span className="material-symbols-outlined">smart_toy</span>
+<span className="text-section-header font-section-header">AI Agent</span>
+</a>
+</nav>
+<div className="mt-md">
+<p className="text-label-small font-label-small uppercase tracking-widest text-on-surface-variant/40 mb-sm px-md">Categories</p>
+<div className="grid grid-cols-2 gap-sm">
+<div className="glass-panel p-md rounded-xl flex flex-col items-center justify-center gap-xs cursor-pointer hover:scale-105 transition-transform group">
+<span className="material-symbols-outlined text-primary group-hover:drop-shadow-[0_0_8px_#ffb1c2]">bolt</span>
+<span className="text-label-small font-label-small">Instant</span>
+</div>
+<div className="glass-panel p-md rounded-xl flex flex-col items-center justify-center gap-xs cursor-pointer hover:scale-105 transition-transform group">
+<span className="material-symbols-outlined text-secondary group-hover:drop-shadow-[0_0_8px_#dab9ff]">liquor</span>
+<span className="text-label-small font-label-small">Premium</span>
+</div>
+<div className="glass-panel p-md rounded-xl flex flex-col items-center justify-center gap-xs cursor-pointer hover:scale-105 transition-transform group">
+<span className="material-symbols-outlined text-tertiary group-hover:drop-shadow-[0_0_8px_#00e475]">nutrition</span>
+<span className="text-label-small font-label-small">Healthy</span>
+</div>
+<div className="glass-panel p-md rounded-xl flex flex-col items-center justify-center gap-xs cursor-pointer hover:scale-105 transition-transform group">
+<span className="material-symbols-outlined text-warning group-hover:drop-shadow-[0_0_8px_#FFB300]">star</span>
+<span className="text-label-small font-label-small">Elite</span>
+</div>
+</div>
+</div>
+{/* Loyalty Card Mini */}
+<div className="mt-auto glass-panel p-lg rounded-2xl relative overflow-hidden">
+<div className="absolute -right-4 -top-4 w-20 h-20 bg-primary/20 blur-3xl"></div>
+<p className="text-label-small font-label-small text-on-surface-variant mb-xs">PLATINUM STATUS</p>
+<h4 className="text-section-header font-section-header text-primary mb-md">Elite Member</h4>
+<div className="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div className="bg-primary h-full w-3/4 shadow-[0_0_10px_rgba(255,177,194,0.5)]"></div>
+</div>
+<p className="text-label-small font-label-small text-on-surface-variant/60 mt-sm">240 points until VIP Platinum</p>
+</div>
+</aside>
+{/* Center Panel: Feed & Hero */}
+<section className="flex flex-col gap-xl overflow-y-auto no-scrollbar">
+{/* Streak Hero Card */}
+<div className="relative w-full h-48 rounded-3xl overflow-hidden glass-panel group border border-primary/20">
 
-                  {searchQuery && (
-                    <div className="flex flex-col border-b border-white/5 pb-2">
-                      <div 
-                        onClick={() => { setSelectedCuisine('Biryani'); setShowAutocomplete(false); }}
-                        className="flex items-center justify-between py-2 hover:bg-white/5 px-2 rounded-xl cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#FF0077] text-[16px]">search</span>
-                          <span className="text-xs text-white font-medium">Biryani</span>
-                          <span className="text-[10px] text-gray-500">in restaurants</span>
-                        </div>
-                      </div>
-                      <div 
-                        onClick={() => { setActiveTab('quick'); setShowAutocomplete(false); }}
-                        className="flex items-center justify-between py-2 hover:bg-white/5 px-2 rounded-xl cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#FF0077] text-[16px]">search</span>
-                          <span className="text-xs text-white font-medium">Milk</span>
-                          <span className="text-[10px] text-gray-500">in Instamart groceries</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <span className="material-symbols-outlined text-[#FF0077] text-[16px]">trending_up</span>
-                      <h2 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono">Trending</h2>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { name: 'Dum Biryani', icon: 'local_fire_department', cuisine: 'Biryani' },
-                        { name: 'Pizza Combos', icon: 'local_pizza', cuisine: 'Pizzas' },
-                        { name: 'Healthy Salads', icon: 'eco', cuisine: 'Healthy' },
-                        { name: 'Fresh Milk', icon: 'water_drop', cuisine: 'Groceries' }
-                      ].map((term) => (
-                        <button 
-                          key={term.name}
-                          onClick={() => { 
-                            setSearchQuery(term.name); 
-                            setSelectedCuisine(term.cuisine === 'Groceries' ? null : term.cuisine);
-                            if (term.cuisine === 'Groceries') setActiveTab('quick');
-                            setShowAutocomplete(false); 
-                          }}
-                          className="bg-white/5 border border-white/5 rounded-xl py-2 px-2.5 flex items-center gap-2 hover:border-[#FF0077]/40 hover:bg-white/10 text-left transition-all"
-                        >
-                          <span className="material-symbols-outlined text-[#FF0077] text-[14px]">{term.icon}</span>
-                          <span className="text-[11px] text-white truncate font-medium">{term.name}</span>
+<div className="absolute inset-0 bg-gradient-to-r from-[#040406] via-[#040406]/60 to-transparent p-xl flex flex-col justify-center">
+<div className="flex items-center gap-md mb-sm">
+<span className="material-symbols-outlined text-primary text-[32px] animate-pulse" style={{fontVariationSettings: '\'FILL\' 1'}}>local_fire_department</span>
+<span className="text-metric-mono font-metric-mono text-primary text-xl uppercase tracking-tighter">12 Day Streak</span>
+</div>
+<h2 className="text-hero-display font-hero-display max-w-[300px] mb-md">Keep the fire burning, District Elite.</h2>
+<button className="shimmer-btn w-fit px-xl py-md bg-primary-container text-on-primary font-bold rounded-full text-body-medium neon-glow-primary">
+                            CLAIM DAILY REWARD
                         </button>
-                      ))}
-                    </div>
-                  </div>
+</div>
+</div>
+{/* Restaurant Feed Section */}
+<div>
+<div className="flex items-center justify-between mb-lg">
+<h3 className="text-hero-display font-hero-display">Featured Merchants</h3>
+<div className="flex gap-sm">
+<button className="p-xs rounded-full border border-border-glass hover:bg-surface-container"><span className="material-symbols-outlined">chevron_left</span></button>
+<button className="p-xs rounded-full border border-border-glass hover:bg-surface-container"><span className="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+{/* Main Restaurant Card: Behrouz Biryani */}
+<div className="glass-panel rounded-3xl overflow-hidden group cursor-pointer hover:border-primary/40 transition-all duration-300">
+<div className="h-64 relative">
+<img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Exquisite and artistic food photography of Behrouz Biryani, showcasing a golden-hued, saffron-infused rice dish in a handcrafted royal brass pot. The steam rises elegantly against a dark obsidian background, illuminated by soft golden light and sharp neon pink highlights. Glistening roasted nuts and deep green mint leaves garnish the dish, emphasizing luxury and high-velocity gourmet delivery." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3O6h3kN5v2ZfZDd3Ufds1_PUUHBmlla4WShhsUOwN1BiWVty9aGs9k-ujSiY3HWg0c-a6yUVCpufZJTK3hqLopqOy-INM9HYG-SKcVE0PbA__mUudSLa2FZF4yeu1q6fwxpjVZXn7yNLyelP_KZmven-uKjmR8Q3bG2PkZi64JiSya_N0Zb1Ww0kf3A7LW34llf4b4dpiTff9GbejYkJFooJR4Slc4fs85sLnGz-kZjWnuFABxdtocK8oviRGW5vmkB6XF1IMU4YS"/>
+<div className="absolute top-lg right-lg bg-[#040406]/80 backdrop-blur-md px-md py-sm rounded-xl border border-border-glass">
+<div className="flex items-center gap-xs">
+<span className="material-symbols-outlined text-warning text-[16px]" style={{fontVariationSettings: '\'FILL\' 1'}}>star</span>
+<span className="text-metric-mono font-metric-mono text-on-surface">4.8</span>
+</div>
+</div>
+<div className="absolute bottom-lg left-lg bg-primary-container text-on-primary px-md py-xs rounded-full text-label-small font-bold uppercase tracking-widest">
+                                Premium Partner
+                            </div>
+</div>
+<div className="p-xl flex flex-col gap-md">
+<div className="flex items-start justify-between">
+<div>
+<h4 className="text-hero-display font-hero-display mb-xs">Behrouz Biryani</h4>
+<p className="text-body-default text-on-surface-variant">Royal Recipes • North Indian • Elite Packaging</p>
+</div>
+<div className="text-right">
+<span className="text-metric-mono font-metric-mono text-primary text-lg">22 MIN</span>
+<p className="text-label-small font-label-small text-on-surface-variant/60 uppercase">Delivery Window</p>
+</div>
+</div>
+<div className="flex items-center gap-xl mt-sm">
+<div className="flex items-center gap-xs">
+<span className="material-symbols-outlined text-on-surface-variant text-[18px]">payments</span>
+<span className="text-body-medium font-body-medium text-on-surface">$$$</span>
+</div>
+<div className="flex items-center gap-xs">
+<span className="material-symbols-outlined text-on-surface-variant text-[18px]">verified</span>
+<span className="text-body-medium font-body-medium text-on-surface">District Curated</span>
+</div>
+</div>
+</div>
+</div>
+{/* Additional Grid Feed */}
+<div className="grid grid-cols-2 gap-lg mt-lg">
+<div className="glass-panel rounded-2xl overflow-hidden group cursor-pointer hover:border-secondary/40 transition-all">
+<div className="h-40 relative">
+<img className="w-full h-full object-cover" data-alt="High-end sushi platter arrangement with vibrant orange salmon and deep red tuna nigiri on a sleek black slate board. Subtle purple neon glows illuminate the edges of the fish. Soft depth of field with a dark, atmospheric restaurant background. Minimalist luxury aesthetic with clean lines and sharp focus on texture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBY63vuIkeBp6l5cHYDUYAUxyfZjekeIUDrgoaWXdYWfRsIItON9yVcNgasVY5EVJ_z9UCEYE7ifS6es_em8GXuQSZjL4elMAOcYKY-mFqvK7XoIYiCdoO9fXcs76s27BFjIlZ-jibt94sXMKAMiW-HDhL8Fx6YgFDMjXCKJuqgQvL6f2QokApfLDSvnpgf5uRCpVCyjlevWvENzKb2pD1gJvWBrOj_kU8HsHYg8siO1GP2yGFdEgOS79jFlelYdFjbEs_cIizY-X6"/>
+<div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+</div>
+<div className="p-lg">
+<h5 className="text-section-header font-section-header mb-xs">Yoko Ono Sushi</h5>
+<p className="text-label-small font-label-small text-on-surface-variant">Modern Japanese • 18 min</p>
+</div>
+</div>
+<div className="glass-panel rounded-2xl overflow-hidden group cursor-pointer hover:border-tertiary/40 transition-all">
+<div className="h-40 relative">
+<img className="w-full h-full object-cover" data-alt="Gourmet artisanal burger with melting cheese and caramelized onions, captured with high-contrast macro photography. Neon green lighting highlights the crisp textures of the bun. The background is a dark, industrial chic setting. The composition is dynamic and appetizing, reflecting a premium urban dining experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9C62CkwFO1Ta65rOPGt_zkQb3NWBfpIVfhSCWsS173P7Hw1t8O2CFnA1Swhsh03BFAJeCU4v8zMcs2FtgfS9UKrkQ-pgIxmQV0atKwEY1VvIrOO2nqjJirHB5LtlEy7v2E23zmpz5QUROCmGsEwpUTOxc6-W7bqEnwZTpjlEj84W0_wRNkm3oiChRsbQBbdUsj6iQ4IQ8MjgCXDjvXHjIGyb2EehurUmG2rcFE5E_2NQqMXhnC7sZPl5JUl0b-89s8s1A5HghkpjV"/>
+<div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+</div>
+<div className="p-lg">
+<h5 className="text-section-header font-section-header mb-xs">Carbon Grill</h5>
+<p className="text-label-small font-label-small text-on-surface-variant">Artisanal Burgers • 25 min</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+{/* Right Sidebar: Reorder & Cart */}
+<aside className="flex flex-col gap-xl">
+{/* Your Usual Section */}
+<div className="glass-panel rounded-3xl p-xl flex flex-col gap-lg border border-border-glass">
+<div className="flex items-center justify-between">
+<h4 className="text-section-header font-section-header uppercase tracking-widest text-on-surface-variant">Your Usual</h4>
+<span className="material-symbols-outlined text-primary cursor-pointer hover:rotate-180 transition-transform duration-500">autorenew</span>
+</div>
+<div className="flex flex-col gap-md">
+<div className="p-md rounded-2xl bg-surface-container flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors border border-transparent hover:border-border-glass">
+<div className="flex items-center gap-md">
+<div className="w-12 h-12 rounded-xl bg-surface-variant flex items-center justify-center">
+<span className="material-symbols-outlined text-primary">local_cafe</span>
+</div>
+<div>
+<p className="text-body-medium font-bold text-on-surface">Nitro Cold Brew</p>
+<p className="text-label-small font-label-small text-on-surface-variant">Starbucks Reserve</p>
+</div>
+</div>
+<span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">add_circle</span>
+</div>
+<div className="p-md rounded-2xl bg-surface-container flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors border border-transparent hover:border-border-glass">
+<div className="flex items-center gap-md">
+<div className="w-12 h-12 rounded-xl bg-surface-variant flex items-center justify-center">
+<span className="material-symbols-outlined text-secondary">lunch_dining</span>
+</div>
+<div>
+<p className="text-body-medium font-bold text-on-surface">Truffle Burger</p>
+<p className="text-label-small font-label-small text-on-surface-variant">Carbon Grill</p>
+</div>
+</div>
+<span className="material-symbols-outlined text-on-surface-variant group-hover:text-secondary transition-colors">add_circle</span>
+</div>
+<div className="p-md rounded-2xl bg-surface-container flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors border border-transparent hover:border-border-glass">
+<div className="flex items-center gap-md">
+<div className="w-12 h-12 rounded-xl bg-surface-variant flex items-center justify-center">
+<span className="material-symbols-outlined text-tertiary">eco</span>
+</div>
+<div>
+<p className="text-body-medium font-bold text-on-surface">Kale Caesar</p>
+<p className="text-label-small font-label-small text-on-surface-variant">Sweetgreen</p>
+</div>
+</div>
+<span className="material-symbols-outlined text-on-surface-variant group-hover:text-tertiary transition-colors">add_circle</span>
+</div>
+</div>
+<button className="w-full py-md rounded-full bg-surface-container-highest border border-border-glass text-body-medium font-bold hover:bg-surface-variant transition-colors">
+                        VIEW ALL HISTORY
+                    </button>
+</div>
+{/* AI Agent / Order Status */}
+<div className="glass-panel rounded-3xl p-xl flex flex-col gap-md relative overflow-hidden bg-gradient-to-br from-[#0A0A0F] to-[#14141F]">
+<div className="absolute -left-10 -bottom-10 w-32 h-32 bg-secondary/10 blur-3xl"></div>
+<div className="flex items-center gap-sm">
+<div className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></div>
+<h4 className="text-section-header font-section-header text-on-surface">District Intelligence</h4>
+</div>
+<p className="text-body-default text-on-surface-variant italic">"Your order from 'The Butcher's Daughter' is currently 4 minutes away. Shall I pre-heat your smart oven?"</p>
+<div className="flex gap-sm mt-sm">
+<button className="flex-1 py-sm bg-secondary/10 border border-secondary/20 text-secondary rounded-lg text-label-small font-bold hover:bg-secondary/20 transition-all">YES, PLEASE</button>
+<button className="flex-1 py-sm bg-surface-container border border-border-glass text-on-surface-variant rounded-lg text-label-small font-bold hover:bg-surface-variant transition-all">DISMISS</button>
+</div>
+</div>
+{/* Promo / VIP Badge */}
+<div className="mt-auto p-xl rounded-3xl bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 flex items-center gap-lg group cursor-pointer">
+<div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(255,177,194,0.4)]">
+<span className="material-symbols-outlined text-on-primary">card_giftcard</span>
+</div>
+<div>
+<h5 className="text-body-medium font-bold text-on-surface group-hover:text-primary transition-colors">Unlock VIP Lounge</h5>
+<p className="text-label-small font-label-small text-on-surface-variant">Access exclusive off-menu items from top NYC chefs.</p>
+</div>
+</div>
+</aside>
+</div>
+</main>
+{/* Contextual FAB (Only for main landing) */}
+<div className="fixed bottom-xl right-xl z-50">
+<button className="flex items-center gap-md px-xl py-lg bg-primary text-on-primary rounded-full font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all shimmer-btn neon-glow-primary">
+<span className="material-symbols-outlined">shopping_cart</span>
+<span className="text-body-medium uppercase tracking-widest">Cart • 2 Items</span>
+</button>
+</div>
+{/* Micro-interactions Script */}
 
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="material-symbols-outlined text-gray-500 text-[16px]">history</span>
-                      <h2 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono">Recent</h2>
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      {[
-                        { name: 'Behrouz Biryani', cuisine: 'Biryani' },
-                        { name: 'Tomatoes', cuisine: 'Groceries' }
-                      ].map((search) => (
-                        <div 
-                          key={search.name}
-                          className="flex items-center justify-between py-1.5 hover:bg-white/5 px-2 rounded-xl cursor-pointer"
-                        >
-                          <div 
-                            onClick={() => { 
-                              setSearchQuery(search.name);
-                              if (search.cuisine === 'Groceries') setActiveTab('quick');
-                              else setSelectedCuisine(search.cuisine);
-                              setShowAutocomplete(false);
-                            }}
-                            className="flex items-center gap-2 flex-grow"
-                          >
-                            <span className="material-symbols-outlined text-gray-500 text-[16px]">schedule</span>
-                            <span className="text-xs text-white font-medium">{search.name}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
 
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-1 px-3 py-1 bg-[#14141F] rounded-lg border border-white/5 cursor-pointer hover:bg-white/5 transition-colors">
-              <span className="material-symbols-outlined text-[#FF0077] text-[18px]">location_on</span>
-              <span className="text-xs font-semibold text-white">Patia, Bhubaneswar</span>
-            </div>
-            <button 
-              onClick={() => onOpenOps && onOpenOps()} 
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6C63FF]/20 hover:bg-[#6C63FF]/30 border border-[#6C63FF]/40 text-[#00D4AA] rounded-full text-xs font-bold tracking-tight shadow-md hover:scale-105 active:scale-95 transition-all"
-            >
-              <span className="material-symbols-outlined text-[16px]">analytics</span>
-              Ops Dashboard
-            </button>
-            <div 
-              onClick={() => onOpenProfile && onOpenProfile()} 
-              className="w-9 h-9 rounded-full border border-[#FF0077]/30 p-0.5 overflow-hidden shrink-0 cursor-pointer hover:border-[#FF0077] transition-colors"
-            >
-              <img 
-                className="w-full h-full rounded-full object-cover" 
-                alt="Profile Avatar"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkjIe7ftPr73AcnjOzX3-ui0Xbbho54xtdD5czbkz7DJ2mdigOasrDeMoDVaBjZSUFeCN0EAflCDpLXBD1NbzOvWFeB8YOQ9WGS0cnpYXWqc0urY7eRW76ES7_0Kla9qSWeTeKWvN-_g4r-xs7rFgIWOnskumKT1XW2XAuPWrFb5gaEsQDqj6mMVNQ4wZWCXFqRXTZSjMjOFa2xa8ph73fqXxyOKRPJ625oY-g_YuSygzfG0o6Vfy2GRwkO-e11nJSvyGZcjfHpsGS"
-              />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <main className="pt-24 min-h-screen max-w-[1440px] mx-auto px-8 pb-8 w-full">
-        <div className="grid grid-cols-[240px_1fr_320px] gap-6 w-full">
-          
-          {/* Left Sidebar */}
-          <aside className="flex flex-col gap-6 pr-2">
-            <nav className="flex flex-col gap-1.5">
-              <button 
-                onClick={() => setActiveTab('home')}
-                className={`flex items-center gap-3 px-4 py-2 rounded-xl transition-all ${
-                  activeTab === 'home' ? 'bg-[#FF0077]/10 text-white font-bold border-l-4 border-[#FF0077]' : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">delivery_dining</span>
-                <span className="text-xs">Delivery</span>
-              </button>
-              <button 
-                onClick={() => setActiveTab('dineout')}
-                className={`flex items-center gap-3 px-4 py-2 rounded-xl transition-all ${
-                  activeTab === 'dineout' ? 'bg-[#FFB300]/10 text-white font-bold border-l-4 border-[#FFB300]' : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">restaurant</span>
-                <span className="text-xs">Dining</span>
-              </button>
-              <button 
-                onClick={() => setActiveTab('quick')}
-                className={`flex items-center gap-3 px-4 py-2 rounded-xl transition-all ${
-                  activeTab === 'quick' ? 'bg-[#00E676]/10 text-white font-bold border-l-4 border-[#00E676]' : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">local_mall</span>
-                <span className="text-xs">Groceries</span>
-              </button>
-              <button 
-                onClick={() => onOpenChat && onOpenChat()}
-                className="flex items-center gap-3 px-4 py-2 rounded-xl transition-all relative text-gray-400 hover:bg-white/5 hover:text-white"
-              >
-                <span className="absolute top-2.5 right-4 w-1.5 h-1.5 bg-[#FF0077] rounded-full animate-pulse"></span>
-                <span className="material-symbols-outlined text-[18px]">smart_toy</span>
-                <span className="text-xs">AI Agent</span>
-              </button>
-            </nav>
-
-            {/* Categories Circle Grid */}
-            <div className="mt-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-3 px-2">Categories</p>
-              <div className="grid grid-cols-2 gap-y-4 gap-x-2">
-                {[
-                  { name: 'Instant', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?w=100&q=80', cuisine: 'Fast Food' },
-                  { name: 'Premium', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=100&q=80', cuisine: 'Premium' },
-                  { name: 'Healthy', img: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=100&q=80', cuisine: 'Healthy' },
-                  { name: 'Elite', img: 'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=100&q=80', cuisine: 'Continental' },
-                  { name: 'Alcohol', img: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=100&q=80', cuisine: 'Beverages' },
-                  { name: 'Pharmacy', img: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=100&q=80', cuisine: 'Wellness' },
-                  { name: 'Pet Care', img: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&q=80', cuisine: 'Pets' },
-                  { name: 'Flower Delivery', img: 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=100&q=80', cuisine: 'Gifts' },
-                  { name: 'Electronics', img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&q=80', cuisine: 'Gadgets' },
-                ].map((cat) => (
-                  <div 
-                    key={cat.name}
-                    onClick={() => setSelectedCuisine(selectedCuisine === cat.cuisine ? null : cat.cuisine)}
-                    className="flex flex-col items-center group cursor-pointer"
-                  >
-                    <div className={`w-14 h-14 rounded-full overflow-hidden border transition-all ${
-                      selectedCuisine === cat.cuisine ? 'border-[#FF0077] ring-2 ring-[#FF0077]/30 scale-105' : 'border-white/10 hover:border-white/30'
-                    }`}>
-                      <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                    </div>
-                    <span className="text-[10px] text-gray-400 group-hover:text-white text-center leading-tight font-sans mt-1.5 truncate w-full px-1">{cat.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Platinum Status Mini */}
-            <div className="mt-auto bg-white/5 border border-white/10 p-4 rounded-2xl relative overflow-hidden">
-              <p className="text-[9px] font-bold text-gray-500 mb-1">PLATINUM STATUS</p>
-              <h4 className="text-xs font-bold text-[#FF0077] mb-3">Elite Member</h4>
-              <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-[#FF0077] h-full w-[80%] shadow-[0_0_10px_rgba(255,0,119,0.5)]"></div>
-              </div>
-              <p className="text-[9px] text-gray-500 mt-2 font-mono">240 points until VIP Platinum</p>
-            </div>
-          </aside>
-
-          {/* Center Panel */}
-          <section className="flex flex-col gap-6 pr-1">
-            {/* Streak Hero Card */}
-            <div className="relative w-full h-44 rounded-3xl overflow-hidden bg-gradient-to-r from-[#0A0A0F] to-[#14141F] border border-white/5 p-6 flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-[#FF0077] text-[24px] animate-pulse">local_fire_department</span>
-                <span className="font-mono text-xs text-[#FF0077] font-bold tracking-tighter">12 DAY STREAK</span>
-              </div>
-              <h2 className="text-lg font-bold text-white max-w-sm mb-4 leading-tight">Keep the fire burning, HyperFlow Elite.</h2>
-              <button className="px-6 py-2 bg-[#FF0077] text-white font-bold rounded-full text-xs shadow-lg hover:opacity-90 active:scale-95 transition-all w-fit">
-                CLAIM DAILY REWARD
-              </button>
-            </div>
-
-            {/* Featured Merchants Section */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white">Featured Merchants</h3>
-                <div className="flex items-center gap-2">
-                  <button className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-white transition-colors">
-                    <span className="material-symbols-outlined text-[16px]">chevron_left</span>
-                  </button>
-                  <button className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-white transition-colors">
-                    <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                  </button>
-                </div>
-              </div>
-              
-              {/* Top Featured Horizontal Banner (Behrouz Biryani style) */}
-              <div 
-                onClick={() => restaurants.length > 0 && onSelectRestaurant(restaurants[0])}
-                className="w-full bg-[#0A0A0F] border border-white/5 rounded-3xl overflow-hidden cursor-pointer hover:border-[#FF0077]/40 transition-all duration-300 mb-6"
-              >
-                <div className="h-56 relative w-full">
-                  <img 
-                    className="w-full h-full object-cover" 
-                    alt="Behrouz Biryani"
-                    src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&q=80"
-                  />
-                  <div className="absolute top-4 right-4 bg-[#040406]/90 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-0.5">
-                    <span className="material-symbols-outlined text-[#FF0077] text-[14px] fill-current">star</span>
-                    <span className="text-[10px] font-mono font-bold text-white">4.8</span>
-                  </div>
-                  <div className="absolute bottom-4 left-4 bg-[#FF0077] text-white px-3 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-widest">
-                    Premium Partner
-                  </div>
-                </div>
-                <div className="p-5 flex justify-between items-end">
-                  <div className="flex flex-col gap-1.5">
-                    <h4 className="text-base font-extrabold text-white">Behrouz Biryani</h4>
-                    <p className="text-[11px] text-gray-400">Royal Recipes • North Indian • Elite Packaging</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="px-2 py-0.5 bg-[#FF0077]/10 border border-[#FF0077]/20 text-[#FF0077] rounded text-[9px] font-bold font-mono">SSS</span>
-                      <span className="px-2 py-0.5 bg-white/5 border border-white/10 text-gray-300 rounded text-[9px] font-bold">District Curated</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-mono text-xs text-[#FF0077] font-bold block">22 MIN DELIVERY WINDOW</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Smaller Cards Feed */}
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { name: 'Yoko Ono Sushi', cuisine: 'Modern Japanoce', time: '18 min', rating: '4.7', img: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&q=80' },
-                  { name: 'Carbon Grill', cuisine: 'Artisanal Burgers', time: '25 min', rating: '4.6', img: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&q=80' }
-                ].map((item, idx) => (
-                  <div 
-                    key={idx}
-                    onClick={() => restaurants.length > idx && onSelectRestaurant(restaurants[idx])}
-                    className="bg-[#0A0A0F] border border-white/5 rounded-2xl overflow-hidden cursor-pointer hover:border-white/20 transition-all duration-300"
-                  >
-                    <div className="h-32 relative">
-                      <img className="w-full h-full object-cover" src={item.img} alt={item.name} />
-                      <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-md px-1.5 py-0.5 rounded-lg border border-white/10 flex items-center gap-0.5">
-                        <span className="material-symbols-outlined text-warning text-[10px] fill-current">star</span>
-                        <span className="text-[9px] font-mono font-bold text-white">{item.rating}</span>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h5 className="text-xs font-bold text-white truncate">{item.name}</h5>
-                      <p className="text-[10px] text-gray-400 truncate mt-0.5">{item.cuisine} • {item.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Right Sidebar */}
-          <aside className="flex flex-col gap-6">
-            {/* Your Usual Section */}
-            <div className="bg-[#0A0A0F] border border-white/5 rounded-3xl p-5 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 font-mono">Your Usual</h4>
-                <span className="material-symbols-outlined text-[#FF0077] cursor-pointer hover:rotate-180 transition-transform duration-500 text-[18px]">autorenew</span>
-              </div>
-              <div className="flex flex-col gap-3">
-                {[
-                  { name: 'Nitro Cold Brew', sub: 'Starbucks Reserve', img: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=400&q=80', icon: 'local_cafe' },
-                  { name: 'Truffle Burger', sub: 'Carbon Grill', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80', icon: 'lunch_dining' },
-                  { name: 'Kale Caesar', sub: 'Sweetgreen', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80', icon: 'eco' }
-                ].map((item, idx) => (
-                  <div 
-                    key={idx}
-                    className="p-3 rounded-2xl bg-[#131316] flex items-center justify-between group border border-transparent hover:border-white/10 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
-                        <img className="w-full h-full object-cover" src={item.img} alt={item.name} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-white">{item.name}</p>
-                        <p className="text-[9px] text-gray-500">{item.sub}</p>
-                      </div>
-                    </div>
-                    <span 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAddToCart({
-                          id: `usual-${idx}`,
-                          name: item.name,
-                          price: idx === 0 ? 249 : idx === 1 ? 349 : 299,
-                          restaurantName: item.sub,
-                          restaurantId: String(idx + 1)
-                        });
-                      }}
-                      className="material-symbols-outlined text-gray-500 group-hover:text-[#FF0077] cursor-pointer transition-colors text-[20px]"
-                    >
-                      add_circle
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* AI Agent Banner */}
-            <div className="bg-gradient-to-br from-[#0A0A0F] to-[#14141F] border border-white/5 rounded-3xl p-5 flex flex-col gap-3 relative overflow-hidden">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#00E676] animate-pulse"></div>
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-white font-mono">District Intelligence</h4>
-              </div>
-              <p className="text-[11px] text-gray-400 italic">"Your order is currently 4 minutes away. Shall I pre-heat your smart oven?"</p>
-              <div className="flex gap-2 mt-2">
-                <button className="flex-1 py-1.5 bg-[#8F00FF]/15 border border-[#8F00FF]/25 text-[#8F00FF] rounded-lg text-[9px] font-bold hover:bg-[#8F00FF]/25 transition-all">YES, PLEASE</button>
-                <button className="flex-1 py-1.5 bg-white/5 border border-white/10 text-gray-400 rounded-lg text-[9px] font-bold hover:bg-white/10 transition-all">DISMISS</button>
-              </div>
-            </div>
-
-            {/* Promo Card and Cart Button */}
-            <div className="mt-auto flex flex-col gap-4">
-              <div className="p-4 rounded-3xl bg-gradient-to-r from-[#FF0077]/10 to-[#8F00FF]/10 border border-[#FF0077]/20 flex items-center gap-4 cursor-pointer">
-                <div className="w-10 h-10 rounded-full bg-[#FF0077] flex items-center justify-center shrink-0 shadow-lg">
-                  <span className="material-symbols-outlined text-white">card_giftcard</span>
-                </div>
-                <div>
-                  <h5 className="text-xs font-bold text-white">Unlock VIPN</h5>
-                  <p className="text-[9px] text-gray-500 leading-tight">Assocs to your Business<br/>NTC chelenyexlon</p>
-                </div>
-              </div>
-
-              {/* Pink Cart Button */}
-              <button 
-                onClick={() => onOpenCheckout && onOpenCheckout()}
-                className="w-full py-3.5 bg-[#FF0077] text-white rounded-full font-bold flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 transition-all shadow-lg shadow-[#FF0077]/25"
-              >
-                <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
-                <span className="text-xs uppercase tracking-wider font-extrabold">CART • {cartTotalItems > 0 ? `${cartTotalItems} ITEMS` : 'EMPTY'}</span>
-              </button>
-            </div>
-          </aside>
-        </div>
-      </main>
-    </div>
+    </>
   );
-}
+};
+
+export default DiscoveryHub;

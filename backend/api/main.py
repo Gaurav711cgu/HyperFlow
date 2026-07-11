@@ -57,6 +57,20 @@ demand_forecaster = CensoredDemandForecaster()
 profitability_scorer = DarkStoreProfitabilityScorer()
 safeguards = ProductionSafeguards()
 
+GLOBAL_STATS = {
+    "reservations_total": 0,
+    "reservations_success": 0,
+    "restock_alerts": 0,
+    "raw_mimo_bumps": 113,
+    "gated_smoother_bumps": 21,
+    "availability_metrics": {
+        "availability_rate": 0.947,
+        "wmape_lift": 0.331,
+        "average_wastage_units": 4.2,
+        "censoring_rate": 0.34
+    }
+}
+
 # Seeding dummy ML states on gateway initialization to ensure immediate API responses
 # We use this reference dataset to calculate real PSI features later
 np_temp = np.random.uniform(15, 38, 100)
@@ -112,6 +126,7 @@ async def reserve_inventory(req: ReserveRequest, db: Session = Depends(get_db)):
 
     if not acquired:
         # Log timeout reservation entry
+        GLOBAL_STATS["reservations_total"] += 1
         latency = (time.time() - t0) * 1000
         res_entry = InventoryReservation(
             order_id=req.order_id, store_id=req.store_id, sku_id=req.sku_id,
@@ -135,6 +150,7 @@ async def reserve_inventory(req: ReserveRequest, db: Session = Depends(get_db)):
             raise HTTPException(status_code=404, detail="SKU inventory not found.")
             
         if inventory_row.qty_available < req.qty_requested:
+            GLOBAL_STATS["reservations_total"] += 1
             res_entry = InventoryReservation(
                 order_id=req.order_id, store_id=req.store_id, sku_id=req.sku_id,
                 qty_requested=req.qty_requested, outcome=ReservationOutcome.INSUFFICIENT_STOCK, latency_ms=latency
@@ -145,6 +161,8 @@ async def reserve_inventory(req: ReserveRequest, db: Session = Depends(get_db)):
             
         # Perform decrement
         inventory_row.qty_available -= req.qty_requested
+        GLOBAL_STATS["reservations_total"] += 1
+        GLOBAL_STATS["reservations_success"] += 1
         res_entry = InventoryReservation(
             order_id=req.order_id, store_id=req.store_id, sku_id=req.sku_id,
             qty_requested=req.qty_requested, outcome=ReservationOutcome.SUCCESS, latency_ms=latency
@@ -232,21 +250,20 @@ async def get_restock_alerts(store_id: str, db: Session = Depends(get_db)):
 @app.get("/api/v1/metrics/availability/{store_id}")
 async def get_availability_metrics(store_id: str):
     # Base availability outputs
-    return {
-        "store_id": store_id,
-        "availability_rate": 0.947,
-        "wmape_lift": 0.331,
-        "average_wastage_units": 4.2,
-        "censoring_rate": 0.34
-    }
+    metrics = GLOBAL_STATS["availability_metrics"].copy()
+    metrics["store_id"] = store_id
+    return metrics
 
 @app.get("/api/v1/metrics/bump-rate")
 async def get_bump_rate():
     # Return simulated Display ETA Jitter metrics
+    raw = GLOBAL_STATS["raw_mimo_bumps"]
+    gated = GLOBAL_STATS["gated_smoother_bumps"]
+    pct = round(((raw - gated) / max(1, raw) * 100), 1)
     return {
-        "raw_mimo_bumps": 113,
-        "gated_smoother_bumps": 21,
-        "jitter_suppression_pct": 81.4,
+        "raw_mimo_bumps": raw,
+        "gated_smoother_bumps": gated,
+        "jitter_suppression_pct": pct,
         "zone_status": "MONSOON_STORM_SURGE_GATED"
     }
 
@@ -316,16 +333,17 @@ def calculate_ml_robustness_task():
     and feature range drift limits every 15 seconds.
     """
     global CACHED_ROBUSTNESS_METRICS
+    from backend.db.session import SessionLocal
     while True:
+        db = SessionLocal()
         try:
-            prod_temp = np.random.uniform(16, 40, 100)
-            prod_rain = np.random.exponential(2.5, 100)
-            prod_time = np.random.normal(950.0, 320.0, 100)
+            from ml_core.demand_simulation import generate_training_data
+            X, observed_sales, censored, true_beta, true_sigma = generate_training_data(n_samples=100)
             
             prod_df = pd.DataFrame({
-                'weather_temp': prod_temp,
-                'weather_rain': prod_rain,
-                'time_elapsed_sec': prod_time
+                'weather_temp': X[:, 0],
+                'weather_rain': X[:, 1],
+                'time_elapsed_sec': X[:, 2]
             })
             
             drift_metrics = safeguards.calculate_drift_metrics(prod_df)
@@ -361,6 +379,8 @@ def calculate_ml_robustness_task():
             print("BACKGROUND TASK: Recalculated and cached ML feature drift metrics (PSI calculated mathematically).")
         except Exception as e:
             print(f"Error calculating background drift metrics: {e}")
+        finally:
+            db.close()
         time.sleep(15)
 
 def poll_outbox_events_task():
@@ -387,10 +407,31 @@ def poll_outbox_events_task():
                 db.close()
         time.sleep(3)
 
+def init_simulations():
+    try:
+        from ml_core.demand_simulation import run_sensitivity_analysis
+        from ml_core.eta_simulation import run_eta_benchmark
+        demand_results = run_sensitivity_analysis()
+        if demand_results:
+            best_model = demand_results[-1]
+            GLOBAL_STATS["availability_metrics"] = {
+                "availability_rate": 0.947,
+                "wmape_lift": best_model.get("wmape_lift", 0.0) / 100.0,
+                "average_wastage_units": 4.2,
+                "censoring_rate": best_model.get("rate", 0.34)
+            }
+        eta_results = run_eta_benchmark()
+        if eta_results:
+            GLOBAL_STATS["raw_mimo_bumps"] = eta_results.get("raw_mimo_bumps", 113)
+            GLOBAL_STATS["gated_smoother_bumps"] = eta_results.get("gated_smoother_bumps", 21)
+    except Exception as e:
+        print(f"Error initializing simulations: {e}")
+
 @app.on_event("startup")
 async def startup_event():
     # Warm up cache immediately
     try:
+        threading.Thread(target=init_simulations, daemon=True).start()
         prod_temp = np.random.uniform(16, 40, 100)
         prod_rain = np.random.exponential(2.5, 100)
         prod_time = np.random.normal(950.0, 320.0, 100)
@@ -436,13 +477,12 @@ async def trigger_ml_retrain():
     try:
         import numpy as np
         import pandas as pd
-        prod_temp = np.random.uniform(16, 40, 100)
-        prod_rain = np.random.exponential(2.5, 100)
-        prod_time = np.random.normal(950.0, 320.0, 100)
+        from ml_core.demand_simulation import generate_training_data
+        X, observed_sales, censored, true_beta, true_sigma = generate_training_data(n_samples=100)
         prod_df = pd.DataFrame({
-            'weather_temp': prod_temp,
-            'weather_rain': prod_rain,
-            'time_elapsed_sec': prod_time
+            'weather_temp': X[:, 0],
+            'weather_rain': X[:, 1],
+            'time_elapsed_sec': X[:, 2]
         })
         drift_metrics = safeguards.calculate_drift_metrics(prod_df)
         for k in drift_metrics.keys():
@@ -471,16 +511,22 @@ async def trigger_ml_retrain():
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
+        self.lock = asyncio.Lock()
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        async with self.lock:
+            self.active_connections.append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+    async def disconnect(self, websocket: WebSocket):
+        async with self.lock:
+            if websocket in self.active_connections:
+                self.active_connections.remove(websocket)
 
     async def broadcast(self, message: dict):
-        for connection in self.active_connections:
+        async with self.lock:
+            connections = list(self.active_connections)
+        for connection in connections:
             try:
                 await connection.send_json(message)
             except Exception:
@@ -494,10 +540,14 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         # Loop to push live metrics to the client dynamically
         while True:
-            # 1. Calculate random fluctuations to look alive
-            success_rate = round(random.uniform(98.5, 100.0), 2)
-            bump_rate = round(random.uniform(1.2, 3.8), 2)
-            alerts_count = random.randint(1, 4)
+            # 1. Use real telemetry stats
+            if GLOBAL_STATS["reservations_total"] > 0:
+                success_rate = round((GLOBAL_STATS["reservations_success"] / GLOBAL_STATS["reservations_total"]) * 100, 2)
+            else:
+                success_rate = 100.0
+                
+            bump_rate = round(GLOBAL_STATS["gated_smoother_bumps"], 2)
+            alerts_count = GLOBAL_STATS["restock_alerts"]
             
             await websocket.send_json({
                 "timestamp": datetime.datetime.now().strftime("%H:%M:%S"),
@@ -508,7 +558,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # Sleep for 3 seconds
             await asyncio.sleep(3)
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        await manager.disconnect(websocket)
 
 # --- Dynamic Catalog & Operations Endpoints ---
 
@@ -992,7 +1042,7 @@ async def ai_agent_chat(req: ChatRequest, db: Session = Depends(get_db)):
         
         # Append function response message to contents
         contents.append({
-            "role": "function",
+            "role": "user",
             "parts": [{
                 "functionResponse": {
                     "name": func_name,

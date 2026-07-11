@@ -90,12 +90,13 @@ class FraudGuard:
     # --- 4. Semantic Intent & Plausibility Engine ---
     def check_semantic_plausibility(self, complaint_text, items_list):
         text_lower = complaint_text.lower()
+        items_lower = [i.lower() for i in items_list]
         
         # 1. Evaluate "cold food" complaints
         is_cold_complaint = any(word in text_lower for word in ["cold", "soggy", "ice cold", "not hot", "reheat"])
         if is_cold_complaint:
             hot_items = ["fries", "burger", "pizza", "biryani", "chicken", "curry", "roti", "samosa", "momo"]
-            has_hot_item = any(item in items_list for item in hot_items)
+            has_hot_item = any(hot_item in item for hot_item in hot_items for item in items_lower)
             if not has_hot_item:
                 return False, "COLD_COMPLAINT_ON_DEFAULT_COLD_ITEMS"
 
@@ -103,7 +104,7 @@ class FraudGuard:
         is_spill_complaint = any(word in text_lower for word in ["spill", "spilled", "leak", "leaked", "gravy out", "mess"])
         if is_spill_complaint:
             liquid_items = ["dal", "curry", "soup", "gravy", "coke", "pepsi", "shake", "smoothie", "lassi"]
-            has_liquid_item = any(item in items_list for item in liquid_items)
+            has_liquid_item = any(liquid_item in item for liquid_item in liquid_items for item in items_lower)
             if not has_liquid_item:
                 return False, "SPILL_COMPLAINT_ON_DRY_ITEMS"
 

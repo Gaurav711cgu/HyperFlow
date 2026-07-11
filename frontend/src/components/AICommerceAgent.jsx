@@ -1,274 +1,270 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 
-export default function AICommerceAgent({ onBack, onSendMessage, messages = [] }) {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-  const [inputValue, setInputValue] = useState('');
-  const feedEndRef = useRef(null);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (feedEndRef.current) {
-      feedEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
-  const handleSend = (e) => {
-    if (e) e.preventDefault();
-    if (!inputValue.trim()) return;
-    onSendMessage(inputValue);
-    setInputValue('');
-  };
-
-  // Default mock messages if none provided
-  const chatMessages = messages.length > 0 ? messages : [
-    {
-      sender: 'user',
-      text: 'Show me high-protein meals near Patia'
-    },
-    {
-      sender: 'agent',
-      text: 'Found 2 meals near Patia matching high protein goals:',
-      toolCall: 'Called tool: search_restaurants (Params: Patia)',
-      meals: [
-        { name: 'Dum Gosht Biryani', protein: '36g Protein', price: 'Rs 349', icon: 'rice_bowl' },
-        { name: 'Butter Chicken', protein: '28g Protein', price: 'Rs 280', icon: 'eco' }
-      ]
-    }
-  ];
-
-  if (isMobile) {
-    /* ─── MOBILE VIEW LAYOUT (ai_commerce_agent) ─── */
-    return (
-      <div className="relative bg-[#040406] min-h-screen text-[#e5e1e6] select-none font-sans overflow-hidden flex flex-col w-full pb-[80px]">
-        {/* Header */}
-        <header className="bg-[#0A0A0F]/90 backdrop-blur-xl border-b border-white/5 px-4 pt-4 pb-3 flex flex-col shrink-0">
-          <div className="flex items-center justify-between w-full mb-3">
-            <div className="flex items-center gap-2">
-              <button onClick={onBack} className="p-1 -ml-1 text-gray-400 hover:text-white transition-colors">
-                <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-              </button>
-              <h1 className="text-sm font-bold text-[#FF0077] tracking-wider uppercase">District AI</h1>
-            </div>
-            <span className="material-symbols-outlined text-gray-500 cursor-pointer text-[20px]">more_vert</span>
-          </div>
-          <div className="flex items-center gap-3 bg-white/5 rounded-xl p-3 border border-white/5">
-            <div className="relative shrink-0">
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#8F00FF]/50 bg-[#0A0A0F] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#8F00FF] text-[24px]">smart_toy</span>
-              </div>
-              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#00E676] rounded-full border-2 border-[#0A0A0F]"></div>
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold text-white leading-tight">Multi-Agent System Online</span>
-              <span className="text-[9px] text-gray-500 truncate">Food, Instamart, Dineout Agents active</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Chat Feed */}
-        <main className="flex-1 overflow-y-auto p-4 flex flex-col gap-6 scrollbar-none">
-          {chatMessages.map((msg, idx) => (
-            <div key={idx} className="flex flex-col gap-2">
-              <div className={`flex w-full ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {msg.sender === 'user' ? (
-                  <div className="max-w-[85%] bg-[#8F00FF]/15 border border-[#8F00FF]/30 rounded-2xl rounded-tr-sm p-3.5 shadow-lg">
-                    <p className="text-xs font-medium text-white leading-relaxed">{msg.text}</p>
-                  </div>
-                ) : (
-                  <div className="flex items-end gap-2 max-w-[85%]">
-                    <div className="w-6 h-6 rounded-full overflow-hidden border border-white/5 bg-white/5 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[#8F00FF] text-[14px]">smart_toy</span>
-                    </div>
-                    <div className="bg-[#0A0A0F]/70 border border-white/10 rounded-2xl rounded-tl-sm p-3.5 shadow-lg">
-                      <p className="text-xs font-medium text-white leading-relaxed mb-3">{msg.text}</p>
-                      
-                      {msg.meals && (
-                        <div className="flex flex-col gap-2 mb-3">
-                          {msg.meals.map((meal, mIdx) => (
-                            <div key={mIdx} className="bg-white/5 rounded-lg p-2.5 border border-white/5 flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="material-symbols-outlined text-gray-400 text-[18px]">{meal.icon}</span>
-                                <div className="flex flex-col">
-                                  <span className="text-xs font-bold text-white">{meal.name}</span>
-                                  <span className="text-[9px] font-mono text-[#00E676]">{meal.protein}</span>
-                                </div>
-                              </div>
-                              <span className="text-xs font-mono font-bold text-[#FF0077]">{meal.price}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <p className="text-[10px] text-gray-500">I can add either to your cart directly using Swiggy Food MCP.</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {msg.toolCall && (
-                <div className="ml-8 flex items-center">
-                  <div className="bg-white/5 rounded-full px-3 py-1 border border-white/5 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[12px] text-[#00E676]">check_circle</span>
-                    <span className="font-mono text-[9px] text-gray-400 leading-none">{msg.toolCall}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-          <div ref={feedEndRef} />
-        </main>
-
-        {/* Input Area */}
-        <footer className="bg-[#0A0A0F]/90 backdrop-blur-xl border-t border-white/5 p-4 fixed bottom-0 left-0 right-0 z-50 flex items-center gap-2">
-          <form onSubmit={handleSend} className="flex-1 bg-white/5 rounded-full border border-white/10 h-12 flex items-center px-4 gap-2 focus-within:border-[#FF0077] transition-all">
-            <span className="material-symbols-outlined text-gray-500 text-[20px]">mic</span>
-            <input 
-              className="bg-transparent border-none text-xs text-white w-full focus:ring-0 placeholder:text-gray-600 outline-none" 
-              placeholder="Ask food agent anything..." 
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-            />
-          </form>
-          <button 
-            onClick={handleSend}
-            className="w-12 h-12 bg-[#FF0077] text-white rounded-full flex items-center justify-center shrink-0 shadow-lg active:scale-95 transition-all"
-          >
-            <span className="material-symbols-outlined text-white font-bold text-[20px]">send</span>
-          </button>
-        </footer>
-      </div>
-    );
-  }
-
-  /* ─── DESKTOP VIEW LAYOUT (ai_commerce_agent_desktop) ─── */
+const AICommerceAgent = () => {
   return (
-    <div className="w-full min-h-screen bg-[#040406] text-[#e5e1e6] select-none font-sans antialiased relative">
-      {/* Top Navigation */}
-      <header className="fixed top-0 left-0 w-full z-50 flex flex-col px-8 py-3 bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-[1440px] mx-auto w-full flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={onBack} className="p-1 rounded-full hover:bg-white/5 text-[#FF0077] transition-colors">
-              <span className="material-symbols-outlined text-[28px]">arrow_back</span>
-            </button>
-            <h1 className="text-2xl font-extrabold text-[#FF0077] tracking-tighter">District AI</h1>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 px-3 py-1 bg-[#131316] rounded-full border border-white/5">
-              <span className="material-symbols-outlined text-[#00E676] text-sm">verified</span>
-              <span className="font-mono text-[9px] uppercase tracking-widest text-gray-500">Agent Command</span>
-            </div>
-          </div>
-        </div>
-      </header>
+    <>
 
-      <main className="pt-20 min-h-screen max-w-[1440px] mx-auto px-8 pb-8">
-        <div className="grid grid-cols-12 gap-8 h-[calc(100vh-100px)]">
-          {/* Chat Feed Panel */}
-          <div className="col-span-8 bg-[#0A0A0F] border border-white/5 rounded-3xl p-6 flex flex-col shadow-2xl h-full relative overflow-hidden">
-            <div className="flex-1 overflow-y-auto mb-16 pr-2 flex flex-col gap-6 custom-scrollbar">
-              {chatMessages.map((msg, idx) => (
-                <div key={idx} className="flex flex-col gap-2">
-                  <div className={`flex w-full ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    {msg.sender === 'user' ? (
-                      <div className="max-w-[70%] bg-[#8F00FF]/15 border border-[#8F00FF]/30 rounded-2xl rounded-tr-sm p-4 shadow-md">
-                        <p className="text-xs text-white leading-relaxed">{msg.text}</p>
-                      </div>
-                    ) : (
-                      <div className="flex items-end gap-3 max-w-[70%]">
-                        <div className="w-8 h-8 rounded-full overflow-hidden border border-white/5 bg-white/5 flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined text-[#8F00FF]">smart_toy</span>
-                        </div>
-                        <div className="bg-[#131316] border border-white/5 rounded-2xl rounded-tl-sm p-4 shadow-md w-full">
-                          <p className="text-xs text-white leading-relaxed mb-4">{msg.text}</p>
-                          
-                          {msg.meals && (
-                            <div className="flex flex-col gap-2 mb-4">
-                              {msg.meals.map((meal, mIdx) => (
-                                <div key={mIdx} className="bg-[#0A0A0F] rounded-xl p-3 border border-white/5 flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <span className="material-symbols-outlined text-gray-500">{meal.icon}</span>
-                                    <div className="flex flex-col">
-                                      <span className="text-xs font-bold text-white">{meal.name}</span>
-                                      <span className="text-[9px] font-mono text-[#00E676]">{meal.protein}</span>
-                                    </div>
-                                  </div>
-                                  <span className="text-xs font-mono font-bold text-[#FF0077]">{meal.price}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          <p className="text-[10px] text-gray-500">Execution powered by LangGraph Food Agent.</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+{/* Top Navigation Bar (Shared Component Anchor) */}
+<header className="fixed top-0 left-0 w-full z-50 flex flex-col px-margin-mobile pt-sm pb-md bg-surface-panel/80 backdrop-blur-xl border-b border-border-glass">
+<div className="flex items-center justify-between w-full h-12">
+<div className="flex items-center gap-md">
+<span className="text-hero-display font-hero-display font-bold text-primary tracking-tighter">District</span>
+<div className="hidden md:flex gap-md px-lg border-l border-border-glass">
+<span className="text-primary font-bold transition-opacity hover:opacity-80 cursor-pointer">AI Agent</span>
+<span className="text-on-surface-variant font-body-default transition-opacity hover:opacity-80 cursor-pointer">Delivery</span>
+<span className="text-on-surface-variant font-body-default transition-opacity hover:opacity-80 cursor-pointer">Groceries</span>
+</div>
+</div>
+<div className="flex items-center gap-md">
+<button className="flex items-center gap-xs text-primary bg-primary/10 px-md py-xs rounded-full border border-primary/20">
+<span className="material-symbols-outlined text-[18px]">location_on</span>
+<span className="text-label-small font-label-small">Downtown Hub</span>
+</button>
+<div className="w-8 h-8 rounded-full overflow-hidden border border-border-glass">
+<img className="w-full h-full object-cover" data-alt="A futuristic professional portrait of a tech-savvy user in a dimly lit obsidian environment with neon pink lighting accents reflecting off a glass background. The person looks confident and sophisticated, dressed in high-performance minimalist techwear. The visual style is crisp, cinematic, and emphasizes the premium high-velocity brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2tO3fncNv4404QJYfcR4maXfhawZqSQgoXfQ5O8B54qj9eJsItCXkM1VpHC_LJ-ZCtdz4hiDtBENK72IykdxC27Dkym1yh8gV18d3xy-yUVoUzw94tObL0wpmlmDo5UwH3zVfGgtFgcahfIgIiCkTt9PZMadV1wHhff0S7D-XCfaeFdFEAsxT-oCm9sKs587BI069qB0mc8Hpp7-eGRoEvwhTyaWcjf4Zi84T59pR5FeL6oZ_OLxVi-nfQWP95zOs7rQjJZ-pRvvF"/>
+</div>
+</div>
+</div>
+</header>
+<main className="flex flex-1 pt-[68px] overflow-hidden">
+{/* Left Pane: History & MCP Tools */}
+<aside className="w-[320px] glass-panel flex flex-col h-full border-r border-border-glass">
+<div className="p-lg border-b border-border-glass">
+<h2 className="text-section-header font-section-header text-on-surface uppercase tracking-widest flex items-center gap-sm">
+<span className="material-symbols-outlined text-primary text-[18px]">history</span>
+                    System Logs
+                </h2>
+</div>
+<div className="flex-1 overflow-y-auto custom-scrollbar p-md space-y-md">
+{/* Tool Active State */}
+<div className="p-md rounded-xl bg-surface-elevated border border-primary/20 neon-glow-pink">
+<div className="flex justify-between items-start mb-sm">
+<span className="text-metric-mono font-metric-mono text-primary">MCP-V1.4.2</span>
+<span className="text-[8px] px-sm py-[1px] rounded bg-primary text-on-primary font-bold">ACTIVE</span>
+</div>
+<p className="text-body-medium font-body-medium text-on-surface">Route Optimization Tool</p>
+<div className="mt-md space-y-xs">
+<div className="flex justify-between text-label-small font-label-small text-on-surface-variant">
+<span>Latency</span>
+<span className="text-tertiary">12ms</span>
+</div>
+<div className="w-full h-1 bg-surface-container rounded-full overflow-hidden">
+<div className="h-full bg-tertiary w-3/4"></div>
+</div>
+</div>
+</div>
+{/* History Item 1 */}
+<div className="p-md rounded-xl bg-surface-panel hover:bg-surface-elevated transition-colors cursor-pointer border border-transparent hover:border-border-glass group">
+<div className="flex items-center gap-sm mb-xs">
+<span className="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary">inventory_2</span>
+<span className="text-label-small font-label-small text-on-surface-variant">2h ago</span>
+</div>
+<p className="text-body-default font-body-default text-on-surface line-clamp-1">Inventory check: Premium Carbon Fiber</p>
+</div>
+{/* History Item 2 */}
+<div className="p-md rounded-xl bg-surface-panel hover:bg-surface-elevated transition-colors cursor-pointer border border-transparent hover:border-border-glass group">
+<div className="flex items-center gap-sm mb-xs">
+<span className="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary">payments</span>
+<span className="text-label-small font-label-small text-on-surface-variant">5h ago</span>
+</div>
+<p className="text-body-default font-body-default text-on-surface line-clamp-1">Transactional validation: District ID 902</p>
+</div>
+{/* History Item 3 */}
+<div className="p-md rounded-xl bg-surface-panel hover:bg-surface-elevated transition-colors cursor-pointer border border-transparent hover:border-border-glass group">
+<div className="flex items-center gap-sm mb-xs">
+<span className="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary">map</span>
+<span className="text-label-small font-label-small text-on-surface-variant">Yesterday</span>
+</div>
+<p className="text-body-default font-body-default text-on-surface line-clamp-1">New logistics route: Sector 7G</p>
+</div>
+</div>
+{/* System Metrics Footer */}
+<div className="p-lg bg-surface-container-low border-t border-border-glass">
+<div className="grid grid-cols-2 gap-md">
+<div>
+<span className="block text-label-small font-label-small text-on-surface-variant mb-[2px]">Credits</span>
+<span className="text-metric-mono font-metric-mono text-primary">12,450.00</span>
+</div>
+<div>
+<span className="block text-label-small font-label-small text-on-surface-variant mb-[2px]">Tier</span>
+<span className="text-metric-mono font-metric-mono text-tertiary">PLATINUM</span>
+</div>
+</div>
+</div>
+</aside>
+{/* Right Pane: Chat Window */}
+<section className="flex-1 flex flex-col relative bg-[#040406]">
+{/* Subtle atmospheric background */}
+<div className="absolute inset-0 opacity-10 pointer-events-none">
 
-                  {msg.toolCall && (
-                    <div className="ml-12 flex items-center">
-                      <div className="bg-white/5 rounded-full px-3 py-1 border border-white/5 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[14px] text-[#00E676]">check_circle</span>
-                        <span className="font-mono text-[9px] text-gray-400">{msg.toolCall}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              <div ref={feedEndRef} />
-            </div>
+</div>
+{/* Chat Content */}
+<div className="flex-1 overflow-y-auto custom-scrollbar p-xl space-y-xl relative z-10">
+{/* Agent Welcome */}
+<div className="flex flex-col items-center justify-center py-xl space-y-md">
+<div className="w-16 h-16 rounded-full glass-panel flex items-center justify-center shimmer-effect border-primary/30">
+<span className="material-symbols-outlined text-primary text-[32px]" style={{fontVariationSettings: '\'FILL\' 1'}}>smart_toy</span>
+</div>
+<div className="text-center">
+<h1 className="text-hero-display font-hero-display text-on-surface">District Intelligence</h1>
+<p className="text-body-medium font-body-medium text-on-surface-variant max-w-sm">How can I assist your logistics operations today?</p>
+</div>
+</div>
+{/* Chat Bubble: User */}
+<div className="flex justify-end">
+<div className="max-w-[70%] bg-surface-elevated border border-border-glass rounded-2xl rounded-tr-none p-lg">
+<p className="text-body-default font-body-default text-on-surface">
+                            Can you analyze the fastest delivery route for the Obsidian-class cargo from Downtown Hub to Sector 4? I need to account for current atmospheric turbulence.
+                        </p>
+<span className="block text-right text-[10px] text-on-surface-variant mt-sm">14:22</span>
+</div>
+</div>
+{/* Chat Bubble: Agent */}
+<div className="flex justify-start">
+<div className="max-w-[85%] bg-surface-panel border border-primary/10 rounded-2xl rounded-tl-none p-lg relative">
+<div className="flex items-center gap-sm mb-md">
+<span className="material-symbols-outlined text-primary text-[18px]">analytics</span>
+<span className="text-label-small font-label-small text-primary uppercase tracking-tighter">Processing Logistics Data...</span>
+</div>
+{/* Mini Bento Results Grid */}
+<div className="grid grid-cols-5 gap-sm mb-md">
+<div className="col-span-3 h-32 rounded-lg bg-surface-elevated border border-border-glass overflow-hidden relative">
+<div className="absolute inset-0 p-md flex flex-col justify-end bg-gradient-to-t from-black/80 to-transparent">
+<span className="text-label-small font-label-small text-on-surface-variant">Optimal Route Map</span>
+<span className="text-section-header font-section-header text-on-surface">Route Alpha-9</span>
+</div>
+<div className="w-full h-full bg-cover bg-center" data-alt="A stylized glowing digital map of a futuristic urban city with neon pink and blue light trails representing high-speed logistics routes. The map shows intricate grid patterns and elevated transport corridors in a dark obsidian-themed environment, with data points and holographic markers. High-key technological precision and atmospheric depth." style={{backgroundImage: 'url(\'https://lh3.googleusercontent.com/aida-public/AB6AXuDjnx17DvYwaxx29La-hl9AIOk8rcHdPJWtycgwAHXv8-Osnbhnc46Y-C-xu1gpviYHGTSqK839JmDwitsi7GLfHWax1uI_1u_BBDg0HD9fG8oxn0pVSav8dNnydGMTY7L2Kk8EwhOmzqxlUuojfBNzy8U9YnpszdtvQTJBGhbv8nH2ysQzjv8xYfxXVmVnh4N_SQD3KANE12z_qeQvL4c_XZy0pAuPYX2jcE7jNGdIT3g6PLsUaoL10gE1CrT_oG8WiG9JB_Gp7ebT\')'}}></div>
+</div>
+<div className="col-span-2 h-32 flex flex-col gap-sm">
+<div className="flex-1 rounded-lg bg-surface-elevated border border-border-glass p-sm flex flex-col justify-center items-center">
+<span className="text-metric-mono font-metric-mono text-tertiary text-lg">18.4s</span>
+<span className="text-[8px] text-on-surface-variant uppercase">Est. Time</span>
+</div>
+<div className="flex-1 rounded-lg bg-surface-elevated border border-border-glass p-sm flex flex-col justify-center items-center">
+<span className="text-metric-mono font-metric-mono text-primary text-lg">99.8%</span>
+<span className="text-[8px] text-on-surface-variant uppercase">Stability</span>
+</div>
+</div>
+</div>
+<p className="text-body-default font-body-default text-on-surface">
+                            Analysis complete. <strong className="text-primary">Route Alpha-9</strong> is the most efficient. By leveraging the low-pressure corridors in Sector 4, we can bypass 80% of the turbulence.
+                        </p>
+<div className="mt-lg flex gap-md">
+<button className="px-lg py-sm rounded-full bg-primary text-on-primary font-bold text-body-medium shimmer-effect neon-glow-pink">
+                                Initialize Dispatch
+                            </button>
+<button className="px-lg py-sm rounded-full border border-border-glass text-on-surface font-bold text-body-medium hover:bg-surface-elevated transition-colors">
+                                View Details
+                            </button>
+</div>
+<span className="block text-left text-[10px] text-on-surface-variant mt-sm">14:23</span>
+</div>
+</div>
+{/* Spacer for fixed input */}
+<div className="h-32"></div>
+</div>
+{/* Input Dock */}
+<div className="absolute bottom-0 left-0 w-full p-xl pointer-events-none">
+<div className="max-w-4xl mx-auto pointer-events-auto">
+<div className="glass-panel p-md rounded-2xl flex items-center gap-md shadow-2xl border-primary/10">
+<button className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-elevated text-on-surface-variant hover:text-primary transition-colors">
+<span className="material-symbols-outlined">attach_file</span>
+</button>
+<div className="flex-1">
+<textarea className="w-full bg-transparent border-none focus:ring-0 text-body-default text-on-surface placeholder-on-surface-variant/40 resize-none" placeholder="Message District Intelligence..." rows="1"></textarea>
+</div>
+<div className="flex items-center gap-sm">
+<button className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-elevated text-on-surface-variant">
+<span className="material-symbols-outlined">mic</span>
+</button>
+<button className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-on-primary hover:scale-105 transition-transform duration-200">
+<span className="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+<div className="mt-sm flex justify-center gap-md">
+<span className="text-[10px] text-on-surface-variant/60 flex items-center gap-xs">
+<span className="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+                            System Online
+                        </span>
+<span className="text-[10px] text-on-surface-variant/60">MCP 1.4.2 Connected</span>
+</div>
+</div>
+</div>
+</section>
+{/* Right Side: Status/Loyalty (Shared Component Hinting) */}
+<aside className="w-[300px] glass-panel hidden xl:flex flex-col border-l border-border-glass">
+<div className="p-lg">
+<div className="p-md rounded-xl bg-gradient-to-br from-[#14141F] to-[#0A0A0F] border border-border-glass mb-xl">
+<div className="flex justify-between items-center mb-md">
+<h3 className="text-section-header font-section-header text-on-surface">Loyalty Status</h3>
+<span className="material-symbols-outlined text-primary" style={{fontVariationSettings: '\'FILL\' 1'}}>verified</span>
+</div>
+<div className="space-y-md">
+<div className="flex justify-between items-end">
+<span className="text-label-small font-label-small text-on-surface-variant">Elite Progress</span>
+<span className="text-metric-mono font-metric-mono text-primary">82%</span>
+</div>
+<div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+<div className="h-full bg-gradient-to-r from-primary to-secondary w-[82%]"></div>
+</div>
+<p className="text-[10px] text-on-surface-variant italic">Next Tier: Platinum Elite Diamond</p>
+</div>
+</div>
+<h3 className="text-section-header font-section-header text-on-surface uppercase tracking-widest mb-md flex items-center gap-sm px-sm">
+<span className="material-symbols-outlined text-secondary text-[18px]">flash_on</span>
+                    Active Tools
+                </h3>
+<div className="space-y-sm px-sm">
+<div className="flex items-center gap-md p-sm rounded-lg hover:bg-surface-elevated transition-colors border border-transparent hover:border-border-glass cursor-pointer">
+<div className="w-8 h-8 rounded bg-primary-container/20 flex items-center justify-center text-primary">
+<span className="material-symbols-outlined text-[20px]">shopping_cart</span>
+</div>
+<div className="flex-1">
+<div className="text-body-medium font-body-medium text-on-surface">Cart Sync</div>
+<div className="text-[10px] text-tertiary">Real-time</div>
+</div>
+</div>
+<div className="flex items-center gap-md p-sm rounded-lg hover:bg-surface-elevated transition-colors border border-transparent hover:border-border-glass cursor-pointer">
+<div className="w-8 h-8 rounded bg-secondary/10 flex items-center justify-center text-secondary">
+<span className="material-symbols-outlined text-[20px]">shield</span>
+</div>
+<div className="flex-1">
+<div className="text-body-medium font-body-medium text-on-surface">Privacy Shield</div>
+<div className="text-[10px] text-on-surface-variant">Encrypted</div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+{/* Bottom Navigation Bar (Mobile Only - Suppressed by shared component logic for desktop view) */}
+<nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-surface-panel/90 backdrop-blur-2xl border-t border-border-glass shadow-[0_-8px_24px_rgba(0,0,0,0.5)] rounded-t-xl">
+<div className="flex flex-col items-center justify-center text-on-surface-variant opacity-60">
+<span className="material-symbols-outlined text-[24px]">delivery_dining</span>
+<span className="text-label-small font-label-small">Delivery</span>
+</div>
+<div className="flex flex-col items-center justify-center text-on-surface-variant opacity-60">
+<span className="material-symbols-outlined text-[24px]">restaurant</span>
+<span className="text-label-small font-label-small">Dining</span>
+</div>
+<div className="flex flex-col items-center justify-center text-primary font-bold scale-110">
+<span className="material-symbols-outlined text-[24px]" style={{fontVariationSettings: '\'FILL\' 1'}}>smart_toy</span>
+<span className="text-label-small font-label-small">AI Agent</span>
+</div>
+<div className="flex flex-col items-center justify-center text-on-surface-variant opacity-60">
+<span className="material-symbols-outlined text-[24px]">local_mall</span>
+<span className="text-label-small font-label-small">Groceries</span>
+</div>
+<div className="flex flex-col items-center justify-center text-on-surface-variant opacity-60">
+<span className="material-symbols-outlined text-[24px]">person</span>
+<span className="text-label-small font-label-small">Profile</span>
+</div>
+</nav>
 
-            {/* Input Bar */}
-            <div className="absolute bottom-4 left-6 right-6 z-10 flex gap-3">
-              <form onSubmit={handleSend} className="flex-1 bg-[#131316] rounded-full border border-white/10 h-12 flex items-center px-4 gap-2 focus-within:border-[#FF0077] transition-all">
-                <input 
-                  className="bg-transparent border-none text-xs text-white w-full focus:ring-0 placeholder:text-gray-600 outline-none" 
-                  placeholder="Ask food agent anything..." 
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                />
-              </form>
-              <button 
-                onClick={handleSend}
-                className="w-12 h-12 bg-[#FF0077] text-white rounded-full flex items-center justify-center shrink-0 shadow-lg hover:opacity-95 transition-all"
-              >
-                <span className="material-symbols-outlined text-white text-[20px]">send</span>
-              </button>
-            </div>
-          </div>
 
-          {/* Right Panel: Multi-Agent Process Monitor */}
-          <div className="col-span-4 bg-[#0A0A0F] border border-white/5 rounded-3xl p-6 flex flex-col gap-6 shadow-2xl h-full overflow-y-auto">
-            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Multi-Agent Diagnostics</h3>
-            
-            <div className="space-y-4">
-              <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                <span className="text-[10px] font-mono text-[#8F00FF] block mb-1">LANGGRAPH_COORDINATOR</span>
-                <p className="text-xs text-white">Food app route matching success. Triaging target queries to Food MCP toolsets.</p>
-              </div>
-              <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                <span className="text-[10px] font-mono text-[#FF0077] block mb-1">FOOD_AGENT_STATE</span>
-                <div className="text-[10px] font-mono text-gray-400 space-y-1">
-                  <div>- query: "high-protein"</div>
-                  <div>- location: "Patia, Bhubaneswar"</div>
-                  <div>- schema_check: PASSED</div>
-                </div>
-              </div>
-              <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                <span className="text-[10px] font-mono text-[#00E676] block mb-1">LIVE_TELEMETRY</span>
-                <p className="text-xs text-white">Active session outbox queues: 0. Latency threshold stable.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+    </>
   );
-}
+};
+
+export default AICommerceAgent;

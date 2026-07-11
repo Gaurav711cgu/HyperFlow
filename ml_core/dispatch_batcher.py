@@ -29,7 +29,7 @@ class DispatchBatcher:
             return [], []
 
         # Find route using Nearest Neighbor
-        unvisited = list(range(n_orders))
+        unvisited_set = set(range(n_orders))
         route_indices = []
         
         # Start at store. Find nearest first order.
@@ -38,15 +38,15 @@ class DispatchBatcher:
         
         first_idx = np.argmin(dists_from_store)
         route_indices.append(first_idx)
-        unvisited.remove(first_idx)
+        unvisited_set.remove(first_idx)
         
         curr_idx = first_idx
-        while unvisited:
+        while unvisited_set:
             # Look up distances in the pre-calculated sub-matrix
-            dists = [dist_matrix[curr_idx][j] if j in unvisited else 1e9 for j in range(n_orders)]
+            dists = [dist_matrix[curr_idx][j] if j in unvisited_set else 1e9 for j in range(n_orders)]
             next_idx = np.argmin(dists)
             route_indices.append(next_idx)
-            unvisited.remove(next_idx)
+            unvisited_set.remove(next_idx)
             curr_idx = next_idx
             
         # Reconstruct route
