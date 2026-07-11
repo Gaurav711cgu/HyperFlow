@@ -1,6 +1,6 @@
 import React from 'react';
 
-const MerchantStockAdmin = () => {
+const MerchantStockAdmin = ({ onBack }) => {
   return (
     <>
 
@@ -17,7 +17,7 @@ const MerchantStockAdmin = () => {
 <nav className="flex-1 overflow-y-auto py-6" data-purpose="nav-links">
 <ul className="space-y-1">
 <li>
-<a className="flex items-center px-6 py-2 text-sm font-mono text-muted hover:text-highlight hover:bg-borderline transition-colors" href="#">
+<a className="flex items-center px-6 py-2 text-sm font-mono text-muted hover:text-highlight hover:bg-borderline transition-colors cursor-pointer" onClick={onBack}>
 <span className="w-5 h-5 mr-3 border border-current flex items-center justify-center text-[10px]">01</span>
             OVERVIEW
           </a>
