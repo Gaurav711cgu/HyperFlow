@@ -4,6 +4,7 @@ export default function DiscoveryHub({ restaurants = [], groceries = [], selecte
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [selectedCuisine, setSelectedCuisine] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -22,6 +23,151 @@ export default function DiscoveryHub({ restaurants = [], groceries = [], selecte
   const cartTotalItems = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
 
   if (isMobile) {
+    if (showAutocomplete) {
+      return (
+        <div className="fixed inset-0 bg-[#040406] z-[60] flex flex-col text-[#e5e1e6] font-sans p-4">
+          {/* Header bar */}
+          <div className="flex items-center gap-3 pt-4 pb-3 border-b border-white/5">
+            <button 
+              onClick={() => setShowAutocomplete(false)} 
+              className="text-gray-400 hover:text-white"
+            >
+              <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+            </button>
+            <div className="relative flex-1 bg-white/5 rounded-xl h-11 flex items-center px-3 border border-[#FF0077] shadow-[0_0_12px_rgba(255,76,135,0.3)]">
+              <span className="material-symbols-outlined text-gray-500 mr-2 text-[20px]">search</span>
+              <input 
+                autoFocus
+                className="bg-transparent border-none w-full text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-0 h-full" 
+                placeholder="Search food, groceries, or dining..." 
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="text-gray-500 hover:text-white">
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Service tags */}
+          <div className="flex gap-2 mt-4 px-2">
+            <span className="text-[10px] font-bold text-[#FF0077] bg-[#FF0077]/10 px-3 py-1 rounded-full border border-[#FF0077]/20">Food Delivery</span>
+            <span className="text-[10px] font-bold text-gray-400 bg-white/5 px-3 py-1 rounded-full border border-white/5">Instamart</span>
+            <span className="text-[10px] font-bold text-gray-400 bg-white/5 px-3 py-1 rounded-full border border-white/5">Dineout</span>
+          </div>
+
+          {/* Main scroll content */}
+          <div className="flex-1 overflow-y-auto mt-4 space-y-6">
+            {/* Autocomplete Suggestions list */}
+            {searchQuery && (
+              <div className="flex flex-col border-b border-white/5 pb-4">
+                <div 
+                  onClick={() => { setSelectedCuisine('Biryani'); setShowAutocomplete(false); }}
+                  className="flex items-center justify-between py-3 hover:bg-white/5 px-2 rounded-xl cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                      <span className="material-symbols-outlined text-[#FF0077] text-[16px]">search</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-white">Biryani</span>
+                      <span className="text-[10px] text-gray-500">in restaurants</span>
+                    </div>
+                  </div>
+                  <span className="material-symbols-outlined text-gray-500 text-[18px]">chevron_right</span>
+                </div>
+                <div 
+                  onClick={() => { setActiveTab('quick'); setShowAutocomplete(false); }}
+                  className="flex items-center justify-between py-3 hover:bg-white/5 px-2 rounded-xl cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                      <span className="material-symbols-outlined text-[#FF0077] text-[16px]">search</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-white">Milk</span>
+                      <span className="text-[10px] text-gray-500">in Instamart groceries</span>
+                    </div>
+                  </div>
+                  <span className="material-symbols-outlined text-gray-500 text-[18px]">chevron_right</span>
+                </div>
+              </div>
+            )}
+
+            {/* Trending Searches */}
+            <div>
+              <div className="flex items-center gap-2 mb-3 px-2">
+                <span className="material-symbols-outlined text-[#FF0077] text-[16px]">trending_up</span>
+                <h2 className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Trending</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { name: 'Dum Biryani', icon: 'local_fire_department', cuisine: 'Biryani' },
+                  { name: 'Pizza Combos', icon: 'local_pizza', cuisine: 'Pizzas' },
+                  { name: 'Healthy Salads', icon: 'eco', cuisine: 'Healthy' },
+                  { name: 'Fresh Milk', icon: 'water_drop', cuisine: 'Groceries' },
+                  { name: 'Desserts', icon: 'cake', cuisine: 'Desserts' },
+                  { name: 'Butter Chicken', icon: 'restaurant', cuisine: 'North Indian' }
+                ].map((term) => (
+                  <button 
+                    key={term.name}
+                    onClick={() => { 
+                      setSearchQuery(term.name); 
+                      setSelectedCuisine(term.cuisine === 'Groceries' ? null : term.cuisine);
+                      if (term.cuisine === 'Groceries') setActiveTab('quick');
+                      setShowAutocomplete(false); 
+                    }}
+                    className="bg-white/5 border border-white/5 rounded-xl py-3 px-3 flex items-center gap-2.5 hover:border-[#FF0077]/40 hover:bg-white/10 text-left transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[#FF0077] text-[16px]">{term.icon}</span>
+                    <span className="text-xs text-white truncate font-medium">{term.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Searches */}
+            <div>
+              <div className="flex items-center gap-2 mb-2 px-2">
+                <span className="material-symbols-outlined text-gray-500 text-[16px]">history</span>
+                <h2 className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Recent</h2>
+              </div>
+              <div className="flex flex-col gap-1">
+                {[
+                  { name: 'Behrouz Biryani', cuisine: 'Biryani' },
+                  { name: 'Tomatoes', cuisine: 'Groceries' }
+                ].map((search) => (
+                  <div 
+                    key={search.name}
+                    className="flex items-center justify-between py-2 hover:bg-white/5 px-2 rounded-xl cursor-pointer group"
+                  >
+                    <div 
+                      onClick={() => { 
+                        setSearchQuery(search.name);
+                        if (search.cuisine === 'Groceries') setActiveTab('quick');
+                        else setSelectedCuisine(search.cuisine);
+                        setShowAutocomplete(false);
+                      }}
+                      className="flex items-center gap-3 flex-grow"
+                    >
+                      <span className="material-symbols-outlined text-gray-500 text-[18px]">schedule</span>
+                      <span className="text-xs text-white font-medium">{search.name}</span>
+                    </div>
+                    <button className="text-gray-500 hover:text-white">
+                      <span className="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     /* ─── MOBILE VIEW LAYOUT (discovery_hub) ─── */
     return (
       <div className="relative bg-[#000] min-h-screen text-[#e5e1e6] select-none font-sans overflow-y-auto pb-24">
@@ -52,20 +198,23 @@ export default function DiscoveryHub({ restaurants = [], groceries = [], selecte
                   <img 
                     className="w-full h-full object-cover" 
                     alt="User Avatar"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0Uznd5BrEakyqV03TSlFHCHXw_TTR9NoiZrjWMX83oPzfPL86grMqD13aKT0QDWtFtRURT0zxK0U5PGph0YE-85gH0kYqPFNrxkJIVv-A-5FLYfmnTzXRUmurQzKSzdHPdwjaAcqq98ciPnMiyXrRP9vtJhGxu3_5vDomtUxqdJ03ATOOMMFCXPpnh4C90ZilJDpgsImzdQdVL2Adtcs8rV177FsVEfoveZebaPCjJOWo3BNAj7ReXUAukbuMudxED_8wA4AHUbhC"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkjIe7ftPr73AcnjOzX3-ui0Xbbho54xtdD5czbkz7DJ2mdigOasrDeMoDVaBjZSUFeCN0EAflCDpLXBD1NbzOvWFeB8YOQ9WGS0cnpYXWqc0urY7eRW76ES7_0Kla9qSWeTeKWvN-_g4r-xs7rFgIWOnskumKT1XW2XAuPWrFb5gaEsQDqj6mMVNQ4wZWCXFqRXTZSjMjOFa2xa8ph73fqXxyOKRPJ625oY-g_YuSygzfG0o6Vfy2GRwkO-e11nJSvyGZcjfHpsGS"
                   />
                 </div>
               </div>
             </div>
             {/* Search Input */}
-            <div className="relative bg-white/5 rounded-xl h-11 flex items-center px-3 border border-white/5 focus-within:border-[#FF0077] transition-all">
+            <div 
+              onClick={() => setShowAutocomplete(true)}
+              className="relative bg-white/5 rounded-xl h-11 flex items-center px-3 border border-white/5 focus-within:border-[#FF0077] transition-all cursor-pointer"
+            >
               <span className="material-symbols-outlined text-gray-500 mr-2 text-[20px]">search</span>
               <input 
-                className="bg-transparent border-none w-full text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-0 h-full" 
+                readOnly
+                className="bg-transparent border-none w-full text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-0 h-full cursor-pointer" 
                 placeholder="Search foods, cuisines..." 
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
               />
               <div className="border-l border-white/10 pl-2 ml-2 flex items-center">
                 <span className="material-symbols-outlined text-[#FF0077] text-[18px]">mic</span>
@@ -320,16 +469,124 @@ export default function DiscoveryHub({ restaurants = [], groceries = [], selecte
             >
               HyperFlow
             </span>
-            <div className="hidden md:flex items-center bg-[#131316] rounded-full px-4 py-1.5 border border-white/5 min-w-[400px]">
-              <span className="material-symbols-outlined text-gray-500 text-[20px] mr-2">search</span>
-              <input 
-                className="bg-transparent border-none outline-none text-xs text-white placeholder:text-gray-600 w-full focus:ring-0" 
-                placeholder="Search curated merchants or delivery slots..." 
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="relative">
+              <div className="hidden md:flex items-center bg-[#131316] rounded-full px-4 py-1.5 border border-white/5 min-w-[400px] focus-within:border-[#FF0077] transition-all">
+                <span className="material-symbols-outlined text-gray-500 text-[20px] mr-2">search</span>
+                <input 
+                  className="bg-transparent border-none outline-none text-xs text-white placeholder:text-gray-600 w-full focus:ring-0" 
+                  placeholder="Search curated merchants or delivery slots..." 
+                  type="text"
+                  value={searchQuery}
+                  onFocus={() => setShowAutocomplete(true)}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {showAutocomplete && (
+                  <button 
+                    onClick={() => setShowAutocomplete(false)} 
+                    className="text-gray-500 hover:text-white focus:outline-none"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">close</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Desktop Autocomplete Popover Dropdown */}
+              {showAutocomplete && (
+                <div className="absolute left-0 mt-2 w-[400px] rounded-2xl p-4 bg-[#0A0A0F]/95 backdrop-blur-xl border border-white/10 shadow-2xl z-50 flex flex-col gap-4">
+                  <div className="flex gap-2">
+                    <span className="text-[10px] font-bold text-[#FF0077] bg-[#FF0077]/10 px-2.5 py-0.5 rounded-full border border-[#FF0077]/20">Food Delivery</span>
+                    <span className="text-[10px] font-bold text-gray-400 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">Instamart</span>
+                    <span className="text-[10px] font-bold text-gray-400 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">Dineout</span>
+                  </div>
+
+                  {searchQuery && (
+                    <div className="flex flex-col border-b border-white/5 pb-2">
+                      <div 
+                        onClick={() => { setSelectedCuisine('Biryani'); setShowAutocomplete(false); }}
+                        className="flex items-center justify-between py-2 hover:bg-white/5 px-2 rounded-xl cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#FF0077] text-[16px]">search</span>
+                          <span className="text-xs text-white font-medium">Biryani</span>
+                          <span className="text-[10px] text-gray-500">in restaurants</span>
+                        </div>
+                      </div>
+                      <div 
+                        onClick={() => { setActiveTab('quick'); setShowAutocomplete(false); }}
+                        className="flex items-center justify-between py-2 hover:bg-white/5 px-2 rounded-xl cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#FF0077] text-[16px]">search</span>
+                          <span className="text-xs text-white font-medium">Milk</span>
+                          <span className="text-[10px] text-gray-500">in Instamart groceries</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <span className="material-symbols-outlined text-[#FF0077] text-[16px]">trending_up</span>
+                      <h2 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono">Trending</h2>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { name: 'Dum Biryani', icon: 'local_fire_department', cuisine: 'Biryani' },
+                        { name: 'Pizza Combos', icon: 'local_pizza', cuisine: 'Pizzas' },
+                        { name: 'Healthy Salads', icon: 'eco', cuisine: 'Healthy' },
+                        { name: 'Fresh Milk', icon: 'water_drop', cuisine: 'Groceries' }
+                      ].map((term) => (
+                        <button 
+                          key={term.name}
+                          onClick={() => { 
+                            setSearchQuery(term.name); 
+                            setSelectedCuisine(term.cuisine === 'Groceries' ? null : term.cuisine);
+                            if (term.cuisine === 'Groceries') setActiveTab('quick');
+                            setShowAutocomplete(false); 
+                          }}
+                          className="bg-white/5 border border-white/5 rounded-xl py-2 px-2.5 flex items-center gap-2 hover:border-[#FF0077]/40 hover:bg-white/10 text-left transition-all"
+                        >
+                          <span className="material-symbols-outlined text-[#FF0077] text-[14px]">{term.icon}</span>
+                          <span className="text-[11px] text-white truncate font-medium">{term.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="material-symbols-outlined text-gray-500 text-[16px]">history</span>
+                      <h2 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 font-mono">Recent</h2>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      {[
+                        { name: 'Behrouz Biryani', cuisine: 'Biryani' },
+                        { name: 'Tomatoes', cuisine: 'Groceries' }
+                      ].map((search) => (
+                        <div 
+                          key={search.name}
+                          className="flex items-center justify-between py-1.5 hover:bg-white/5 px-2 rounded-xl cursor-pointer"
+                        >
+                          <div 
+                            onClick={() => { 
+                              setSearchQuery(search.name);
+                              if (search.cuisine === 'Groceries') setActiveTab('quick');
+                              else setSelectedCuisine(search.cuisine);
+                              setShowAutocomplete(false);
+                            }}
+                            className="flex items-center gap-2 flex-grow"
+                          >
+                            <span className="material-symbols-outlined text-gray-500 text-[16px]">schedule</span>
+                            <span className="text-xs text-white font-medium">{search.name}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
+
           </div>
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-1 px-3 py-1 bg-[#14141F] rounded-lg border border-white/5 cursor-pointer hover:bg-white/5 transition-colors">
