@@ -4,17 +4,17 @@ const FinancialOpsAdmin = ({ onBack }) => {
   return (
     <>
 
-{/* BEGIN: Sidebar */}
+<!-- BEGIN: Sidebar -->
 <nav aria-label="Sidebar" className="w-64 flex-shrink-0 border-r border-obsidian-border bg-obsidian-bg flex flex-col justify-between">
 <div>
-{/* Brand */}
+<!-- Brand -->
 <div className="h-16 flex items-center px-6 border-b border-obsidian-border">
 <svg className="w-6 h-6 text-obsidian-text mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2"></path></svg>
 <span className="font-semibold tracking-wide text-sm uppercase">HyperFlow</span>
 </div>
-{/* Navigation Links */}
+<!-- Navigation Links -->
 <div className="p-4 space-y-1">
-<a className="flex items-center px-3 py-2 text-sm font-medium bg-obsidian-border text-obsidian-text border border-obsidian-border cursor-pointer" onClick={onBack}>
+<a className="flex items-center px-3 py-2 text-sm font-medium bg-obsidian-border text-obsidian-text border border-obsidian-border cursor-pointer" onClick={onBack} href="#">
 <svg className="w-4 h-4 mr-3 text-obsidian-muted" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2"></path></svg>
           Dashboard
         </a>
@@ -28,7 +28,7 @@ const FinancialOpsAdmin = ({ onBack }) => {
         </a>
 </div>
 </div>
-{/* User Section */}
+<!-- User Section -->
 <div className="p-4 border-t border-obsidian-border">
 <div className="flex items-center">
 <img alt="Admin User" className="h-8 w-8 object-cover border border-obsidian-border" src="https://lh3.googleusercontent.com/aida/AP1WRLv9wlAZe2hhMPwWygVWbbf7ZRu67jUQ2SYDC7XN9GufD2BtBPvEMf3WXFWwhqMVaBlnqkAJgYR2cG5NeLSCIBeVFbTkc8ruPttElEVkmtWZaoCGBiq3UCuigAiK4nXfOhT1tdv5g95PrxWV_ng1VToHIMv62-SwHaVmaMGItM7Id_r-Rs-_XCd7B_r3t0cBCqpIwaRYUHcd2o7JFcSHssf0e2arDxLlwtYjUlUI-BTe2cXiyZj9WiMT21s"/>
@@ -39,31 +39,31 @@ const FinancialOpsAdmin = ({ onBack }) => {
 </div>
 </div>
 </nav>
-{/* END: Sidebar */}
-{/* BEGIN: MainContent */}
+<!-- END: Sidebar -->
+<!-- BEGIN: MainContent -->
 <main className="flex-1 flex flex-col overflow-hidden bg-obsidian-bg">
-{/* BEGIN: Header */}
+<!-- BEGIN: Header -->
 <header className="h-16 flex items-center justify-between px-8 border-b border-obsidian-border precision-panel">
 <h1 className="text-lg font-semibold text-obsidian-text">Financial Operations</h1>
 <div className="flex items-center space-x-4">
-{/* Date Range Filter */}
+<!-- Date Range Filter -->
 <div className="flex items-center space-x-2 text-sm text-obsidian-muted border border-obsidian-border px-3 py-1.5 bg-obsidian-bg">
 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2"></path></svg>
 <span>Oct 1, 2023 - Oct 31, 2023</span>
 </div>
-{/* Action Button */}
+<!-- Action Button -->
 <button className="precision-button px-4 py-1.5 text-sm font-medium text-obsidian-text flex items-center">
 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2"></path></svg>
           Export CSV
         </button>
 </div>
 </header>
-{/* END: Header */}
+<!-- END: Header -->
 <div className="flex-1 overflow-y-auto p-8">
 <div className="max-w-7xl mx-auto space-y-8">
-{/* BEGIN: FinancialOverview */}
+<!-- BEGIN: FinancialOverview -->
 <section aria-label="Financial Overview Cards" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-{/* Overview Card 1 */}
+<!-- Overview Card 1 -->
 <article className="precision-panel p-5 flex flex-col justify-between">
 <h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">Available Balance</h3>
 <div className="text-2xl font-semibold text-obsidian-text font-mono">$1,240,500.00</div>
@@ -72,7 +72,7 @@ const FinancialOpsAdmin = ({ onBack }) => {
 <span>+2.4% from last week</span>
 </div>
 </article>
-{/* Overview Card 2 */}
+<!-- Overview Card 2 -->
 <article className="precision-panel p-5 flex flex-col justify-between">
 <h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">Pending Payouts</h3>
 <div className="text-2xl font-semibold text-obsidian-text font-mono">$45,200.00</div>
@@ -81,7 +81,7 @@ const FinancialOpsAdmin = ({ onBack }) => {
 <span>12 transfers pending</span>
 </div>
 </article>
-{/* Overview Card 3 */}
+<!-- Overview Card 3 -->
 <article className="precision-panel p-5 flex flex-col justify-between">
 <h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">30d Volume</h3>
 <div className="text-2xl font-semibold text-obsidian-text font-mono">$5,420,100.00</div>
@@ -90,7 +90,7 @@ const FinancialOpsAdmin = ({ onBack }) => {
 <span>+14.1% vs previous 30d</span>
 </div>
 </article>
-{/* Overview Card 4 */}
+<!-- Overview Card 4 -->
 <article className="precision-panel p-5 flex flex-col justify-between">
 <h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">Success Rate</h3>
 <div className="text-2xl font-semibold text-obsidian-text font-mono">99.98%</div>
@@ -99,10 +99,10 @@ const FinancialOpsAdmin = ({ onBack }) => {
 </div>
 </article>
 </section>
-{/* END: FinancialOverview */}
-{/* BEGIN: Main Content Grid */}
+<!-- END: FinancialOverview -->
+<!-- BEGIN: Main Content Grid -->
 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-{/* BEGIN: TransactionLogs */}
+<!-- BEGIN: TransactionLogs -->
 <section aria-label="Transaction Logs" className="lg:col-span-2 space-y-4">
 <div className="flex items-center justify-between">
 <h2 className="text-sm font-semibold text-obsidian-text uppercase tracking-wide">Recent Transactions</h2>
@@ -169,13 +169,13 @@ const FinancialOpsAdmin = ({ onBack }) => {
 </table>
 </div>
 </section>
-{/* END: TransactionLogs */}
-{/* BEGIN: PayoutControls */}
+<!-- END: TransactionLogs -->
+<!-- BEGIN: PayoutControls -->
 <section aria-label="Payout Controls" className="lg:col-span-1 space-y-4">
 <h2 className="text-sm font-semibold text-obsidian-text uppercase tracking-wide">Manual Payout</h2>
 <div className="precision-panel p-6">
 <form className="space-y-5" onsubmit="event.preventDefault();">
-{/* Amount Input */}
+<!-- Amount Input -->
 <div>
 <label className="block text-xs font-medium text-obsidian-muted mb-1 uppercase" htmlFor="payout-amount">Amount (USD)</label>
 <div className="relative mt-1">
@@ -188,7 +188,7 @@ const FinancialOpsAdmin = ({ onBack }) => {
 </div>
 </div>
 </div>
-{/* Destination Select */}
+<!-- Destination Select -->
 <div>
 <label className="block text-xs font-medium text-obsidian-muted mb-1 uppercase" htmlFor="payout-destination">Destination Account</label>
 <select className="precision-input mt-1 block w-full pl-3 pr-10 py-2 text-base sm:text-sm" id="payout-destination" name="destination">
@@ -198,18 +198,18 @@ const FinancialOpsAdmin = ({ onBack }) => {
 <option>Wayne Ent. (**** 4567)</option>
 </select>
 </div>
-{/* Priority Toggle */}
+<!-- Priority Toggle -->
 <div className="flex items-center justify-between pt-2">
 <span className="flex-grow flex flex-col">
 <span className="text-sm font-medium text-obsidian-text" id="priority-label">Priority Processing</span>
 <span className="text-xs text-obsidian-muted" id="priority-description">Incurs additional $15 fee</span>
 </span>
-{/* Custom Toggle Switch */}
+<!-- Custom Toggle Switch -->
 <button aria-checked="false" className="relative inline-flex flex-shrink-0 h-6 w-11 border border-obsidian-border bg-obsidian-bg cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none" role="switch" type="button">
 <span aria-hidden="true" className="pointer-events-none inline-block h-5 w-5 bg-obsidian-muted transform ring-0 transition ease-in-out duration-200 translate-x-0"></span>
 </button>
 </div>
-{/* Submit Button */}
+<!-- Submit Button -->
 <div className="pt-4 border-t border-obsidian-border">
 <button className="precision-button-primary w-full flex justify-center py-2 px-4 text-sm font-medium focus:outline-none uppercase tracking-wider" type="submit">
                     Initiate Payout
@@ -217,7 +217,7 @@ const FinancialOpsAdmin = ({ onBack }) => {
 </div>
 </form>
 </div>
-{/* System Status Widget */}
+<!-- System Status Widget -->
 <div className="precision-panel p-4 flex items-center justify-between">
 <div className="flex items-center">
 <div className="w-2 h-2 bg-obsidian-success rounded-full mr-3"></div>
@@ -226,13 +226,13 @@ const FinancialOpsAdmin = ({ onBack }) => {
 <span className="text-xs font-mono text-obsidian-success">Operational</span>
 </div>
 </section>
-{/* END: PayoutControls */}
+<!-- END: PayoutControls -->
 </div>
-{/* END: Main Content Grid */}
+<!-- END: Main Content Grid -->
 </div>
 </div>
 </main>
-{/* END: MainContent */}
+<!-- END: MainContent -->
 
     </>
   );
