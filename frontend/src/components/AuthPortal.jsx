@@ -2,16 +2,16 @@ import React from 'react';
 
 const AuthPortal = () => {
   return (
-    <div className="w-full min-h-screen relative bg-district-obsidian overflow-hidden">
+    <div className="w-full h-screen relative bg-district-obsidian overflow-hidden">
       {/* Global Background Elements */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-district-pink rounded-full blur-[100px] opacity-30"></div>
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-district-purple rounded-full blur-[100px] opacity-30"></div>
       </div>
       {/* Main Container (Split Pane) */}
-      <main className="w-full min-h-screen flex z-10 relative">
+      <main className="w-full h-screen flex z-10 relative">
         {/* Left Pane: Brand & Abstract Visuals (60%) */}
-<section className="w-3/5 h-full relative overflow-hidden flex items-center justify-center">
+<section className="w-3/5 h-screen relative overflow-hidden flex items-center justify-center">
 {/* Background Image with Detailed Prompt */}
 <div className="absolute inset-0 z-0 bg-district-obsidian bg-cover bg-center bg-no-repeat" data-alt="A macro digital rendering of metallic purple silk-like waves flowing through a deep obsidian void. The texture is hyper-realistic with sharp, liquid chrome highlights reflecting vibrant neon pink ambient light. The composition follows a high-velocity diagonal flow with intricate micro-shadows that emphasize technological precision and luxury depth. The overall aesthetic is elite, high-premium, and atmospheric, perfectly blending dark obsidian with neon purple and hot pink accents." style={{backgroundImage: 'url(\'https://lh3.googleusercontent.com/aida-public/AB6AXuD9p-quxV0ahQq5Wiua4pvGcNuRVvSGZYFEHiG-2hVkCNzq6v7nu8fM_HkkSx0kE0iHbee5B-In_Mlp7T1oXmIWpLE0fxFMtn22JvLw1sS-ZjL0MNewwRIO5mcuJIv8rVBIwXwiJWk4aq67PxMTojegMt4eTLcwBukraOf3HA5L1hrrn3RfoGZwK5bJQvRQ1UFw90jX8dLKHeDRHwVuIePNxPdpcSE3f1XzyudeoelwSKQaH-R8GGSmMIwZvMKdPyEqBFAdylVyfpH8\')'}}>
 </div>
@@ -42,7 +42,7 @@ const AuthPortal = () => {
 </div>
 </section>
 {/* Right Pane: Onboarding Login (40%) */}
-<section className="w-2/5 h-full bg-district-obsidian flex items-center justify-center px-xl">
+<section className="w-2/5 h-screen bg-district-obsidian flex items-center justify-center px-xl">
 {/* Login Card */}
 <div className="glass-panel w-full max-w-md p-xl rounded-[24px] flex flex-col relative overflow-hidden">
 {/* Top Header */}
