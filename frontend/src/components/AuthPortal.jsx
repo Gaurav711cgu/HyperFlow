@@ -29,16 +29,7 @@ const AuthPortal = () => {
 <p className="font-body-medium text-body-medium text-on-surface-variant max-w-sm tracking-wide leading-relaxed">
                     Experience high-density logistics through a premium glassmorphic lens. Join the elite network of precision delivery.
                 </p>
-{/* Status Ticker (Corporate Modern Detail) */}
-<div className="mt-xl flex gap-lg bg-black/40 backdrop-blur-md px-lg py-sm rounded-full border border-white/5">
-<div className="flex items-center gap-sm">
-<div className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></div>
-<span className="font-metric-mono text-metric-mono text-on-tertiary-fixed-variant">NODE_ACTIVE: 04-DX</span>
-</div>
-<div className="flex items-center gap-sm">
-<span className="font-metric-mono text-metric-mono text-district-pink">LATENCY: 12ms</span>
-</div>
-</div>
+
 </div>
 </section>
 {/* Right Pane: Onboarding Login (40%) */}
