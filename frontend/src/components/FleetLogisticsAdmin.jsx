@@ -4,14 +4,14 @@ const FleetLogisticsAdmin = ({ onBack }) => {
   return (
     <>
 
-<!-- BEGIN: SidebarNavigation -->
+{/* BEGIN: SidebarNavigation */}
 <aside className="w-64 flex flex-col border-r border-borderMain bg-obsidian flex-shrink-0" data-purpose="main-sidebar">
-<!-- Brand Identity -->
+{/* Brand Identity */}
 <div className="h-16 flex items-center px-6 border-b border-borderMain">
 <div className="w-4 h-4 bg-accent mr-3"></div>
 <h1 className="text-sm font-bold tracking-widest uppercase">HyperFlow</h1>
 </div>
-<!-- Navigation Links -->
+{/* Navigation Links */}
 <nav className="flex-1 overflow-y-auto py-4" data-purpose="navigation-menu">
 <ul className="space-y-1">
 <li>
@@ -57,7 +57,7 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 </li>
 </ul>
 </nav>
-<!-- User Profile Area -->
+{/* User Profile Area */}
 <div className="p-4 border-t border-borderMain">
 <div className="flex items-center">
 <div className="w-8 h-8 bg-surface border border-borderMain flex items-center justify-center text-xs font-bold text-accent">
@@ -70,10 +70,10 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 </div>
 </div>
 </aside>
-<!-- END: SidebarNavigation -->
-<!-- BEGIN: MainContentArea -->
+{/* END: SidebarNavigation */}
+{/* BEGIN: MainContentArea */}
 <main className="flex-1 flex flex-col min-w-0" data-purpose="main-dashboard-area">
-<!-- BEGIN: TopHeader -->
+{/* BEGIN: TopHeader */}
 <header className="h-16 flex items-center justify-between px-8 border-b border-borderMain bg-obsidian shrink-0">
 <div className="flex items-center">
 <h2 className="text-lg font-medium text-textPrimary">Global Ops Control Center</h2>
@@ -91,12 +91,12 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 </div>
 </div>
 </header>
-<!-- END: TopHeader -->
-<!-- Dashboard Content Scrollable Area -->
+{/* END: TopHeader */}
+{/* Dashboard Content Scrollable Area */}
 <div className="flex-1 overflow-auto p-8 bg-obsidian flex flex-col space-y-6">
-<!-- BEGIN: KeyMetricsSection -->
+{/* BEGIN: KeyMetricsSection */}
 <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-purpose="logistics-metrics">
-<!-- Metric Card 1 -->
+{/* Metric Card 1 */}
 <article className="bg-surface border border-borderMain p-5 flex flex-col justify-between h-28">
 <div className="flex justify-between items-start">
 <h3 className="text-xs font-medium text-textSecondary uppercase tracking-wider">Active Riders</h3>
@@ -107,7 +107,7 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 <span className="text-xs font-medium text-success">+4.2%</span>
 </div>
 </article>
-<!-- Metric Card 2 -->
+{/* Metric Card 2 */}
 <article className="bg-surface border border-borderMain p-5 flex flex-col justify-between h-28">
 <div className="flex justify-between items-start">
 <h3 className="text-xs font-medium text-textSecondary uppercase tracking-wider">Deliveries in Transit</h3>
@@ -117,7 +117,7 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 <span className="text-xs font-medium text-warning">High Load</span>
 </div>
 </article>
-<!-- Metric Card 3 -->
+{/* Metric Card 3 */}
 <article className="bg-surface border border-borderMain p-5 flex flex-col justify-between h-28">
 <div className="flex justify-between items-start">
 <h3 className="text-xs font-medium text-textSecondary uppercase tracking-wider">Avg Delivery Time</h3>
@@ -128,7 +128,7 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 <span className="text-xs font-medium text-textSecondary">-2m vs avg</span>
 </div>
 </article>
-<!-- Metric Card 4 -->
+{/* Metric Card 4 */}
 <article className="bg-surface border border-borderMain p-5 flex flex-col justify-between h-28">
 <div className="flex justify-between items-start">
 <h3 className="text-xs font-medium text-textSecondary uppercase tracking-wider">Success Rate (Daily)</h3>
@@ -141,10 +141,10 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 </div>
 </article>
 </section>
-<!-- END: KeyMetricsSection -->
-<!-- BEGIN: MainDashboardGrid -->
+{/* END: KeyMetricsSection */}
+{/* BEGIN: MainDashboardGrid */}
 <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-[500px]">
-<!-- Live Rider Tracking Map (Left / Center) -->
+{/* Live Rider Tracking Map (Left / Center) */}
 <div className="lg:col-span-2 border border-borderMain bg-surface flex flex-col relative" data-purpose="rider-tracking-map">
 <div className="px-5 py-3 border-b border-borderMain flex justify-between items-center bg-obsidian">
 <h3 className="text-sm font-medium text-textPrimary">Live Rider Tracking</h3>
@@ -153,16 +153,16 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 <button className="px-3 py-1 text-xs border border-borderMain text-textSecondary hover:text-textPrimary hover:bg-surfaceHover">Map View</button>
 </div>
 </div>
-<!-- Map Image Placeholder Container -->
+{/* Map Image Placeholder Container */}
 <div className="flex-1 relative bg-obsidian overflow-hidden">
-<!-- Using the requested image as the map visual -->
+{/* Using the requested image as the map visual */}
 <img alt="Live Rider Map Visual" className="absolute inset-0 w-full h-full object-cover opacity-70 grayscale contrast-125" src="https://lh3.googleusercontent.com/aida/AP1WRLs0Jeh45OI-ZPsSnh1UdfZRoLM1W96iLTXc16YE0Q6UaO9vwEOwoCgb8v9UY_k5A6w7xxARXUL-m_dzIX2Vn1RDPOgZe5omMv4InqVXGGiAcDXN5NRyenk4smjPa51I-6tNrMu5e46lr-CGTpy7er-mmqz9_DnuF6_XFtA5MBePdStaQaqogmWW-y_mxd69_SJa8BliqPjk00Zn3Ao5ny6DAav2gTAboczygIQL8PPWLB4TYvZqheZiW2kH"/>
-<!-- Map Overlay UI Elements -->
+{/* Map Overlay UI Elements */}
 <div className="absolute top-4 left-4 bg-surface border border-borderMain p-3 max-w-xs">
 <h4 className="text-xs font-bold text-textPrimary mb-2">Zone Alpha Alert</h4>
 <p className="text-xs text-textSecondary">High traffic density detected in sector 4G. Routing algorithms updated automatically.</p>
 </div>
-<!-- Simulated Map Markers (using precision styling) -->
+{/* Simulated Map Markers (using precision styling) */}
 <div className="absolute top-1/3 left-1/4 flex flex-col items-center">
 <div className="w-3 h-3 bg-accent border border-obsidian mb-1"></div>
 <div className="px-1.5 py-0.5 bg-surface border border-borderMain text-[10px] text-textPrimary">R-492</div>
@@ -177,14 +177,14 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 </div>
 </div>
 </div>
-<!-- Logistics Events & Alerts Sidebar (Right) -->
+{/* Logistics Events & Alerts Sidebar (Right) */}
 <div className="border border-borderMain bg-surface flex flex-col" data-purpose="events-sidebar">
 <div className="px-5 py-3 border-b border-borderMain bg-obsidian">
 <h3 className="text-sm font-medium text-textPrimary">System Events</h3>
 </div>
 <div className="flex-1 overflow-y-auto">
 <ul className="divide-y divide-borderMain">
-<!-- Event Item: Alert -->
+{/* Event Item: Alert */}
 <li className="p-4 hover:bg-surfaceHover transition-colors cursor-pointer border-l-2 border-danger">
 <div className="flex justify-between items-start mb-1">
 <span className="text-xs font-semibold text-danger">CRITICAL ALERT</span>
@@ -192,7 +192,7 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 </div>
 <p className="text-sm text-textPrimary">Rider R-112 connection lost in Sector 7. Last known location saved.</p>
 </li>
-<!-- Event Item: Warning -->
+{/* Event Item: Warning */}
 <li className="p-4 hover:bg-surfaceHover transition-colors cursor-pointer border-l-2 border-warning">
 <div className="flex justify-between items-start mb-1">
 <span className="text-xs font-semibold text-warning">DELAY WARNING</span>
@@ -200,7 +200,7 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 </div>
 <p className="text-sm text-textPrimary">ETA for Order #99281 exceeded by 5 minutes. Customer notified.</p>
 </li>
-<!-- Event Item: Info -->
+{/* Event Item: Info */}
 <li className="p-4 hover:bg-surfaceHover transition-colors cursor-pointer border-l-2 border-accent">
 <div className="flex justify-between items-start mb-1">
 <span className="text-xs font-semibold text-accent">ROUTE UPDATE</span>
@@ -208,7 +208,7 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 </div>
 <p className="text-sm text-textPrimary">Global optimization matrix updated. 45 active routes adjusted for efficiency.</p>
 </li>
-<!-- Event Item: Info -->
+{/* Event Item: Info */}
 <li className="p-4 hover:bg-surfaceHover transition-colors cursor-pointer border-l-2 border-borderMain">
 <div className="flex justify-between items-start mb-1">
 <span className="text-xs font-semibold text-textSecondary">SYSTEM LOG</span>
@@ -216,7 +216,7 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 </div>
 <p className="text-sm text-textSecondary">Shift change completed. 412 new riders authenticated.</p>
 </li>
-<!-- Event Item: Info -->
+{/* Event Item: Info */}
 <li className="p-4 hover:bg-surfaceHover transition-colors cursor-pointer border-l-2 border-borderMain">
 <div className="flex justify-between items-start mb-1">
 <span className="text-xs font-semibold text-textSecondary">SYSTEM LOG</span>
@@ -233,10 +233,10 @@ const FleetLogisticsAdmin = ({ onBack }) => {
 </div>
 </div>
 </section>
-<!-- END: MainDashboardGrid -->
+{/* END: MainDashboardGrid */}
 </div>
 </main>
-<!-- END: MainContentArea -->
+{/* END: MainContentArea */}
 
     </>
   );
