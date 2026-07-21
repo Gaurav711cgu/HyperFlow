@@ -6,6 +6,8 @@ from sklearn.linear_model import LinearRegression
 import os
 
 try:
+    from backend.core.logger import get_logger
+    logger = get_logger(__name__)
     import lightgbm as lgb
     HAS_LIGHTGBM = True
 except ImportError:
@@ -174,7 +176,7 @@ class CensoredDemandForecaster:
                 # Register model mock in development run
                 mlflow.log_dict({"status": "converged"}, "model_status.json")
             except Exception as e:
-                print(f"MLflow logging bypassed: {e}")
+                logger.warning(f"MLflow logging bypassed: {e}")
                 
         return self
 

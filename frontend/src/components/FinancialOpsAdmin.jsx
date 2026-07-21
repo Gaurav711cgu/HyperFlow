@@ -1,6 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 const FinancialOpsAdmin = ({ onBack }) => {
+  const [profitData, setProfitData] = useState(null);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/v1/profitability/store_01')
+      .then(res => res.json())
+      .then(data => setProfitData(data))
+      .catch(err => console.error(err));
+  }, []);
+
   return (
     <>
 
@@ -62,48 +72,67 @@ const FinancialOpsAdmin = ({ onBack }) => {
 <div className="flex-1 overflow-y-auto p-8">
 <div className="max-w-7xl mx-auto space-y-8">
 {/* BEGIN: FinancialOverview */}
-<section aria-label="Financial Overview Cards" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-{/* Overview Card 1 */}
+<motion.section 
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5 }}
+  aria-label="Financial Overview Cards" 
+  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+>
+{/* Overview Card 1: Months to Profit */}
 <article className="precision-panel p-5 flex flex-col justify-between">
-<h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">Available Balance</h3>
-<div className="text-2xl font-semibold text-obsidian-text font-mono">$1,240,500.00</div>
+<h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">Time To Profitability</h3>
+<div className="text-2xl font-semibold text-obsidian-text font-mono">
+{profitData ? `${profitData.profitability_projection.months_to_profit_median.toFixed(1)} mo` : "Loading..."}
+</div>
 <div className="mt-4 flex items-center text-xs text-obsidian-success">
 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18" strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2"></path></svg>
-<span>+2.4% from last week</span>
+<span>Cox PH Median Estimate</span>
 </div>
 </article>
-{/* Overview Card 2 */}
+{/* Overview Card 2: Density */}
 <article className="precision-panel p-5 flex flex-col justify-between">
-<h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">Pending Payouts</h3>
-<div className="text-2xl font-semibold text-obsidian-text font-mono">$45,200.00</div>
-<div className="mt-4 flex items-center text-xs text-obsidian-warning">
-<svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2"></path></svg>
-<span>12 transfers pending</span>
+<h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">Population Density</h3>
+<div className="text-2xl font-semibold text-obsidian-text font-mono">
+{profitData ? profitData.metrics.population_density : "--"}
 </div>
-</article>
-{/* Overview Card 3 */}
-<article className="precision-panel p-5 flex flex-col justify-between">
-<h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">30d Volume</h3>
-<div className="text-2xl font-semibold text-obsidian-text font-mono">$5,420,100.00</div>
-<div className="mt-4 flex items-center text-xs text-obsidian-success">
-<svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18" strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2"></path></svg>
-<span>+14.1% vs previous 30d</span>
-</div>
-</article>
-{/* Overview Card 4 */}
-<article className="precision-panel p-5 flex flex-col justify-between">
-<h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">Success Rate</h3>
-<div className="text-2xl font-semibold text-obsidian-text font-mono">99.98%</div>
 <div className="mt-4 flex items-center text-xs text-obsidian-muted">
-<span>Based on 142k transactions</span>
+<span>Active users / sq km</span>
 </div>
 </article>
-</section>
+{/* Overview Card 3: Non-Grocery */}
+<article className="precision-panel p-5 flex flex-col justify-between">
+<h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">Non-Grocery Share</h3>
+<div className="text-2xl font-semibold text-obsidian-text font-mono">
+{profitData ? `${(profitData.metrics.non_grocery_share * 100).toFixed(0)}%` : "--"}
+</div>
+<div className="mt-4 flex items-center text-xs text-obsidian-success">
+<svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18" strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2"></path></svg>
+<span>High margin category</span>
+</div>
+</article>
+{/* Overview Card 4: Recommendation */}
+<article className="precision-panel p-5 flex flex-col justify-between">
+<h3 className="text-xs font-medium text-obsidian-muted uppercase tracking-wider mb-1">Allocation Strategy</h3>
+<div className="text-sm font-semibold text-obsidian-text">
+{profitData ? profitData.profitability_projection.allocation_recommendation : "Loading..."}
+</div>
+<div className="mt-4 flex items-center text-xs text-obsidian-muted">
+<span>AI generated action plan</span>
+</div>
+</article>
+</motion.section>
 {/* END: FinancialOverview */}
 {/* BEGIN: Main Content Grid */}
 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-{/* BEGIN: TransactionLogs */}
-<section aria-label="Transaction Logs" className="lg:col-span-2 space-y-4">
+{/* BEGIN: Survival Curve Chart */}
+<motion.section 
+  initial={{ opacity: 0, scale: 0.95 }}
+  animate={{ opacity: 1, scale: 1 }}
+  transition={{ duration: 0.6, delay: 0.2 }}
+  aria-label="Cox PH Survival Curve" 
+  className="precision-panel p-6"
+>
 <div className="flex items-center justify-between">
 <h2 className="text-sm font-semibold text-obsidian-text uppercase tracking-wide">Recent Transactions</h2>
 <a className="text-xs text-obsidian-accent hover:text-obsidian-accentHover font-medium" href="#">View All →</a>
@@ -168,8 +197,8 @@ const FinancialOpsAdmin = ({ onBack }) => {
 </tbody>
 </table>
 </div>
-</section>
-{/* END: TransactionLogs */}
+</motion.section>
+{/* END: Survival Curve Chart */}
 {/* BEGIN: PayoutControls */}
 <section aria-label="Payout Controls" className="lg:col-span-1 space-y-4">
 <h2 className="text-sm font-semibold text-obsidian-text uppercase tracking-wide">Manual Payout</h2>

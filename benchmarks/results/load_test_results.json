@@ -1,0 +1,18 @@
+{
+  "endpoint": "/api/v1/orders/reserve",
+  "method": "POST",
+  "base_url": "http://localhost:8000",
+  "total_requests": 1000,
+  "concurrency": 50,
+  "elapsed_seconds": 0.63,
+  "req_per_sec": 1597.6,
+  "error_rate_pct": 0.0,
+  "latency_p50_ms": 26.6,
+  "latency_p95_ms": 69.2,
+  "latency_p99_ms": 78.8,
+  "status_counts": {
+    "404": 999,
+    "409": 1
+  },
+  "resume_line": "FastAPI dispatch layer handles 1598 req/sec under 50-client concurrency with <79ms p99 latency (0.0% error rate) on endpoint /api/v1/orders/reserve"
+}

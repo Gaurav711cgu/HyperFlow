@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const DiscoveryHub = () => {
   return (
@@ -84,7 +85,12 @@ const DiscoveryHub = () => {
 {/* Center Panel: Feed & Hero */}
 <section className="flex flex-col gap-xl overflow-y-auto no-scrollbar">
 {/* Streak Hero Card */}
-<div className="relative w-full h-48 rounded-3xl overflow-hidden glass-panel group border border-primary/20">
+<motion.div 
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5 }}
+  className="relative w-full h-48 rounded-3xl overflow-hidden glass-panel group border border-primary/20"
+>
 
 <div className="absolute inset-0 bg-gradient-to-r from-[#040406] via-[#040406]/60 to-transparent p-xl flex flex-col justify-center">
 <div className="flex items-center gap-md mb-sm">
@@ -96,7 +102,7 @@ const DiscoveryHub = () => {
                             CLAIM DAILY REWARD
                         </button>
 </div>
-</div>
+</motion.div>
 {/* Restaurant Feed Section */}
 <div>
 <div className="flex items-center justify-between mb-lg">

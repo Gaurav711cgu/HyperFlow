@@ -24,11 +24,26 @@ OAUTH_PENDING_SESSIONS: Dict[str, Dict[str, Any]] = {}
 
 def get_swiggy_token(authorization: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> Optional[str]:
     if authorization:
-        return authorization.credentials
+        token = authorization.credentials
+        if not token or len(token) < 10:
+            raise HTTPException(status_code=401, detail="Invalid token format")
+        return token
     return None
 
+async def cleanup_oauth_sessions():
+    """Background task to remove expired OAuth sessions"""
+    while True:
+        try:
+            now = time.time()
+            expired_keys = [state for state, data in OAUTH_PENDING_SESSIONS.items() if data["expires_at"] < now]
+            for state in expired_keys:
+                OAUTH_PENDING_SESSIONS.pop(state, None)
+        except Exception as e:
+            print(f"[OAuth Cleanup Error] {e}")
+        await asyncio.sleep(60)
+
 async def call_mcp_async(server: str, tool_name: str, arguments: dict, token: Optional[str]) -> dict:
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     try:
         res = await loop.run_in_executor(
             None,

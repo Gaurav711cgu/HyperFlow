@@ -1,6 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 const GrowthAnalyticsAdmin = ({ onBack }) => {
+  const [robustness, setRobustness] = useState(null);
+  const [bumpRate, setBumpRate] = useState(null);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/v1/metrics/robustness')
+      .then(res => res.json())
+      .then(data => setRobustness(data))
+      .catch(err => console.error(err));
+
+    fetch('http://localhost:8000/api/v1/metrics/bump-rate')
+      .then(res => res.json())
+      .then(data => setBumpRate(data))
+      .catch(err => console.error(err));
+  }, []);
+
   return (
     <>
 
@@ -37,7 +53,12 @@ const GrowthAnalyticsAdmin = ({ onBack }) => {
 </aside>
 {/* END: SidebarNavigation */}
 {/* BEGIN: MainContentArea */}
-<main className="flex-1 flex flex-col min-w-0 bg-obsidian-900 z-10 relative">
+<motion.main 
+  initial={{ opacity: 0, x: 20 }}
+  animate={{ opacity: 1, x: 0 }}
+  transition={{ duration: 0.5 }}
+  className="flex-1 flex flex-col min-w-0 bg-obsidian-900 z-10 relative"
+>
 {/* BEGIN: TopHeader */}
 <header className="h-16 border-b border-obsidian-border bg-obsidian-900 flex items-center justify-between px-6 flex-shrink-0 sticky top-0 z-20">
 {/* Search */}
@@ -76,46 +97,48 @@ const GrowthAnalyticsAdmin = ({ onBack }) => {
 </div>
 {/* BEGIN: KPIGrid */}
 <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-purpose="kpi-metrics">
-{/* KPI 1 */}
+{/* KPI 1: Robustness Status */}
 <div className="bg-obsidian-800 border border-obsidian-border rounded-lg p-5 flex flex-col justify-between">
-<div className="text-sm text-zinc-400 font-medium mb-1">Total Users</div>
+<div className="text-sm text-zinc-400 font-medium mb-1">ML Robustness Status</div>
 <div className="flex items-end justify-between">
-<div className="text-3xl font-semibold text-zinc-100">124,592</div>
+<div className="text-3xl font-semibold text-zinc-100 uppercase">{robustness ? robustness.status : "Loading"}</div>
 <div className="text-sm text-emerald-400 flex items-center gap-1">
 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path></svg>
-                12.5%
+                Active
               </div>
 </div>
 </div>
-{/* KPI 2 */}
+{/* KPI 2: Jitter Suppression */}
 <div className="bg-obsidian-800 border border-obsidian-border rounded-lg p-5 flex flex-col justify-between">
-<div className="text-sm text-zinc-400 font-medium mb-1">Active Campaigns</div>
+<div className="text-sm text-zinc-400 font-medium mb-1">ETA Jitter Suppression</div>
 <div className="flex items-end justify-between">
-<div className="text-3xl font-semibold text-zinc-100">14</div>
+<div className="text-3xl font-semibold text-zinc-100">{bumpRate ? `${bumpRate.jitter_suppression_pct}%` : "Loading"}</div>
+<div className="text-sm text-emerald-400 flex items-center gap-1">
+                Gated Bumps: {bumpRate ? bumpRate.gated_smoother_bumps : "--"}
+              </div>
+</div>
+</div>
+{/* KPI 3: Total Clipped Obs */}
+<div className="bg-obsidian-800 border border-obsidian-border rounded-lg p-5 flex flex-col justify-between">
+<div className="text-sm text-zinc-400 font-medium mb-1">Clipped Outliers Today</div>
+<div className="flex items-end justify-between">
+<div className="text-3xl font-semibold text-zinc-100">{robustness?.clipping_guard?.total_clipped_observations_today ?? "Loading"}</div>
 <div className="text-sm text-zinc-500 flex items-center gap-1">
-                --
+                Via Safing Guard
               </div>
 </div>
 </div>
-{/* KPI 3 */}
+{/* KPI 4: Feature Drift Max */}
 <div className="bg-obsidian-800 border border-obsidian-border rounded-lg p-5 flex flex-col justify-between">
-<div className="text-sm text-zinc-400 font-medium mb-1">Monthly Recurring Revenue</div>
+<div className="text-sm text-zinc-400 font-medium mb-1">Avg PSI Drift</div>
 <div className="flex items-end justify-between">
-<div className="text-3xl font-semibold text-zinc-100">$84.2k</div>
+<div className="text-3xl font-semibold text-zinc-100">
+{robustness ? 
+  (Object.values(robustness.features_drift).reduce((a, b) => a + b.psi, 0) / 3).toFixed(4)
+  : "Loading"}
+</div>
 <div className="text-sm text-emerald-400 flex items-center gap-1">
-<svg className="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path></svg>
-                8.1%
-              </div>
-</div>
-</div>
-{/* KPI 4 */}
-<div className="bg-obsidian-800 border border-obsidian-border rounded-lg p-5 flex flex-col justify-between">
-<div className="text-sm text-zinc-400 font-medium mb-1">Avg. Retention (D30)</div>
-<div className="flex items-end justify-between">
-<div className="text-3xl font-semibold text-zinc-100">42.8%</div>
-<div className="text-sm text-rose-400 flex items-center gap-1">
-<svg className="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 14l-7 7m0 0l-7-7m7 7V3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path></svg>
-                2.4%
+                Stable
               </div>
 </div>
 </div>
@@ -237,7 +260,7 @@ const GrowthAnalyticsAdmin = ({ onBack }) => {
 </div>
 </div>
 {/* END: DashboardContent */}
-</main>
+</motion.main>
 {/* END: MainContentArea */}
 
 

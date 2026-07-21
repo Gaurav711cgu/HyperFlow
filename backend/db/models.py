@@ -42,6 +42,10 @@ class SalesEvent(Base):
     oos_time = Column(DateTime(timezone=True), nullable=True)
     event_date = Column(Date, nullable=False)
     hour_bucket = Column(Integer, nullable=False)
+    weather_temp = Column(Float, nullable=True)
+    weather_rain = Column(Float, nullable=True)
+    time_elapsed_sec = Column(Float, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 class ForecastResult(Base):
     __tablename__ = 'forecast_results'

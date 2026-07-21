@@ -8,6 +8,9 @@ try:
 except ImportError:
     HAS_LIFELINES = False
 
+def expit(x):
+    return 1 / (1 + np.exp(-np.clip(x, -20, 20)))
+
 
 class CustomCoxPHFitter:
     """
@@ -201,7 +204,7 @@ class DarkStoreProfitabilityScorer:
         
         # Months to profit is smaller for high pop, high skus, high AOV, and larger for high competitors
         hazard = 0.3 * pop - 0.4 * comp - 0.2 * dist + 0.3 * skus + 0.2 * aov + 0.5 * non_g
-        months = np.clip(np.random.geometric(p=expit(hazard) if 'expit' in globals() else 0.25, size=n_samples), 1, 18)
+        months = np.clip(np.random.geometric(p=expit(hazard), size=n_samples), 1, 18)
         profitable = np.random.choice([0, 1], p=[0.1, 0.9], size=n_samples) # mostly completed events
         
         df_mock = pd.DataFrame({
@@ -215,7 +218,3 @@ class DarkStoreProfitabilityScorer:
             'profitable': profitable
         })
         self.fit(df_mock)
-
-
-def expit(x):
-    return 1 / (1 + np.exp(-np.clip(x, -20, 20)))
