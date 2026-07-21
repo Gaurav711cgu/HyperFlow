@@ -571,8 +571,7 @@ export default function App() {
       API.exchangeCode(code, state).then(data => {
         if (data && data.access_token) {
           localStorage.setItem('swiggy_access_token', data.access_token);
-          setPhone('Swiggy Connected');
-          setLoggedIn(true);
+          setIsLoggedIn(true);
           setAppView('hub');
         } else {
           alert("Swiggy connection failed: " + (data?.error_description || "Unknown error"));
