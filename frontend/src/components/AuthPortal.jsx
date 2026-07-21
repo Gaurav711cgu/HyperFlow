@@ -1,7 +1,27 @@
 import React, { useState } from 'react';
+import * as API from '../api.js';
 
 const AuthPortal = ({ onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
+
+  const handleSwiggyLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await API.fetchLoginUrl();
+      if (res && res.auth_url) {
+        localStorage.setItem('swiggy_oauth_state', res.state);
+        window.location.href = res.auth_url;
+      } else {
+        alert("Failed to fetch login URL");
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("Swiggy login error:", err);
+      alert("Failed to initiate Swiggy login");
+      setLoading(false);
+    }
+  };
 
   const handleDemoLogin = async (e) => {
     e.preventDefault();
@@ -88,17 +108,28 @@ const AuthPortal = ({ onLoginSuccess }) => {
               <p className="font-body-default text-body-default text-on-surface-variant">Explore the Hyperlocal Intelligence Platform</p>
             </div>
 
-            {/* Form Section */}
-            <form className="space-y-lg" onSubmit={handleDemoLogin}>
+            {/* Actions Section */}
+            <div className="space-y-4 flex flex-col w-full mt-4">
               <button 
-                type="submit" 
+                type="button" 
+                onClick={handleSwiggyLogin}
                 disabled={loading}
-                className="shimmer-btn w-full py-md bg-district-pink text-white rounded-full font-section-header neon-glow-pink hover:opacity-90 transition-all flex items-center justify-center gap-sm"
+                className="shimmer-btn w-full py-md bg-[#6C63FF] text-white rounded-full font-section-header neon-glow-primary hover:opacity-90 transition-all flex items-center justify-center gap-sm"
               >
-                {loading ? 'Authenticating...' : 'Demo Access'}
+                {loading ? 'Connecting...' : 'Login with Phone (Swiggy)'}
+                {!loading && <span className="material-symbols-outlined text-[18px]">smartphone</span>}
+              </button>
+
+              <button 
+                type="button" 
+                onClick={handleDemoLogin}
+                disabled={loading}
+                className="w-full py-md bg-white/10 border border-white/20 text-white rounded-full font-section-header hover:bg-white/20 transition-all flex items-center justify-center gap-sm"
+              >
+                {loading ? 'Authenticating...' : 'Continue in Demo Mode'}
                 {!loading && <span className="material-symbols-outlined text-[18px]">arrow_forward</span>}
               </button>
-            </form>
+            </div>
 
             {/* Ornamental Detail */}
             <div className="absolute bottom-0 right-0 p-xs opacity-20">
