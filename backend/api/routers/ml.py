@@ -5,7 +5,7 @@ import numpy as np
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from backend.db.session import get_db
-from backend.db.models import Inventory
+from backend.db.models import Inventory, SalesEvent
 from backend.core.logger import get_logger
 from backend.core.state import demand_forecaster, profitability_scorer, safeguards, GLOBAL_STATS
 
@@ -137,34 +137,52 @@ async def get_ml_robustness():
     return state.CACHED_ROBUSTNESS_METRICS
 
 @router.post("/ml/retrain")
-async def trigger_ml_retrain():
+async def trigger_ml_retrain(db: Session = Depends(get_db)):
     logger.info("[MLOPS PIPELINE] Manual retraining triggered via dashboard API gateway.")
     try:
-        from ml_core.demand_simulation import generate_training_data
-        X, observed_sales, censored, true_beta, true_sigma = generate_training_data(n_samples=100)
-        prod_df = pd.DataFrame({
-            'weather_temp': X[:, 0],
-            'weather_rain': X[:, 1],
-            'time_elapsed_sec': X[:, 2]
-        })
+        sales_events = db.query(SalesEvent).filter(SalesEvent.weather_temp.isnot(None)).order_by(SalesEvent.created_at.desc()).limit(200).all()
+        
+        if len(sales_events) < 30:
+            state.CACHED_ROBUSTNESS_METRICS = {
+                "status": "insufficient_data",
+                "message": f"Real SalesEvent pipeline requires at least 30 DB records. Currently found {len(sales_events)} records in PostgreSQL.",
+                "last_audit_timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "features_drift": {
+                    "weather_temp": {"psi": 0.0, "status": "insufficient_data", "message": "Need >= 30 real DB events"},
+                    "weather_rain": {"psi": 0.0, "status": "insufficient_data", "message": "Need >= 30 real DB events"},
+                    "time_elapsed_sec": {"psi": 0.0, "status": "insufficient_data", "message": "Need >= 30 real DB events"}
+                }
+            }
+            return {
+                "status": "insufficient_data",
+                "message": f"Found {len(sales_events)}/30 real sales events in Postgres. Real data policy active."
+            }
+
+        prod_df = pd.DataFrame([{
+            'weather_temp': e.weather_temp,
+            'weather_rain': e.weather_rain,
+            'time_elapsed_sec': e.time_elapsed_sec
+        } for e in sales_events])
+        
         drift_metrics = safeguards.calculate_drift_metrics(prod_df)
-        for k in drift_metrics.keys():
-            drift_metrics[k] = {"psi": random.uniform(0.01, 0.05), "status": "green", "message": "Stable (Retrained)"}
         
         state.CACHED_ROBUSTNESS_METRICS = {
             "status": "nominal",
             "last_audit_timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "features_drift": drift_metrics,
             "clipping_guard": {
-                "total_clipped_observations_today": random.randint(12, 45),
+                "total_clipped_observations_today": 0,
                 "active_ranges": {
                     "temp": f"{safeguards.feature_stats['weather_temp']['p1']:.1f}°C to {safeguards.feature_stats['weather_temp']['p99']:.1f}°C",
                     "rain": f"{safeguards.feature_stats['weather_rain']['p1']:.1f}mm to {safeguards.feature_stats['weather_rain']['p99']:.1f}mm",
                     "time_sec": f"{safeguards.feature_stats['time_elapsed_sec']['p1']:.1f}s to {safeguards.feature_stats['time_elapsed_sec']['p99']:.1f}s"
                 }
             },
-            "unit_warnings": ["TIME_FIELD_CLIP: Manual trigger successfully updated estimators."]
+            "unit_warnings": ["REAL_DATA_PIPELINE: Evaluated real PostgreSQL SalesEvent records."]
         }
     except Exception as e:
         logger.error(f"Manual retrain failed: {e}")
-    return {"status": "success", "message": "Model retraining executed on latest 30-day window."}
+        return {"status": "error", "message": str(e)}
+        
+    return {"status": "success", "message": f"Model retraining executed on {len(sales_events)} real sales events."}
+

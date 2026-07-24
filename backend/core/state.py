@@ -47,12 +47,37 @@ CACHED_ROBUSTNESS_METRICS = {
     "unit_warnings": ["TIME_FIELD_CLIP: Evaluated time_elapsed_sec. 0 anomalies detected."]
 }
 
-# Seeding dummy ML states on gateway initialization to ensure immediate API responses
-np_temp = np.random.uniform(15, 38, 100)
-np_rain = np.random.exponential(2.0, 100)
-np_sales = np.random.normal(20.0, 8.0, 100)
-np_time = np.random.normal(900.0, 300.0, 100)
-X_init = np.column_stack([np_temp, np_rain, np_time[:100]])
-y_init = np_sales
-cens_init = y_init >= 30.0
-demand_forecaster.fit(X_init, y_init, cens_init)
+import joblib
+import pathlib
+
+MODEL_DIR = pathlib.Path(__file__).parent.parent.parent / "models"
+MODEL_PATH = MODEL_DIR / "demand_forecaster.joblib"
+
+def load_or_init_forecaster() -> CensoredDemandForecaster:
+    """Loads pre-trained Tobit model weights from disk if available, otherwise initializes."""
+    MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    if MODEL_PATH.exists():
+        try:
+            return joblib.load(MODEL_PATH)
+        except Exception as e:
+            print(f"[State] Failed loading model from {MODEL_PATH}: {e}")
+    
+    forecaster = CensoredDemandForecaster()
+    np_temp = np.random.uniform(15, 38, 100)
+    np_rain = np.random.exponential(2.0, 100)
+    np_sales = np.random.normal(20.0, 8.0, 100)
+    np_time = np.random.normal(900.0, 300.0, 100)
+    X_init = np.column_stack([np_temp, np_rain, np_time[:100]])
+    y_init = np_sales
+    cens_init = y_init >= 30.0
+    forecaster.fit(X_init, y_init, cens_init)
+    
+    try:
+        joblib.dump(forecaster, MODEL_PATH)
+    except Exception as e:
+        print(f"[State] Failed saving initial model to {MODEL_PATH}: {e}")
+        
+    return forecaster
+
+demand_forecaster = load_or_init_forecaster()
+

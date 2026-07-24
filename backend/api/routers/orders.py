@@ -11,6 +11,7 @@ from backend.db.session import get_db
 from backend.db.models import Inventory, InventoryReservation, ReservationOutcome, OutboxEvent
 from backend.core.logger import get_logger
 from backend.core.state import lock_manager, GLOBAL_STATS
+import backend.core.state as state
 
 logger = get_logger(__name__)
 

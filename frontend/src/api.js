@@ -213,3 +213,44 @@ export async function placeFoodOrder({ addressId, paymentMethod }) {
 export async function trackFoodOrder(orderId) {
   return apiFetch(`/api/v1/food/orders/${orderId}/track`);
 }
+
+// ─── HyperFlow 4.0 v2 Core Endpoints ──────────────────────────────────────────
+
+export async function fetchDemandOracle(addressId = 'default_address', lat = 20.3533, lng = 85.8333) {
+  return apiFetch(`/api/v2/oracle/demand?addressId=${addressId}&lat=${lat}&lng=${lng}`);
+}
+
+export async function predictRefund({ order_id, complaint_type, complaint_text, item_name, item_price }) {
+  return apiFetch('/api/v2/refund/predict', {
+    method: 'POST',
+    body: JSON.stringify({ order_id, complaint_type, complaint_text, item_name, item_price }),
+  });
+}
+
+export async function fetchDineoutSniper(latitude = 20.3533, longitude = 85.8333, cuisine = 'Buffet', date = '2026-07-25') {
+  return apiFetch(`/api/v2/dineout/sniper?latitude=${latitude}&longitude=${longitude}&cuisine=${cuisine}&date=${date}`);
+}
+
+export async function analyzeDispatch(store_location = [20.3533, 85.8333], orders_count = 5) {
+  return apiFetch('/api/v2/dispatch/analyze', {
+    method: 'POST',
+    body: JSON.stringify({ store_location, orders_count }),
+  });
+}
+
+export function connectETALive(orderId, onMessage) {
+  const base = getBaseUrl();
+  const wsBase = base
+    ? base.replace(/^http/, 'ws')
+    : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`;
+  const token = localStorage.getItem('swiggy_access_token') || '';
+  const ws = new WebSocket(`${wsBase}/api/v2/ws/eta-live/${orderId}?token=${token}`);
+  ws.onmessage = (e) => {
+    try {
+      onMessage(JSON.parse(e.data));
+    } catch {}
+  };
+  ws.onerror = (e) => console.warn('[WS] eta-live error', e);
+  return ws;
+}
+

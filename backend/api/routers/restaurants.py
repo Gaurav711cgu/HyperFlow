@@ -48,7 +48,7 @@ async def list_restaurants(
     token = authorization.credentials if authorization else os.getenv("SWIGGY_ACCESS_TOKEN")
     if token and len(token) > 50 and not token.startswith("YOUR_") and "INVALID" not in token:
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             addr_res = await loop.run_in_executor(
                 None, 
                 call_swiggy_mcp_sync, 
@@ -126,7 +126,7 @@ async def list_restaurant_menu(
     token = authorization.credentials if authorization else os.getenv("SWIGGY_ACCESS_TOKEN")
     if token and len(token) > 50 and not token.startswith("YOUR_") and "INVALID" not in token:
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             addr_res = await loop.run_in_executor(
                 None, 
                 call_swiggy_mcp_sync, 

@@ -134,3 +134,40 @@ class SystemSetting(Base):
     value = Column(String(500), nullable=False)
 
 
+class PriceHistory(Base):
+    __tablename__ = 'price_history'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    product_id = Column(String(100), nullable=False)
+    product_name = Column(String(200), nullable=False)
+    price_inr = Column(Float, nullable=False)
+    source = Column(String(50), default="instamart")
+    captured_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    day_of_week = Column(Integer, nullable=False)
+    hour_of_day = Column(Integer, nullable=False)
+
+
+class RefundPrediction(Base):
+    __tablename__ = 'refund_predictions'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    order_id = Column(String(100), nullable=False)
+    complaint_type = Column(String(100), nullable=False)
+    predicted_outcome = Column(String(50), nullable=False)
+    fraud_probability = Column(Float, nullable=False)
+    actual_outcome = Column(String(50), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class ETAEvent(Base):
+    __tablename__ = 'eta_events'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    order_id = Column(String(100), nullable=False)
+    raw_eta_min = Column(Integer, nullable=False)
+    smoothed_eta_min = Column(Integer, nullable=True)
+    is_jitter = Column(Boolean, nullable=True)
+    captured_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+

@@ -312,3 +312,7 @@ app.include_router(ml_router, prefix="/api/v1", tags=["ml"])
 app.include_router(restaurants_router, prefix="/api/v1", tags=["restaurants"])
 app.include_router(chat_router, prefix="/api/v1", tags=["chat"])
 app.include_router(oracle_router, prefix="/api/v2/oracle", tags=["oracle"])
+
+from backend.api.routers.v2_router import router as v2_router
+app.include_router(v2_router)
+
