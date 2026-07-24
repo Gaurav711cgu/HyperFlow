@@ -207,7 +207,10 @@ def run_eta_backtest():
     raw_b_n, learn_b_n, raw_mae_n, learn_mae_n = evaluate(test_normal, is_storm=False)
     raw_b_s, learn_b_s, raw_mae_s, learn_mae_s = evaluate(test_storm, is_storm=True)
     
-    report_path = "/Users/gauravkumarnayak/.gemini/antigravity/brain/20e5f71a-b0c3-43f3-af46-407db61a59a4/eta_stability_report.md"
+    import os
+    report_dir = os.environ.get("REPORT_DIR", os.path.join(os.path.dirname(__file__), "..", "docs"))
+    os.makedirs(report_dir, exist_ok=True)
+    report_path = os.path.join(report_dir, "eta_stability_report.md")
     
     report_content = f"""# ETA Stability & Storm Robustness Report
 

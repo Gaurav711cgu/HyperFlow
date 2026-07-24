@@ -173,8 +173,10 @@ def run_sensitivity_analysis():
             
     df_res = pd.DataFrame(results)
     
-    # Generate Markdown Report
-    report_path = "/Users/gauravkumarnayak/.gemini/antigravity/brain/20e5f71a-b0c3-43f3-af46-407db61a59a4/demand_sensitivity_report.md"
+    import os
+    report_dir = os.environ.get("REPORT_DIR", os.path.join(os.path.dirname(__file__), "..", "docs"))
+    os.makedirs(report_dir, exist_ok=True)
+    report_path = os.path.join(report_dir, "demand_sensitivity_report.md")
     
     report_content = f"""# Demand Forecasting Sensitivity & Robustness Analysis
 

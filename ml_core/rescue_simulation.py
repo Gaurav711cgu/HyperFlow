@@ -229,8 +229,10 @@ def run_rescue_backtest():
     avg_sqi_base = np.mean(stats["baseline"]["avg_delivered_sqi"]) if stats["baseline"]["avg_delivered_sqi"] else 0.0
     avg_sqi_coro = np.mean(stats["coro"]["avg_delivered_sqi"]) if stats["coro"]["avg_delivered_sqi"] else 0.0
     
-    # Generate Markdown Report
-    report_path = "/Users/gauravkumarnayak/.gemini/antigravity/brain/20e5f71a-b0c3-43f3-af46-407db61a59a4/rescue_performance_report.md"
+    import os
+    report_dir = os.environ.get("REPORT_DIR", os.path.join(os.path.dirname(__file__), "..", "docs"))
+    os.makedirs(report_dir, exist_ok=True)
+    report_path = os.path.join(report_dir, "rescue_performance_report.md")
     
     report_content = f"""# Cancelled Order Rescue Optimizer (CORO) Performance Report
 
