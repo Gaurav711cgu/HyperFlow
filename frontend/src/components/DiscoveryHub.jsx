@@ -1,266 +1,242 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const DiscoveryHub = () => {
+const DiscoveryHub = ({
+  restaurants = [],
+  groceries = [],
+  selectedAddress,
+  activeTab = 'home',
+  setActiveTab = () => {},
+  onSelectRestaurant = () => {},
+  onAddToCart = () => {},
+  onOpenChat = () => {},
+  onOpenCheckout = () => {},
+  onOpenOps = () => {},
+  onOpenProfile = () => {},
+  onOpenModule = () => {},
+  cart = []
+}) => {
+  const totalCartCount = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
+
   return (
-    <>
+    <div className="min-h-screen bg-[#07070B] text-white font-sans selection:bg-[#FF3366] selection:text-white">
+      
+      {/* Ambient Lighting */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-[#FF3366] rounded-full blur-[160px] opacity-10"></div>
+        <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-[#6C63FF] rounded-full blur-[160px] opacity-10"></div>
+      </div>
 
-{/* TopAppBar */}
-<header className="fixed top-0 left-0 w-full z-50 flex flex-col px-xl pt-sm pb-md bg-surface-panel/80 backdrop-blur-xl border-b border-border-glass">
-<div className="flex items-center justify-between max-w-[1440px] mx-auto w-full">
-<div className="flex items-center gap-xl">
-<span className="text-hero-display font-hero-display font-bold text-primary tracking-tighter cursor-pointer hover:opacity-80 transition-opacity">District</span>
-<div className="hidden md:flex items-center bg-surface-container rounded-full px-lg py-sm border border-border-glass min-w-[400px]">
-<span className="material-symbols-outlined text-on-surface-variant text-[20px] mr-sm">search</span>
-<input className="bg-transparent border-none outline-none text-body-default text-on-surface placeholder:text-on-surface-variant/50 w-full" placeholder="Search curated merchants or delivery slots..." type="text"/>
-</div>
-</div>
-<div className="flex items-center gap-lg">
-<div className="flex items-center gap-xs px-md py-xs bg-surface-container-high rounded-lg border border-border-glass cursor-pointer hover:bg-surface-variant transition-colors">
-<span className="material-symbols-outlined text-primary text-[18px]">location_on</span>
-<span className="text-body-medium font-body-medium text-on-surface">Lower Manhattan, NY</span>
-</div>
-<div className="flex items-center gap-md">
-<div className="w-10 h-10 rounded-full border-2 border-primary-container p-0.5 overflow-hidden">
-<img className="w-full h-auto rounded-full object-cover" data-alt="A professional high-fidelity studio portrait of a tech-savvy executive in their late 20s. The lighting is moody and cinematic with hints of hot pink neon reflecting off their sharp features. The background is a blurred obsidian tech workspace with high-end hardware. The overall vibe is premium, exclusive, and hyper-modern, fitting a luxury digital platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkjIe7ftPr73AcnjOzX3-ui0Xbbho54xtdD5czbkz7DJ2mdigOasrDeMoDVaBjZSUFeCN0EAflCDpLXBD1NbzOvWFeB8YOQ9WGS0cnpYXWqc0urY7eRW76ES7_0Kla9qSWeTeKWvN-_g4r-xs7rFgIWOnskumKT1XW2XAuPWrFb5gaEsQDqj6mMVNQ4wZWCXFqRXTZSjMjOFa2xa8ph73fqXxyOKRPJ625oY-g_YuSygzfG0o6Vfy2GRwkO-e11nJSvyGZcjfHpsGS"/>
-</div>
-</div>
-</div>
-</div>
-</header>
-<main className="pt-[84px] min-h-screen max-w-[1440px] mx-auto px-xl pb-xl">
-<div className="grid grid-cols-1 md:grid-cols-[240px_1fr_320px] gap-xl h-[calc(100vh-100px)]">
-{/* Left Sidebar: Categories & Navigation */}
-<aside className="flex flex-col gap-lg overflow-y-auto pr-xs">
-<nav className="flex flex-col gap-sm">
-<a className="flex items-center gap-md px-md py-sm rounded-xl bg-primary-container/10 text-primary font-bold transition-all" href="#">
-<span className="material-symbols-outlined">delivery_dining</span>
-<span className="text-section-header font-section-header">Delivery</span>
-</a>
-<a className="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container transition-all" href="#">
-<span className="material-symbols-outlined">restaurant</span>
-<span className="text-section-header font-section-header">Dining</span>
-</a>
-<a className="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container transition-all" href="#">
-<span className="material-symbols-outlined">local_mall</span>
-<span className="text-section-header font-section-header">Groceries</span>
-</a>
-<a className="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-container transition-all" href="#">
-<span className="material-symbols-outlined">smart_toy</span>
-<span className="text-section-header font-section-header">AI Agent</span>
-</a>
-</nav>
-<div className="mt-md">
-<p className="text-label-small font-label-small uppercase tracking-widest text-on-surface-variant/40 mb-sm px-md">Categories</p>
-<div className="grid grid-cols-2 gap-sm">
-<div className="glass-panel p-md rounded-xl flex flex-col items-center justify-center gap-xs cursor-pointer hover:scale-105 transition-transform group">
-<span className="material-symbols-outlined text-primary group-hover:drop-shadow-[0_0_8px_#ffb1c2]">bolt</span>
-<span className="text-label-small font-label-small">Instant</span>
-</div>
-<div className="glass-panel p-md rounded-xl flex flex-col items-center justify-center gap-xs cursor-pointer hover:scale-105 transition-transform group">
-<span className="material-symbols-outlined text-secondary group-hover:drop-shadow-[0_0_8px_#dab9ff]">liquor</span>
-<span className="text-label-small font-label-small">Premium</span>
-</div>
-<div className="glass-panel p-md rounded-xl flex flex-col items-center justify-center gap-xs cursor-pointer hover:scale-105 transition-transform group">
-<span className="material-symbols-outlined text-tertiary group-hover:drop-shadow-[0_0_8px_#00e475]">nutrition</span>
-<span className="text-label-small font-label-small">Healthy</span>
-</div>
-<div className="glass-panel p-md rounded-xl flex flex-col items-center justify-center gap-xs cursor-pointer hover:scale-105 transition-transform group">
-<span className="material-symbols-outlined text-warning group-hover:drop-shadow-[0_0_8px_#FFB300]">star</span>
-<span className="text-label-small font-label-small">Elite</span>
-</div>
-</div>
-</div>
-{/* Loyalty Card Mini */}
-<div className="mt-auto glass-panel p-lg rounded-2xl relative overflow-hidden">
-<div className="absolute -right-4 -top-4 w-20 h-20 bg-primary/20 blur-3xl"></div>
-<p className="text-label-small font-label-small text-on-surface-variant mb-xs">PLATINUM STATUS</p>
-<h4 className="text-section-header font-section-header text-primary mb-md">Elite Member</h4>
-<div className="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
-<div className="bg-primary h-full w-3/4 shadow-[0_0_10px_rgba(255,177,194,0.5)]"></div>
-</div>
-<p className="text-label-small font-label-small text-on-surface-variant/60 mt-sm">240 points until VIP Platinum</p>
-</div>
-</aside>
-{/* Center Panel: Feed & Hero */}
-<section className="flex flex-col gap-xl overflow-y-auto no-scrollbar">
-{/* Streak Hero Card */}
-<motion.div 
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.5 }}
-  className="relative w-full h-48 rounded-3xl overflow-hidden glass-panel group border border-primary/20"
->
+      {/* Top Header Bar */}
+      <header className="fixed top-0 left-0 w-full z-50 px-6 py-4 bg-[#0A0A10]/90 backdrop-blur-xl border-b border-white/10">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          
+          {/* Logo & Search */}
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('home')}>
+              <span className="text-2xl font-serif font-bold text-white tracking-tight">HyperFlow</span>
+              <span className="text-xs font-serif italic text-transparent bg-clip-text bg-gradient-to-r from-[#FF3366] to-[#FF4D6D] font-semibold">
+                3.0
+              </span>
+            </div>
 
-<div className="absolute inset-0 bg-gradient-to-r from-[#040406] via-[#040406]/60 to-transparent p-xl flex flex-col justify-center">
-<div className="flex items-center gap-md mb-sm">
-<span className="material-symbols-outlined text-primary text-[32px] animate-pulse" style={{fontVariationSettings: '\'FILL\' 1'}}>local_fire_department</span>
-<span className="text-metric-mono font-metric-mono text-primary text-xl uppercase tracking-tighter">12 Day Streak</span>
-</div>
-<h2 className="text-hero-display font-hero-display max-w-[300px] mb-md">Keep the fire burning, District Elite.</h2>
-<button className="shimmer-btn w-fit px-xl py-md bg-primary-container text-on-primary font-bold rounded-full text-body-medium neon-glow-primary">
-                            CLAIM DAILY REWARD
-                        </button>
-</div>
-</motion.div>
-{/* Restaurant Feed Section */}
-<div>
-<div className="flex items-center justify-between mb-lg">
-<h3 className="text-hero-display font-hero-display">Featured Merchants</h3>
-<div className="flex gap-sm">
-<button className="p-xs rounded-full border border-border-glass hover:bg-surface-container"><span className="material-symbols-outlined">chevron_left</span></button>
-<button className="p-xs rounded-full border border-border-glass hover:bg-surface-container"><span className="material-symbols-outlined">chevron_right</span></button>
-</div>
-</div>
-{/* Main Restaurant Card: Behrouz Biryani */}
-<div className="glass-panel rounded-3xl overflow-hidden group cursor-pointer hover:border-primary/40 transition-all duration-300">
-<div className="h-64 relative">
-<img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Exquisite and artistic food photography of Behrouz Biryani, showcasing a golden-hued, saffron-infused rice dish in a handcrafted royal brass pot. The steam rises elegantly against a dark obsidian background, illuminated by soft golden light and sharp neon pink highlights. Glistening roasted nuts and deep green mint leaves garnish the dish, emphasizing luxury and high-velocity gourmet delivery." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3O6h3kN5v2ZfZDd3Ufds1_PUUHBmlla4WShhsUOwN1BiWVty9aGs9k-ujSiY3HWg0c-a6yUVCpufZJTK3hqLopqOy-INM9HYG-SKcVE0PbA__mUudSLa2FZF4yeu1q6fwxpjVZXn7yNLyelP_KZmven-uKjmR8Q3bG2PkZi64JiSya_N0Zb1Ww0kf3A7LW34llf4b4dpiTff9GbejYkJFooJR4Slc4fs85sLnGz-kZjWnuFABxdtocK8oviRGW5vmkB6XF1IMU4YS"/>
-<div className="absolute top-lg right-lg bg-[#040406]/80 backdrop-blur-md px-md py-sm rounded-xl border border-border-glass">
-<div className="flex items-center gap-xs">
-<span className="material-symbols-outlined text-warning text-[16px]" style={{fontVariationSettings: '\'FILL\' 1'}}>star</span>
-<span className="text-metric-mono font-metric-mono text-on-surface">4.8</span>
-</div>
-</div>
-<div className="absolute bottom-lg left-lg bg-primary-container text-on-primary px-md py-xs rounded-full text-label-small font-bold uppercase tracking-widest">
-                                Premium Partner
-                            </div>
-</div>
-<div className="p-xl flex flex-col gap-md">
-<div className="flex items-start justify-between">
-<div>
-<h4 className="text-hero-display font-hero-display mb-xs">Behrouz Biryani</h4>
-<p className="text-body-default text-on-surface-variant">Royal Recipes • North Indian • Elite Packaging</p>
-</div>
-<div className="text-right">
-<span className="text-metric-mono font-metric-mono text-primary text-lg">22 MIN</span>
-<p className="text-label-small font-label-small text-on-surface-variant/60 uppercase">Delivery Window</p>
-</div>
-</div>
-<div className="flex items-center gap-xl mt-sm">
-<div className="flex items-center gap-xs">
-<span className="material-symbols-outlined text-on-surface-variant text-[18px]">payments</span>
-<span className="text-body-medium font-body-medium text-on-surface">$$$</span>
-</div>
-<div className="flex items-center gap-xs">
-<span className="material-symbols-outlined text-on-surface-variant text-[18px]">verified</span>
-<span className="text-body-medium font-body-medium text-on-surface">District Curated</span>
-</div>
-</div>
-</div>
-</div>
-{/* Additional Grid Feed */}
-<div className="grid grid-cols-2 gap-lg mt-lg">
-<div className="glass-panel rounded-2xl overflow-hidden group cursor-pointer hover:border-secondary/40 transition-all">
-<div className="h-40 relative">
-<img className="w-full h-full object-cover" data-alt="High-end sushi platter arrangement with vibrant orange salmon and deep red tuna nigiri on a sleek black slate board. Subtle purple neon glows illuminate the edges of the fish. Soft depth of field with a dark, atmospheric restaurant background. Minimalist luxury aesthetic with clean lines and sharp focus on texture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBY63vuIkeBp6l5cHYDUYAUxyfZjekeIUDrgoaWXdYWfRsIItON9yVcNgasVY5EVJ_z9UCEYE7ifS6es_em8GXuQSZjL4elMAOcYKY-mFqvK7XoIYiCdoO9fXcs76s27BFjIlZ-jibt94sXMKAMiW-HDhL8Fx6YgFDMjXCKJuqgQvL6f2QokApfLDSvnpgf5uRCpVCyjlevWvENzKb2pD1gJvWBrOj_kU8HsHYg8siO1GP2yGFdEgOS79jFlelYdFjbEs_cIizY-X6"/>
-<div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-</div>
-<div className="p-lg">
-<h5 className="text-section-header font-section-header mb-xs">Yoko Ono Sushi</h5>
-<p className="text-label-small font-label-small text-on-surface-variant">Modern Japanese • 18 min</p>
-</div>
-</div>
-<div className="glass-panel rounded-2xl overflow-hidden group cursor-pointer hover:border-tertiary/40 transition-all">
-<div className="h-40 relative">
-<img className="w-full h-full object-cover" data-alt="Gourmet artisanal burger with melting cheese and caramelized onions, captured with high-contrast macro photography. Neon green lighting highlights the crisp textures of the bun. The background is a dark, industrial chic setting. The composition is dynamic and appetizing, reflecting a premium urban dining experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9C62CkwFO1Ta65rOPGt_zkQb3NWBfpIVfhSCWsS173P7Hw1t8O2CFnA1Swhsh03BFAJeCU4v8zMcs2FtgfS9UKrkQ-pgIxmQV0atKwEY1VvIrOO2nqjJirHB5LtlEy7v2E23zmpz5QUROCmGsEwpUTOxc6-W7bqEnwZTpjlEj84W0_wRNkm3oiChRsbQBbdUsj6iQ4IQ8MjgCXDjvXHjIGyb2EehurUmG2rcFE5E_2NQqMXhnC7sZPl5JUl0b-89s8s1A5HghkpjV"/>
-<div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-</div>
-<div className="p-lg">
-<h5 className="text-section-header font-section-header mb-xs">Carbon Grill</h5>
-<p className="text-label-small font-label-small text-on-surface-variant">Artisanal Burgers • 25 min</p>
-</div>
-</div>
-</div>
-</div>
-</section>
-{/* Right Sidebar: Reorder & Cart */}
-<aside className="flex flex-col gap-xl">
-{/* Your Usual Section */}
-<div className="glass-panel rounded-3xl p-xl flex flex-col gap-lg border border-border-glass">
-<div className="flex items-center justify-between">
-<h4 className="text-section-header font-section-header uppercase tracking-widest text-on-surface-variant">Your Usual</h4>
-<span className="material-symbols-outlined text-primary cursor-pointer hover:rotate-180 transition-transform duration-500">autorenew</span>
-</div>
-<div className="flex flex-col gap-md">
-<div className="p-md rounded-2xl bg-surface-container flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors border border-transparent hover:border-border-glass">
-<div className="flex items-center gap-md">
-<div className="w-12 h-12 rounded-xl bg-surface-variant flex items-center justify-center">
-<span className="material-symbols-outlined text-primary">local_cafe</span>
-</div>
-<div>
-<p className="text-body-medium font-bold text-on-surface">Nitro Cold Brew</p>
-<p className="text-label-small font-label-small text-on-surface-variant">Starbucks Reserve</p>
-</div>
-</div>
-<span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">add_circle</span>
-</div>
-<div className="p-md rounded-2xl bg-surface-container flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors border border-transparent hover:border-border-glass">
-<div className="flex items-center gap-md">
-<div className="w-12 h-12 rounded-xl bg-surface-variant flex items-center justify-center">
-<span className="material-symbols-outlined text-secondary">lunch_dining</span>
-</div>
-<div>
-<p className="text-body-medium font-bold text-on-surface">Truffle Burger</p>
-<p className="text-label-small font-label-small text-on-surface-variant">Carbon Grill</p>
-</div>
-</div>
-<span className="material-symbols-outlined text-on-surface-variant group-hover:text-secondary transition-colors">add_circle</span>
-</div>
-<div className="p-md rounded-2xl bg-surface-container flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors border border-transparent hover:border-border-glass">
-<div className="flex items-center gap-md">
-<div className="w-12 h-12 rounded-xl bg-surface-variant flex items-center justify-center">
-<span className="material-symbols-outlined text-tertiary">eco</span>
-</div>
-<div>
-<p className="text-body-medium font-bold text-on-surface">Kale Caesar</p>
-<p className="text-label-small font-label-small text-on-surface-variant">Sweetgreen</p>
-</div>
-</div>
-<span className="material-symbols-outlined text-on-surface-variant group-hover:text-tertiary transition-colors">add_circle</span>
-</div>
-</div>
-<button className="w-full py-md rounded-full bg-surface-container-highest border border-border-glass text-body-medium font-bold hover:bg-surface-variant transition-colors">
-                        VIEW ALL HISTORY
-                    </button>
-</div>
-{/* AI Agent / Order Status */}
-<div className="glass-panel rounded-3xl p-xl flex flex-col gap-md relative overflow-hidden bg-gradient-to-br from-[#0A0A0F] to-[#14141F]">
-<div className="absolute -left-10 -bottom-10 w-32 h-32 bg-secondary/10 blur-3xl"></div>
-<div className="flex items-center gap-sm">
-<div className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></div>
-<h4 className="text-section-header font-section-header text-on-surface">District Intelligence</h4>
-</div>
-<p className="text-body-default text-on-surface-variant italic">"Your order from 'The Butcher's Daughter' is currently 4 minutes away. Shall I pre-heat your smart oven?"</p>
-<div className="flex gap-sm mt-sm">
-<button className="flex-1 py-sm bg-secondary/10 border border-secondary/20 text-secondary rounded-lg text-label-small font-bold hover:bg-secondary/20 transition-all">YES, PLEASE</button>
-<button className="flex-1 py-sm bg-surface-container border border-border-glass text-on-surface-variant rounded-lg text-label-small font-bold hover:bg-surface-variant transition-all">DISMISS</button>
-</div>
-</div>
-{/* Promo / VIP Badge */}
-<div className="mt-auto p-xl rounded-3xl bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 flex items-center gap-lg group cursor-pointer">
-<div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(255,177,194,0.4)]">
-<span className="material-symbols-outlined text-on-primary">card_giftcard</span>
-</div>
-<div>
-<h5 className="text-body-medium font-bold text-on-surface group-hover:text-primary transition-colors">Unlock VIP Lounge</h5>
-<p className="text-label-small font-label-small text-on-surface-variant">Access exclusive off-menu items from top NYC chefs.</p>
-</div>
-</div>
-</aside>
-</div>
-</main>
-{/* Contextual FAB (Only for main landing) */}
-<div className="fixed bottom-xl right-xl z-50">
-<button className="flex items-center gap-md px-xl py-lg bg-primary text-on-primary rounded-full font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all shimmer-btn neon-glow-primary">
-<span className="material-symbols-outlined">shopping_cart</span>
-<span className="text-body-medium uppercase tracking-widest">Cart • 2 Items</span>
-</button>
-</div>
-{/* Micro-interactions Script */}
+            <div className="hidden md:flex items-center bg-white/[0.04] rounded-full px-4 py-2 border border-white/10 w-80">
+              <span className="material-symbols-outlined text-white/40 text-xl mr-2">search</span>
+              <input 
+                className="bg-transparent border-none outline-none text-sm text-white placeholder:text-white/40 w-full font-light" 
+                placeholder="Search Instamart items, cuisines, slots..." 
+                type="text"
+              />
+            </div>
+          </div>
 
+          {/* Module Navigation Tabs */}
+          <div className="hidden lg:flex items-center gap-1 bg-white/[0.04] p-1.5 rounded-full border border-white/10">
+            {[
+              { id: 'home', label: 'Hub', icon: 'grid_view' },
+              { id: 'demand_oracle', label: 'Demand', icon: 'shopping_bag' },
+              { id: 'eta_truth', label: 'ETA Truth', icon: 'schedule' },
+              { id: 'refund_oracle', label: 'Refund', icon: 'verified_user' },
+              { id: 'dineout_sniper', label: 'Dineout', icon: 'restaurant' },
+              { id: 'dispatch_map', label: 'Dispatch', icon: 'local_shipping' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => onOpenModule(tab.id)}
+                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === tab.id
+                    ? 'bg-gradient-to-r from-[#FF3366] to-[#FF4D6D] text-white font-semibold shadow-md shadow-[#FF3366]/20'
+                    : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-base">{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
 
-    </>
+          {/* User Controls & Location */}
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/[0.05] rounded-full border border-white/10 text-xs text-white/80">
+              <span className="material-symbols-outlined text-[#FF4D6D] text-sm">location_on</span>
+              <span className="truncate max-w-[150px]">{selectedAddress?.tag || 'Patia, Bhubaneswar'}</span>
+            </div>
+
+            <button
+              onClick={onOpenOps}
+              className="px-4 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm text-[#FF4D6D]">admin_panel_settings</span>
+              <span>Ops Control</span>
+            </button>
+
+            <button
+              onClick={onOpenChat}
+              className="p-2 rounded-full bg-[#FF3366]/15 border border-[#FF3366]/30 text-[#FF4D6D] hover:bg-[#FF3366]/25 transition-all cursor-pointer relative"
+              title="AI Commerce Agent"
+            >
+              <span className="material-symbols-outlined text-lg">chat</span>
+              <span className="w-2 h-2 rounded-full bg-[#FF3366] absolute top-1 right-1 animate-ping"></span>
+            </button>
+          </div>
+
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="pt-24 pb-16 max-w-7xl mx-auto px-6 relative z-10">
+        
+        {/* Editorial Hero Banner */}
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full mb-10 rounded-3xl p-8 bg-[#101018]/90 border border-white/10 backdrop-blur-2xl shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+        >
+          <div className="max-w-xl space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/30">
+              <span className="w-2 h-2 rounded-full bg-[#FF3366] animate-pulse"></span>
+              <span className="text-[10px] font-bold tracking-[0.2em] text-[#FF4D6D] uppercase">
+                HYPERFLOW 4.0 ACTIVE OPERATING SYSTEM
+              </span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight leading-snug">
+              Boutique Operations. <br />
+              <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-[#FF3366] to-[#FF758F]">
+                Simplified.
+              </span>
+            </h1>
+
+            <p className="text-sm text-[#9A9AB0] font-light">
+              Live Swiggy MCP Passthrough · OpenMeteo Weather Telemetry · Tobit MLE Stockout Predictions.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => onOpenModule('demand_oracle')}
+              className="px-6 py-3 bg-gradient-to-r from-[#FF3366] to-[#FF4D6D] text-white rounded-full font-semibold text-xs shadow-lg shadow-[#FF3366]/20 hover:opacity-95 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span>Explore Demand Oracle</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+
+            <button
+              onClick={() => onOpenModule('eta_truth')}
+              className="px-6 py-3 bg-white/[0.05] border border-white/15 text-white rounded-full font-semibold text-xs hover:bg-white/[0.1] transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span className="text-[#FF4D6D]">✦</span>
+              <span>Launch ETA Truth</span>
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Feature Modules Quick Bar (5 Cards) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-12">
+          {[
+            { id: 'demand_oracle', title: 'Demand Oracle', desc: 'Instamart Stockout Risk', icon: 'shopping_bag', color: '#FF3366' },
+            { id: 'eta_truth', title: 'ETA Truth', desc: 'Live WebSocket Smoother', icon: 'schedule', color: '#00D4AA' },
+            { id: 'refund_oracle', title: 'Refund Oracle', desc: 'FraudGuard Triage', icon: 'verified_user', color: '#6C63FF' },
+            { id: 'dineout_sniper', title: 'Dineout Sniper', desc: 'Slot Fill Time Scorer', icon: 'restaurant', color: '#FFB800' },
+            { id: 'dispatch_map', title: 'Dispatch Map', desc: 'Route Batch Optimizer', icon: 'local_shipping', color: '#00D4FF' }
+          ].map((mod) => (
+            <div
+              key={mod.id}
+              onClick={() => onOpenModule(mod.id)}
+              className="bg-[#101018]/80 border border-white/10 hover:border-[#FF3366]/50 rounded-2xl p-5 backdrop-blur-xl transition-all hover:-translate-y-1 cursor-pointer group flex flex-col justify-between"
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 group-hover:bg-[#FF3366]/15 flex items-center justify-center mb-3">
+                <span className="material-symbols-outlined text-xl transition-colors" style={{ color: mod.color }}>
+                  {mod.icon}
+                </span>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white group-hover:text-[#FF4D6D] transition-colors">{mod.title}</h4>
+                <p className="text-[11px] text-white/50 font-light mt-0.5">{mod.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Featured Restaurants / Items Grid */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-serif font-bold text-white tracking-tight">Curated Merchants & Products</h2>
+              <p className="text-xs text-white/50 font-light">Real-time availability synced with Swiggy MCP</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(restaurants && restaurants.length > 0 ? restaurants : [
+              { id: 'rest_01', name: 'Behrouz Biryani', cuisine: 'Royal North Indian · Biryani', rating: 4.8, distance: '1.8 km', time: '22 min', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3O6h3kN5v2ZfZDd3Ufds1_PUUHBmlla4WShhsUOwN1BiWVty9aGs9k-ujSiY3HWg0c-a6yUVCpufZJTK3hqLopqOy-INM9HYG-SKcVE0PbA__mUudSLa2FZF4yeu1q6fwxpjVZXn7yNLyelP_KZmven-uKjmR8Q3bG2PkZi64JiSya_N0Zb1Ww0kf3A7LW34llf4b4dpiTff9GbejYkJFooJR4Slc4fs85sLnGz-kZjWnuFABxdtocK8oviRGW5vmkB6XF1IMU4YS' },
+              { id: 'rest_02', name: 'Yoko Ono Gourmet Sushi', cuisine: 'Modern Japanese · Fresh Sashimi', rating: 4.9, distance: '2.4 km', time: '18 min', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCBY63vuIkeBp6l5cHYDUYAUxyfZjekeIUDrgoaWXdYWfRsIItON9yVcNgasVY5EVJ_z9UCEYE7ifS6es_em8GXuQSZjL4elMAOcYKY-mFqvK7XoIYiCdoO9fXcs76s27BFjIlZ-jibt94sXMKAMiW-HDhL8Fx6YgFDMjXCKJuqgQvL6f2QokApfLDSvnpgf5uRCpVCyjlevWvENzKb2pD1gJvWBrOj_kU8HsHYg8siO1GP2yGFdEgOS79jFlelYdFjbEs_cIizY-X6' },
+              { id: 'rest_03', name: 'Carbon Grill Artisanal Burgers', cuisine: 'Gourmet Burgers · Craft Drinks', rating: 4.7, distance: '3.1 km', time: '25 min', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9C62CkwFO1Ta65rOPGt_zkQb3NWBfpIVfhSCWsS173P7Hw1t8O2CFnA1Swhsh03BFAJeCU4v8zMcs2FtgfS9UKrkQ-pgIxmQV0atKwEY1VvIrOO2nqjJirHB5LtlEy7v2E23zmpz5QUROCmGsEwpUTOxc6-W7bqEnwZTpjlEj84W0_wRNkm3oiChRsbQBbdUsj6iQ4IQ8MjgCXDjvXHjIGyb2EehurUmG2rcFE5E_2NQqMXhnC7sZPl5JUl0b-89s8s1A5HghkpjV' }
+            ]).map((r) => (
+              <div 
+                key={r.id} 
+                onClick={() => onSelectRestaurant(r)}
+                className="bg-[#101018]/90 border border-white/10 rounded-3xl overflow-hidden hover:border-[#FF3366]/40 transition-all cursor-pointer group shadow-xl"
+              >
+                <div className="h-44 relative overflow-hidden bg-white/5">
+                  <img src={r.image} alt={r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-xs font-mono font-bold text-amber-400 border border-white/10 flex items-center gap-1">
+                    <span>★</span>
+                    <span>{r.rating}</span>
+                  </div>
+                </div>
+
+                <div className="p-5 space-y-2">
+                  <h3 className="text-lg font-serif font-bold text-white group-hover:text-[#FF4D6D] transition-colors">{r.name}</h3>
+                  <p className="text-xs text-white/50 font-light">{r.cuisine}</p>
+
+                  <div className="pt-3 flex items-center justify-between border-t border-white/10 text-xs font-mono">
+                    <span className="text-[#FF4D6D] font-bold">{r.time}</span>
+                    <span className="text-white/40">{r.distance}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </main>
+
+      {/* Floating Action Button: Cart Trigger */}
+      {totalCartCount > 0 && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <button 
+            onClick={onOpenCheckout}
+            className="flex items-center gap-3 px-6 py-3.5 bg-gradient-to-r from-[#FF3366] to-[#FF4D6D] text-white rounded-full font-bold text-xs shadow-2xl shadow-[#FF3366]/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-lg">shopping_cart</span>
+            <span className="uppercase tracking-widest">Cart • {totalCartCount} Items</span>
+          </button>
+        </div>
+      )}
+
+    </div>
   );
 };
 

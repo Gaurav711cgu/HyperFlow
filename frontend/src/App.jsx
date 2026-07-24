@@ -28,6 +28,14 @@ import MerchantStockAdmin from './components/MerchantStockAdmin.jsx';
 import FleetLogisticsAdmin from './components/FleetLogisticsAdmin.jsx';
 import FinancialOpsAdmin from './components/FinancialOpsAdmin.jsx';
 import GrowthAnalyticsAdmin from './components/GrowthAnalyticsAdmin.jsx';
+
+// Import HyperFlow 4.0 Module Views
+import DemandOracleView from './components/DemandOracleView.jsx';
+import ETATruthView from './components/ETATruthView.jsx';
+import RefundOracleView from './components/RefundOracleView.jsx';
+import DineoutSniperView from './components/DineoutSniperView.jsx';
+import DispatchMapView from './components/DispatchMapView.jsx';
+
 import RefundStatus from './components/RefundStatus.jsx';
 import HelpSupport from './components/HelpSupport.jsx';
 import ChatbotHelp from './components/ChatbotHelp.jsx';
@@ -240,7 +248,7 @@ const categories = [
 ];
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('swiggy_access_token'));
   const [activeTab, setActiveTab] = useState('home');
   const [appView, setAppView] = useState('consumer'); 
   const [isSimulatorMode, setIsSimulatorMode] = useState(window.innerWidth >= 1024); 
@@ -1197,6 +1205,26 @@ export default function App() {
 
   if (!isLoggedIn) {
     return <AuthPortal onLoginSuccess={() => setIsLoggedIn(true)} />;
+  }
+
+  if (appView === 'demand_oracle') {
+    return <DemandOracleView onBack={() => setAppView('consumer')} />;
+  }
+
+  if (appView === 'eta_truth') {
+    return <ETATruthView onBack={() => setAppView('consumer')} />;
+  }
+
+  if (appView === 'refund_oracle') {
+    return <RefundOracleView onBack={() => setAppView('consumer')} />;
+  }
+
+  if (appView === 'dineout_sniper') {
+    return <DineoutSniperView onBack={() => setAppView('consumer')} />;
+  }
+
+  if (appView === 'dispatch_map') {
+    return <DispatchMapView onBack={() => setAppView('consumer')} />;
   }
 
   if (appView === 'admin') {
