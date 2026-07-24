@@ -114,7 +114,7 @@ const AuthPortal = ({ onLoginSuccess }) => {
                 type="button" 
                 onClick={handleSwiggyLogin}
                 disabled={loading}
-                className="shimmer-btn w-full py-md bg-[#6C63FF] text-white rounded-full font-section-header neon-glow-primary hover:opacity-90 transition-all flex items-center justify-center gap-sm"
+                className="shimmer-btn w-full py-md bg-gradient-to-r from-[#6C63FF] to-[#A078FF] text-white rounded-full font-section-header neon-glow-primary hover:opacity-90 transition-all flex items-center justify-center gap-sm shadow-lg shadow-[#6C63FF]/20"
               >
                 {loading ? 'Connecting...' : 'Login with Phone (Swiggy)'}
                 {!loading && <span className="material-symbols-outlined text-[18px]">smartphone</span>}
@@ -131,18 +131,51 @@ const AuthPortal = ({ onLoginSuccess }) => {
               </button>
             </div>
 
-            {/* Ornamental Detail */}
-            <div className="absolute bottom-0 right-0 p-xs opacity-20">
-              <span className="font-metric-mono text-[8px] text-white">AUTH_V3.0.0</span>
-            </div>
-          </div>
+            {/* OR CONTINUE WITH Section - Matching Reference Theme */}
+            <div className="mt-8 pt-6 border-t border-white/10 flex flex-col items-center gap-4">
+              <span className="text-[11px] font-bold tracking-[0.25em] text-[#E8A2B8] uppercase">
+                OR CONTINUE WITH
+              </span>
 
-          {/* Footer Text */}
-          <div className="absolute bottom-xl flex flex-col items-center gap-xs">
-            <p className="font-label-small text-label-small text-on-surface-variant/40">Secure verification by HyperFlow Bio-Sync</p>
-            <div className="flex gap-md">
-              <a className="font-label-small text-label-small text-district-pink/60 hover:text-district-pink transition-colors" href="#">Privacy Policy</a>
-              <a className="font-label-small text-label-small text-district-pink/60 hover:text-district-pink transition-colors" href="#">Support</a>
+              <div className="flex items-center justify-center gap-6 my-1">
+                {/* Fingerprint Bio-Sync Button */}
+                <button
+                  type="button"
+                  onClick={handleDemoLogin}
+                  title="Bio-Sync Authentication"
+                  className="w-12 h-12 rounded-full border border-white/20 bg-white/5 hover:bg-white/15 hover:border-[#E8A2B8]/50 transition-all flex items-center justify-center text-white shadow-inner group"
+                >
+                  <span className="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform text-white/90">
+                    fingerprint
+                  </span>
+                </button>
+
+                {/* Passkey / User Key Button */}
+                <button
+                  type="button"
+                  onClick={handleSwiggyLogin}
+                  title="Passkey Authentication"
+                  className="w-12 h-12 rounded-full border border-white/20 bg-white/5 hover:bg-white/15 hover:border-[#E8A2B8]/50 transition-all flex items-center justify-center text-white shadow-inner group"
+                >
+                  <span className="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform text-white/90">
+                    vpn_key
+                  </span>
+                </button>
+              </div>
+
+              <p className="text-[12px] text-[#E8A2B8]/60 text-center font-medium mt-1">
+                Secure verification by HyperFlow Bio-Sync
+              </p>
+              
+              <div className="flex gap-4 text-[12px] text-[#E8A2B8]/70">
+                <a className="hover:text-[#E8A2B8] transition-colors" href="#">Privacy Policy</a>
+                <a className="hover:text-[#E8A2B8] transition-colors" href="#">Support</a>
+              </div>
+            </div>
+
+            {/* Ornamental Detail */}
+            <div className="absolute bottom-2 right-3 opacity-30">
+              <span className="font-metric-mono text-[9px] text-[#E8A2B8] tracking-widest">AUTH_V3.0.0</span>
             </div>
           </div>
         </section>
