@@ -26,8 +26,8 @@ export default function DineoutSniperView({ onBack }) {
             <span className="material-symbols-outlined text-xl">arrow_back</span>
           </button>
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 mb-1">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 mb-1 font-mono">
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
               <span className="text-[10px] font-bold tracking-widest text-amber-400 uppercase">MODULE 4 • DINEOUT SLOT SNIPER</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight">
@@ -42,8 +42,8 @@ export default function DineoutSniperView({ onBack }) {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold font-mono text-amber-400 uppercase tracking-wider">WHY HYPERFLOW VS INDUSTRY BASELINE</span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <span className="text-xs font-bold font-mono text-amber-400 uppercase tracking-wider">HYPERFLOW ARCHITECTURAL DIFFERENTIATION</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 DYNAMIC SLOT PRESSURE SCORING
               </span>
             </div>
@@ -53,7 +53,7 @@ export default function DineoutSniperView({ onBack }) {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 bg-white/[0.05] p-1.5 rounded-full border border-white/10 shrink-0">
+          <div className="flex items-center gap-2 bg-white/[0.05] p-1.5 rounded-full border border-white/10 shrink-0 font-mono">
             <button
               onClick={() => setMode('sniper')}
               className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
@@ -88,7 +88,7 @@ export default function DineoutSniperView({ onBack }) {
                 <div>
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-lg font-serif font-bold text-white">{venue.venue_name}</h3>
-                    <span className="text-xs font-mono text-amber-400 font-bold">★ {venue.rating}</span>
+                    <span className="text-xs font-mono text-amber-400 font-bold">RATING: {venue.rating}</span>
                   </div>
                   <p className="text-xs text-white/50 font-light">{venue.cuisine}</p>
 
@@ -102,7 +102,7 @@ export default function DineoutSniperView({ onBack }) {
                         {mode === 'sniper' ? (
                           <div className="text-right">
                             <p className="text-amber-400 font-mono font-bold">Fills in ~{s.estimated_minutes_to_full}m</p>
-                            <span className="text-[10px] text-white/40 uppercase">Demand: {s.demand_score}</span>
+                            <span className="text-[10px] text-white/40 uppercase font-mono">Demand: {s.demand_score}</span>
                           </div>
                         ) : (
                           <span className="text-white/50 font-mono">Available</span>
@@ -114,7 +114,7 @@ export default function DineoutSniperView({ onBack }) {
 
                 <button 
                   onClick={() => alert(`Slot booked at ${venue.venue_name}!`)}
-                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-black font-bold rounded-full text-xs transition-all cursor-pointer mt-4"
+                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-black font-mono font-bold rounded-full text-xs transition-all cursor-pointer mt-4"
                 >
                   Snipe Slot Now
                 </button>

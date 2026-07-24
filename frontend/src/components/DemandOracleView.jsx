@@ -30,8 +30,8 @@ export default function DemandOracleView({ onBack }) {
           </button>
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/30 mb-1">
-              <span className="w-2 h-2 rounded-full bg-[#FF3366] animate-pulse"></span>
-              <span className="text-[10px] font-bold tracking-widest text-[#FF4D6D] uppercase">MODULE 1 • INSTAMART INTELLIGENCE</span>
+              <span className="w-2 h-2 rounded-full bg-[#FF3366]"></span>
+              <span className="text-[10px] font-bold tracking-widest text-[#FF4D6D] uppercase font-mono">MODULE 1 • INSTAMART INTELLIGENCE</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-serif font-bold text-white tracking-tight">
               Demand Oracle <span className="italic font-serif text-[#FF4D6D]">Unconstrained.</span>
@@ -40,10 +40,10 @@ export default function DemandOracleView({ onBack }) {
         </div>
 
         {data?.weather_context && (
-          <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-[#101018] border border-white/10 rounded-2xl text-xs font-mono">
-            <span className="text-amber-400">☀️ {data.weather_context.temperature_c}°C</span>
-            <span className="text-blue-400">🌧️ {data.weather_context.precipitation_mm}mm</span>
-            <span className="text-emerald-400">OpenMeteo Live</span>
+          <div className="hidden sm:flex items-center gap-4 px-4 py-2 bg-[#101018] border border-white/10 rounded-2xl text-xs font-mono">
+            <span className="text-amber-400">TEMP: {data.weather_context.temperature_c}°C</span>
+            <span className="text-blue-400">PRECIP: {data.weather_context.precipitation_mm}mm</span>
+            <span className="text-emerald-400">OPENMETEO LIVE</span>
           </div>
         )}
       </div>
@@ -53,8 +53,8 @@ export default function DemandOracleView({ onBack }) {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold font-mono text-[#FF4D6D] uppercase tracking-wider">WHY HYPERFLOW VS INDUSTRY BASELINE</span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FF3366]/20 text-[#FF4D6D] border border-[#FF3366]/30">
+              <span className="text-xs font-bold font-mono text-[#FF4D6D] uppercase tracking-wider">HYPERFLOW ARCHITECTURAL DIFFERENTIATION</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#FF3366]/20 text-[#FF4D6D] border border-[#FF3366]/30">
                 +24.28% WMAPE LIFT
               </span>
             </div>
@@ -68,7 +68,7 @@ export default function DemandOracleView({ onBack }) {
           <div className="flex items-center gap-2 bg-white/[0.05] p-1.5 rounded-full border border-white/10 shrink-0">
             <button
               onClick={() => setModelMode('tobit')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold transition-all cursor-pointer ${
                 modelMode === 'tobit'
                   ? 'bg-gradient-to-r from-[#FF3366] to-[#FF4D6D] text-white shadow-md'
                   : 'text-white/60 hover:text-white'
@@ -78,7 +78,7 @@ export default function DemandOracleView({ onBack }) {
             </button>
             <button
               onClick={() => setModelMode('ols')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold transition-all cursor-pointer ${
                 modelMode === 'ols'
                   ? 'bg-red-500/30 text-red-300 border border-red-500/50 shadow-md'
                   : 'text-white/60 hover:text-white'
@@ -91,10 +91,10 @@ export default function DemandOracleView({ onBack }) {
 
         {/* Live Comparison Bar */}
         <div className="p-4 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-between text-xs font-mono">
-          <span>Active Evaluation Mode: <strong className={modelMode === 'tobit' ? 'text-emerald-400' : 'text-red-400'}>
+          <span>EVALUATION MODE: <strong className={modelMode === 'tobit' ? 'text-emerald-400' : 'text-red-400'}>
             {modelMode === 'tobit' ? 'HyperFlow Tobit Censored MLE (Latent Demand Preserved)' : 'Naive OLS Regression (Biased Under Stockouts)'}
           </strong></span>
-          <span className="text-white/50">M5 Benchmark Score: {modelMode === 'tobit' ? '29.53% WMAPE' : '38.99% WMAPE'}</span>
+          <span className="text-white/50">M5 BENCHMARK: {modelMode === 'tobit' ? '29.53% WMAPE' : '38.99% WMAPE'}</span>
         </div>
       </div>
 
@@ -108,7 +108,6 @@ export default function DemandOracleView({ onBack }) {
               { product_id: '2', product_name: 'Fresh Tomatoes (500g)', price_inr: 32, demand_forecast: { point_units: 8.5, confidence_pct: 75 }, stockout_risk: 'MEDIUM', recommended_action: 'ORDER_WITHIN_2H', time_to_stockout_minutes: 110 },
               { product_id: '3', product_name: 'Fresho Eggs Farm Fresh (6 pcs)', price_inr: 48, demand_forecast: { point_units: 22.0, confidence_pct: 92 }, stockout_risk: 'LOW', recommended_action: 'SAFE', time_to_stockout_minutes: 360 }
             ]).map((pred, i) => {
-              // Adjust displayed values if OLS baseline is selected
               const pointUnits = modelMode === 'ols' ? roundNumber((pred.demand_forecast?.point_units || 12.0) * 0.62) : (pred.demand_forecast?.point_units || 12.0);
               const confPct = modelMode === 'ols' ? 52 : (pred.demand_forecast?.confidence_pct || 85);
 
@@ -118,9 +117,9 @@ export default function DemandOracleView({ onBack }) {
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div>
                         <h3 className="text-base font-serif font-bold text-white">{pred.product_name}</h3>
-                        <p className="text-xs text-white/40 font-mono mt-0.5">₹{pred.price_inr}</p>
+                        <p className="text-xs text-white/40 font-mono mt-0.5">INR {pred.price_inr}</p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold font-mono border ${
                         pred.stockout_risk === 'HIGH' ? 'bg-[#FF3366]/20 text-[#FF4D6D] border-[#FF3366]/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                       }`}>
                         {pred.stockout_risk} RISK
@@ -130,7 +129,7 @@ export default function DemandOracleView({ onBack }) {
                     <div className="flex items-center justify-between pt-4 border-t border-white/10">
                       <div>
                         <p className="text-2xl font-serif font-bold text-white">{pointUnits} units</p>
-                        <p className="text-[10px] text-white/50 uppercase tracking-wider mt-0.5">
+                        <p className="text-[10px] text-white/50 font-mono uppercase tracking-wider mt-0.5">
                           {modelMode === 'tobit' ? 'UNCONSTRAINED LATENT DEMAND' : 'CENSORED OBSERVED SALES (BIASED)'}
                         </p>
                       </div>
