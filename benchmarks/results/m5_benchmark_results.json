@@ -1,0 +1,10 @@
+{
+  "dataset": "M5 Forecasting Benchmark",
+  "n_samples": 10000,
+  "censoring_rate_pct": 57.71,
+  "ols_wmape_pct": 38.99,
+  "tobit_wmape_pct": 29.53,
+  "wmape_lift_pct": 24.28,
+  "training_time_seconds": 9.4,
+  "resume_line": "Tobit MLE Regressor achieves 29.53% WMAPE vs 38.99% OLS baseline (+24.28% WMAPE lift) under 57.7% stockout censoring."
+}

@@ -1,18 +1,24 @@
 import os
 import random
 import numpy as np
+import pathlib
+import joblib
+import asyncio
+from threading import Lock
+
 from backend.services.redis_lock import RedisLockManager
 from backend.ml.censored_demand import CensoredDemandForecaster
 from backend.ml.store_profitability import DarkStoreProfitabilityScorer
 from backend.ml.production_safeguards import ProductionSafeguards
 
-import asyncio
-
 lock_manager = RedisLockManager()
+redis_client = getattr(lock_manager, 'redis', None)
 demand_forecaster = CensoredDemandForecaster()
 profitability_scorer = DarkStoreProfitabilityScorer()
 safeguards = ProductionSafeguards()
 stats_lock = asyncio.Lock()
+_thread_stats_lock = Lock()
+_thread_robustness_lock = Lock()
 
 GLOBAL_STATS = {
     "reservations_total": 0,
@@ -30,11 +36,13 @@ GLOBAL_STATS = {
 
 CACHED_ROBUSTNESS_METRICS = {
     "status": "nominal",
+    "data_source": "synthetic",
+    "message": "Using synthetic reference data — connect real sales feed for live PSI.",
     "last_audit_timestamp": "--:--:--",
     "features_drift": {
-        "weather_temp": {"psi": 0.0412, "status": "green", "message": "Stable"},
-        "weather_rain": {"psi": 0.0892, "status": "green", "message": "Stable"},
-        "time_elapsed_sec": {"psi": 0.0612, "status": "green", "message": "Stable"}
+        "weather_temp": {"psi": 0.0412, "status": "green", "message": "Stable (Synthetic Ref)"},
+        "weather_rain": {"psi": 0.0892, "status": "green", "message": "Stable (Synthetic Ref)"},
+        "time_elapsed_sec": {"psi": 0.0612, "status": "green", "message": "Stable (Synthetic Ref)"}
     },
     "clipping_guard": {
         "total_clipped_observations_today": 0,
@@ -47,8 +55,22 @@ CACHED_ROBUSTNESS_METRICS = {
     "unit_warnings": ["TIME_FIELD_CLIP: Evaluated time_elapsed_sec. 0 anomalies detected."]
 }
 
-import joblib
-import pathlib
+def get_stats() -> dict:
+    with _thread_stats_lock:
+        return dict(GLOBAL_STATS)
+
+def update_stats(updates: dict) -> None:
+    with _thread_stats_lock:
+        GLOBAL_STATS.update(updates)
+
+def get_robustness_metrics() -> dict:
+    with _thread_robustness_lock:
+        return dict(CACHED_ROBUSTNESS_METRICS)
+
+def update_robustness_metrics(metrics: dict) -> None:
+    with _thread_robustness_lock:
+        CACHED_ROBUSTNESS_METRICS.clear()
+        CACHED_ROBUSTNESS_METRICS.update(metrics)
 
 MODEL_DIR = pathlib.Path(__file__).parent.parent.parent / "models"
 MODEL_PATH = MODEL_DIR / "demand_forecaster.joblib"
@@ -80,4 +102,3 @@ def load_or_init_forecaster() -> CensoredDemandForecaster:
     return forecaster
 
 demand_forecaster = load_or_init_forecaster()
-

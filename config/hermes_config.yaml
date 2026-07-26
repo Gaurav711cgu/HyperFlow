@@ -1,0 +1,41 @@
+# HyperFlow Hermes Profile Configuration
+# Date: 2026-07-26
+# Version: 1.0.0
+
+# Core LLM model selection
+model: anthropic/claude-sonnet-4-6
+
+# MCP Gateway registration
+mcp:
+  servers:
+    - name: hyperflow-ml
+      url: http://localhost:8001
+      description: HyperFlow dark store ML tools — demand forecasting, profitability scoring, PSI drift detection
+
+# Persistent memory layer (SQLite FTS5)
+memory:
+  provider: sqlite
+  write_approval: false  # Auto-write memory updates, reviewable via /memory list
+
+# Skill library tap path
+skills:
+  external_dirs:
+    - ./skills/hyperflow-skills   # Local development skill tap copy
+  write_approval: true           # Human approval required for auto-generated skill updates
+
+# Real-time messaging configuration
+messaging:
+  telegram:
+    token: ${TELEGRAM_BOT_TOKEN}
+    allowed_users: [${TELEGRAM_USER_ID}]
+  slack:
+    token: ${SLACK_BOT_TOKEN}
+    default_channel: "#hyperflow-ops"
+
+# Containerized execution environment
+terminal:
+  backend: docker
+  image: python:3.11-slim
+  env_passthrough:
+    - HYPERFLOW_API_URL
+    - REDIS_URL

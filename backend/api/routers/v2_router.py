@@ -12,9 +12,15 @@ from backend.db.session import get_db
 from backend.db.models import SalesEvent, PriceHistory, RefundPrediction, ETAEvent
 from backend.core.state import demand_forecaster, safeguards, GLOBAL_STATS, stats_lock
 from backend.services.weather import get_cached_weather
-from backend.api.utils import call_swiggy_mcp_sync
-from backend.ml.fraud_guard import FraudGuard
-from backend.ml.dispatch_batcher import DispatchBatcher
+try:
+    from backend.ml.fraud_guard import FraudGuard
+except ImportError:
+    from ml_core.fraud_guard import FraudGuard
+
+try:
+    from backend.ml.dispatch_batcher import DispatchBatcher
+except ImportError:
+    from ml_core.dispatch_batcher import DispatchBatcher
 from backend.core.logger import get_logger
 
 logger = get_logger(__name__)
