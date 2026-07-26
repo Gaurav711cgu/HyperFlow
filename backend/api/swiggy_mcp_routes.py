@@ -6,7 +6,7 @@ import secrets
 import base64
 import hashlib
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi import APIRouter, Depends, HTTPException, Header, Query, Request
 from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -59,6 +59,24 @@ async def call_mcp_async(server: str, tool_name: str, arguments: dict, token: Op
         print(f"[Swiggy MCP Error] {server}/{tool_name} failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
+def resolve_redirect_uri(request: Request) -> str:
+    env_uri = os.getenv("SWIGGY_REDIRECT_URI") or os.getenv("FRONTEND_URL") or os.getenv("PUBLIC_URL")
+    if env_uri:
+        clean = env_uri.rstrip("/")
+        if not clean.endswith("/auth/callback"):
+            return f"{clean}/auth/callback"
+        return clean
+
+    referer = request.headers.get("referer") or request.headers.get("origin") or ""
+    if referer:
+        parsed = urlparse(referer)
+        if parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}/auth/callback"
+
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("x-forwarded-host", request.headers.get("host", "localhost:8000"))
+    return f"{scheme}://{host}/auth/callback"
+
 # ─── OAuth 2.1 + PKCE Authentication ──────────────────────────────────────────
 
 class ExchangePayload(BaseModel):
@@ -66,19 +84,20 @@ class ExchangePayload(BaseModel):
     state: str
 
 @router.get("/api/v1/auth/login-url")
-async def get_login_url(db: Session = Depends(get_db)):
+async def get_login_url(request: Request, db: Session = Depends(get_db)):
+    redirect_uri = resolve_redirect_uri(request)
     client_id_setting = db.query(SystemSetting).filter(SystemSetting.key == "oauth_client_id").first()
     client_id = client_id_setting.value if client_id_setting else None
     
     if not client_id:
-        print("[OAuth] Registering new client dynamically with Swiggy...")
+        print(f"[OAuth] Registering new client dynamically with Swiggy for redirect_uri={redirect_uri}...")
         try:
             import urllib.request
             req = urllib.request.Request(
                 "https://mcp.swiggy.com/auth/register",
                 data=json.dumps({
                     "client_name": "HyperFlow 3.0",
-                    "redirect_uris": ["http://localhost:5173/auth/callback"],
+                    "redirect_uris": [redirect_uri, "http://localhost:5173/auth/callback"],
                     "grant_types": ["authorization_code"],
                     "response_types": ["code"],
                     "token_endpoint_auth_method": "none"
@@ -108,7 +127,6 @@ async def get_login_url(db: Session = Depends(get_db)):
         "expires_at": time.time() + 120
     }
     
-    redirect_uri = "http://localhost:5173/auth/callback"
     auth_url = (
         f"https://mcp.swiggy.com/auth/authorize?"
         f"response_type=code&"
@@ -119,10 +137,10 @@ async def get_login_url(db: Session = Depends(get_db)):
         f"state={state}&"
         f"scope=mcp:tools"
     )
-    return {"auth_url": auth_url, "state": state}
+    return {"auth_url": auth_url, "state": state, "redirect_uri": redirect_uri}
 
 @router.post("/api/v1/auth/exchange")
-async def exchange_token(payload: ExchangePayload, db: Session = Depends(get_db)):
+async def exchange_token(payload: ExchangePayload, request: Request, db: Session = Depends(get_db)):
     session = OAUTH_PENDING_SESSIONS.pop(payload.state, None)
     if not session or session["expires_at"] < time.time():
         raise HTTPException(status_code=400, detail="Invalid or expired state session")
@@ -132,6 +150,7 @@ async def exchange_token(payload: ExchangePayload, db: Session = Depends(get_db)
     if not client_id_setting:
         raise HTTPException(status_code=500, detail="OAuth client not registered")
     client_id = client_id_setting.value
+    redirect_uri = resolve_redirect_uri(request)
     
     try:
         import urllib.request
@@ -140,7 +159,7 @@ async def exchange_token(payload: ExchangePayload, db: Session = Depends(get_db)
             "code": payload.code,
             "code_verifier": code_verifier,
             "client_id": client_id,
-            "redirect_uri": "http://localhost:5173/auth/callback"
+            "redirect_uri": redirect_uri
         }
         req = urllib.request.Request(
             "https://mcp.swiggy.com/auth/token",
@@ -157,12 +176,9 @@ async def exchange_token(payload: ExchangePayload, db: Session = Depends(get_db)
 
 @router.get("/auth/callback")
 @router.get("/api/v1/auth/callback")
-async def oauth_callback_redirect(code: str = Query(...), state: str = Query(...)):
-    """
-    Redirect handler for Swiggy OAuth callback.
-    Forwards code and state to the frontend application running on port 5173.
-    """
-    target_url = f"http://localhost:5173/auth/callback?code={code}&state={state}"
+async def oauth_callback_redirect(request: Request, code: str = Query(...), state: str = Query(...)):
+    redirect_base = resolve_redirect_uri(request)
+    target_url = f"{redirect_base}?code={code}&state={state}"
     return RedirectResponse(url=target_url)
 
 @router.get("/api/v1/auth/pending-sessions")
