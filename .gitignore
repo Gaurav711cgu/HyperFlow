@@ -31,9 +31,13 @@ CLAUDE.md
 GAURAV_MASTER_HANDOFF_REPORT.md
 AGENTS.md
 
+# ML Models and binary assets
+models/*.joblib
+*.joblib
+*.png
+
 # Large assets and zips
 *.zip
 swiggy_svg_extracted/
 stitch_district_obsidian_ui_spec/
 stitch_hyperflow_operations_engine/
-
