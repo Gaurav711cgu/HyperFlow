@@ -1,0 +1,10 @@
+{
+  "dataset": "Swiggy-MCP-BEIR-v1.0",
+  "num_tools": 35,
+  "num_queries": 8,
+  "metrics": {
+    "ndcg_at_10": 0.5333,
+    "mrr_at_10": 0.5074,
+    "hit_at_1": 0.25
+  }
+}

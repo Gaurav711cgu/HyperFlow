@@ -17,26 +17,29 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 @router.get("/forecast/{store_id}/{sku_id}")
-async def get_forecast(store_id: str, sku_id: str):
-    # Prepares features for prediction
-    # Observed features: temp, rain, time_in_sec
-    temp = float(random.uniform(20.0, 35.0))
-    rain = float(random.exponential(1.5))
-    elapsed_time = float(random.normalvariate(900.0, 200.0))
+async def get_forecast(store_id: str, sku_id: str, db: Session = Depends(get_db)):
+    inv_item = db.query(Inventory).filter(Inventory.store_id == store_id, Inventory.sku_id == sku_id).first()
+    recent_sale = db.query(SalesEvent).filter(SalesEvent.sku_id == sku_id).order_by(SalesEvent.created_at.desc()).first()
     
-    # ML Robustness check: validating ranges and unit scale anomalies
+    temp = recent_sale.weather_temp if recent_sale and recent_sale.weather_temp else float(random.uniform(20.0, 35.0))
+    rain = recent_sale.weather_rain if recent_sale and recent_sale.weather_rain else float(random.exponential(1.5))
+    elapsed_time = recent_sale.time_elapsed_sec if recent_sale and recent_sale.time_elapsed_sec else float(random.normalvariate(900.0, 200.0))
+    
     test_df = pd.DataFrame([{"weather_temp": temp, "weather_rain": rain, "time_elapsed_sec": elapsed_time}])
-    # Validate and clip input
     clipped_df, clip_alerts = safeguards.validate_and_clip(test_df)
     unit_alerts = safeguards.check_unit_consistency(clipped_df)
     
-    # Retrieve model predictions
     X_pred = clipped_df.values
     point, lower, upper = demand_forecaster.predict_with_intervals(X_pred)
+    
+    current_stock = inv_item.qty_available if inv_item else 25
+    sku_name = inv_item.sku_name if inv_item else f"SKU {sku_id}"
     
     return {
         "store_id": store_id,
         "sku_id": sku_id,
+        "sku_name": sku_name,
+        "current_stock": current_stock,
         "features": {
             "temp": round(temp, 2),
             "rain": round(rain, 2),
@@ -72,10 +75,17 @@ async def get_restock_alerts(store_id: str, db: Session = Depends(get_db)):
     return alerts
 
 @router.get("/metrics/availability/{store_id}")
-async def get_availability_metrics(store_id: str):
-    # Base availability outputs
+async def get_availability_metrics(store_id: str, db: Session = Depends(get_db)):
     metrics = GLOBAL_STATS["availability_metrics"].copy()
     metrics["store_id"] = store_id
+    
+    total_items = db.query(Inventory).filter(Inventory.store_id == store_id).count()
+    if total_items > 0:
+        in_stock_items = db.query(Inventory).filter(Inventory.store_id == store_id, Inventory.qty_available > 0).count()
+        metrics["availability_rate"] = round(in_stock_items / max(1, total_items), 3)
+        metrics["total_skus_tracked"] = total_items
+        metrics["in_stock_skus"] = in_stock_items
+
     return metrics
 
 @router.get("/metrics/bump-rate")

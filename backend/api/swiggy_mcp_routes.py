@@ -206,9 +206,21 @@ async def food_search_restaurants(addressId: str, query: str = "food", token: Op
 async def food_get_restaurant_menu(restaurant_id: str, addressId: str, token: Optional[str] = Depends(get_swiggy_token)):
     return await call_mcp_async("food", "get_restaurant_menu", {"addressId": addressId, "restaurantId": restaurant_id}, token)
 
+from backend.ml.colbert_reranker import colbert_reranker
+
 @router.get("/api/v1/food/menu/search")
 async def food_search_menu(addressId: str, query: str, token: Optional[str] = Depends(get_swiggy_token)):
     return await call_mcp_async("food", "search_menu", {"addressId": addressId, "query": query}, token)
+
+@router.get("/api/v1/food/menu/colbert-search")
+async def food_colbert_search_menu(addressId: str, query: str, token: Optional[str] = Depends(get_swiggy_token)):
+    raw_res = await call_mcp_async("food", "search_menu", {"addressId": addressId, "query": query}, token)
+    if isinstance(raw_res, dict) and "items" in raw_res:
+        items = raw_res["items"]
+        reranked = colbert_reranker.rerank(query, items, text_key="name")
+        raw_res["items"] = reranked
+        raw_res["reranker"] = "ColBERT-MaxSim-v1.0"
+    return raw_res
 
 class UpdateFoodCartPayload(BaseModel):
     addressId: str
