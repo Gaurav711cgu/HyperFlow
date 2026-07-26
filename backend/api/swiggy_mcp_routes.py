@@ -6,7 +6,8 @@ import secrets
 import base64
 import hashlib
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -153,6 +154,16 @@ async def exchange_token(payload: ExchangePayload, db: Session = Depends(get_db)
     except Exception as e:
         print(f"[OAuth] Token exchange failed: {e}")
         raise HTTPException(status_code=500, detail=f"OAuth exchange failed: {e}")
+
+@router.get("/auth/callback")
+@router.get("/api/v1/auth/callback")
+async def oauth_callback_redirect(code: str = Query(...), state: str = Query(...)):
+    """
+    Redirect handler for Swiggy OAuth callback.
+    Forwards code and state to the frontend application running on port 5173.
+    """
+    target_url = f"http://localhost:5173/auth/callback?code={code}&state={state}"
+    return RedirectResponse(url=target_url)
 
 @router.get("/api/v1/auth/pending-sessions")
 async def get_pending_sessions():
