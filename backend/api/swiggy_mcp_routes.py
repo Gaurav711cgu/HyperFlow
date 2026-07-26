@@ -73,9 +73,11 @@ def resolve_redirect_uri(request: Request) -> str:
         if parsed.scheme and parsed.netloc:
             return f"{parsed.scheme}://{parsed.netloc}/auth/callback"
 
-    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
-    host = request.headers.get("x-forwarded-host", request.headers.get("host", "localhost:8000"))
-    return f"{scheme}://{host}/auth/callback"
+    host = request.headers.get("x-forwarded-host", request.headers.get("host", ""))
+    if "localhost" in host or "127.0.0.1" in host:
+        return "http://localhost:5173/auth/callback"
+
+    return "https://hyper-flow-chi.vercel.app/auth/callback"
 
 # ─── OAuth 2.1 + PKCE Authentication ──────────────────────────────────────────
 

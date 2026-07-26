@@ -15,7 +15,7 @@ const getBaseUrl = () => {
       return 'http://127.0.0.1:8000';
     }
   }
-  return '';
+  return 'https://gaurav711-hyperflow.hf.space';
 };
 
 export function setBackendUrl(url) {
