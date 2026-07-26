@@ -1,16 +1,8 @@
----
-title: HyperFlow 3.0 ML Core
-emoji: ⚡
-colorFrom: indigo
-colorTo: green
-sdk: docker
-app_file: app.py
-pinned: false
----
+
 
 <div align="center">
 
-<img src="https://img.shields.io/badge/HyperFlow-3.0-FF0077?style=for-the-badge&labelColor=0A0A0F&color=FF0077" height="32"/>
+
 
 # HyperFlow 3.0
 ### Hyperlocal Commerce Intelligence Platform
@@ -49,7 +41,7 @@ pinned: false
 
 ---
 
-## 🎯 What Problem This Solves
+## What Problem This Solves
 
 Four production ML gaps documented by Swiggy Bytes and Zomato Engineering, implemented from first principles:
 
@@ -62,7 +54,7 @@ Four production ML gaps documented by Swiggy Bytes and Zomato Engineering, imple
 
 ---
 
-## 🏗 System Architecture
+## System Architecture
 
 ```mermaid
 graph TD
@@ -113,7 +105,7 @@ graph TD
 
 ---
 
-## 📊 Benchmark Results
+##  Benchmark Results
 
 > All metrics produced by Monte Carlo simulation engines in `ml_core/`. Run `python3 -m ml_core.demand_simulation` to reproduce.
 
@@ -248,7 +240,7 @@ Background thread recalculates PSI every 15 seconds against reference distributi
 
 ---
 
-## 🧠 AI Commerce Agent
+## AI Commerce Agent
 
 Gemini 2.0 Flash running a ReAct (Reason + Act) loop with 4 registered tools:
 
@@ -270,7 +262,7 @@ Total tool calls: 2  |  Latency: ~1.1s
 
 ---
 
-## 🔐 Authentication
+## Authentication
 
 | Mode | Trigger | Data Source | Use Case |
 |---|---|---|---|
@@ -370,7 +362,7 @@ No OTP, no email verification in demo mode — correct UX for a portfolio demo. 
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Option 1 — Demo (No setup required)
 
@@ -479,7 +471,7 @@ hyperflow/
 
 ---
 
-## 🔌 API Reference
+## API Reference
 
 Full interactive docs: **[hyperflow-api.onrender.com/docs](https://hyperflow-api.onrender.com/docs)**
 
@@ -501,7 +493,7 @@ Full interactive docs: **[hyperflow-api.onrender.com/docs](https://hyperflow-api
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run full test suite
@@ -517,7 +509,7 @@ python3 -m pytest tests/ -v
 
 ---
 
-## 📐 Key Design Decisions
+## Key Design Decisions
 
 **Why not a real auth system?**
 The ML pipeline and agent are the technical depth. OTP auth would cost 3 weeks for zero resume signal. Demo JWT is correct UX for portfolio demos — every serious SaaS product (Vercel, Linear, Notion) has a demo login. Production auth would use OAuth 2.1 with PKCE (already implemented for Swiggy MCP).
@@ -533,7 +525,7 @@ Standard Tobit assumes constant variance (σ is a scalar). In demand forecasting
 
 ---
 
-## 🗺 Roadmap
+## Roadmap
 
 - [ ] Run offline benchmarks → replace all hardcoded metric values with simulation output
 - [ ] Wire `/api/v1/forecast/` and `/api/v1/metrics/` to real seeded training data
@@ -543,7 +535,7 @@ Standard Tobit assumes constant variance (σ is a scalar). In demand forecasting
 
 ---
 
-## 👤 Author
+##  Author
 
 **Gaurav Nayak**
 B.Tech CS + Data Science · C.V. Raman Global University, Bhubaneswar
@@ -554,7 +546,7 @@ B.Tech CS + Data Science · C.V. Raman Global University, Bhubaneswar
 
 ---
 
-## 📄 License
+## License
 
 MIT License · See [LICENSE](LICENSE) for details.
 
