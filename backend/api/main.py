@@ -124,6 +124,9 @@ app.include_router(auth_router)
 from backend.api.routers.v1_mcp_endpoints import router as v1_mcp_router
 app.include_router(v1_mcp_router)
 
+from backend.api.routers.omnichannel import router as omnichannel_router
+app.include_router(omnichannel_router)
+
 
 async def calculate_ml_robustness_task():
     """
