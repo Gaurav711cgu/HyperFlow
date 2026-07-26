@@ -22,11 +22,11 @@ jobs:
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements.txt pytest pytest-asyncio httpx lightgbm opentelemetry-api opentelemetry-sdk
 
     - name: Run Backend Pytest Test Suite
       run: |
-        python -m pytest tests/ -v
+        PYTHONPATH=. python -m pytest tests/ -v
 
   ml-benchmark:
     runs-on: ubuntu-latest
@@ -43,10 +43,10 @@ jobs:
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements.txt pytest pytest-asyncio httpx lightgbm opentelemetry-api opentelemetry-sdk
 
     - name: Run M5 Benchmark Evaluation
-      run: python benchmarks/run_m5_eval.py
+      run: PYTHONPATH=. python benchmarks/run_m5_eval.py
 
     - name: Assert WMAPE Lift > 0
       run: |
