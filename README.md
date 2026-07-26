@@ -1,3 +1,13 @@
+---
+title: HyperFlow 3.0 ML Core
+emoji: ⚡
+colorFrom: indigo
+colorTo: green
+sdk: docker
+app_file: app.py
+pinned: false
+---
+
 <div align="center">
 
 <img src="https://img.shields.io/badge/HyperFlow-3.0-FF0077?style=for-the-badge&labelColor=0A0A0F&color=FF0077" height="32"/>
