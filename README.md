@@ -149,7 +149,7 @@ Fraud Guard (50 cloud-kitchen geo-collision trials)
 
 ---
 
-## 🤖 ML Components
+##  ML Components
 
 ### 1. Heteroscedastic Tobit Demand Forecaster
 
@@ -283,7 +283,7 @@ No OTP, no email verification in demo mode — correct UX for a portfolio demo. 
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 <table>
 <tr>
@@ -415,7 +415,7 @@ python3 -m ml_core.fraud_simulation    # Fraud triage + tenure bypass
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 hyperflow/
