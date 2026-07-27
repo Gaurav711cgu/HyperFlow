@@ -89,37 +89,8 @@ class ExchangePayload(BaseModel):
 async def get_login_url(request: Request, db: Session = Depends(get_db)):
     redirect_uri = resolve_redirect_uri(request)
     client_id_setting = db.query(SystemSetting).filter(SystemSetting.key == "oauth_client_id").first()
-    client_id = client_id_setting.value if client_id_setting else None
+    client_id = client_id_setting.value if client_id_setting else os.getenv("SWIGGY_CLIENT_ID", "hyperflow-3.0-mcp-client")
     
-    if not client_id:
-        print(f"[OAuth] Registering new client dynamically with Swiggy for redirect_uri={redirect_uri}...")
-        try:
-            import urllib.request
-            req = urllib.request.Request(
-                "https://mcp.swiggy.com/auth/register",
-                data=json.dumps({
-                    "client_name": "HyperFlow 3.0",
-                    "redirect_uris": [redirect_uri, "http://localhost:5173/auth/callback"],
-                    "grant_types": ["authorization_code"],
-                    "response_types": ["code"],
-                    "token_endpoint_auth_method": "none"
-                }).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=5) as response:
-                res = json.loads(response.read().decode("utf-8"))
-                client_id = res.get("client_id")
-                if client_id:
-                    setting = SystemSetting(key="oauth_client_id", value=client_id)
-                    db.merge(setting)
-                    db.commit()
-                else:
-                    raise ValueError("Registration failed - no client_id returned")
-        except Exception as e:
-            print(f"[OAuth] Dynamic client registration failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to register OAuth client: {e}")
-            
     code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").replace("=", "")
     code_challenge = base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode("utf-8")).digest()).decode("utf-8").replace("=", "")
     state = secrets.token_hex(16)
@@ -149,9 +120,7 @@ async def exchange_token(payload: ExchangePayload, request: Request, db: Session
         
     code_verifier = session["code_verifier"]
     client_id_setting = db.query(SystemSetting).filter(SystemSetting.key == "oauth_client_id").first()
-    if not client_id_setting:
-        raise HTTPException(status_code=500, detail="OAuth client not registered")
-    client_id = client_id_setting.value
+    client_id = client_id_setting.value if client_id_setting else os.getenv("SWIGGY_CLIENT_ID", "hyperflow-3.0-mcp-client")
     redirect_uri = resolve_redirect_uri(request)
     
     try:
