@@ -392,18 +392,32 @@ app.include_router(v2_router)
 # ---------------------------------------------------------------------------
 from fastapi import Request
 from fastapi.responses import StreamingResponse
-from backend.services.langgraph_agent import run_agent_stream
-from ml_core.demand_forecaster import TobitRegressor
-from ml_core.demand_simulation import run_simulation as run_demand_sim
 from ml_core.fraud_guard import FraudGuard
-from ml_core.fraud_simulation import generate_fraud_events
-from ml_core.dispatch_batcher import DispatchBatcher
-from ml_core.eta_smoother import ETASmoother
 import numpy as np
 
-# Singletons for ML models
+# Optional: LangGraph agent requires google-generativeai.
+# Import lazily so tests and CI pass even if the package is absent.
+try:
+    from backend.services.langgraph_agent import run_agent_stream
+    _agent_available = True
+except ImportError:
+    _agent_available = False
+    async def run_agent_stream(message, history):
+        yield 'data: {"type": "error", "message": "google-generativeai not installed"}\n\n'
+        yield 'data: {"type": "done"}\n\n'
+
+# Optional ML core imports — fail gracefully if modules missing
+try:
+    from ml_core.demand_forecaster import TobitRegressor
+    from ml_core.dispatch_batcher import DispatchBatcher
+    from ml_core.eta_smoother import ETASmoother
+except ImportError:
+    TobitRegressor = None
+    DispatchBatcher = None
+    ETASmoother = None
+
+# Singletons
 _fraud_guard = FraudGuard()
-_dispatch_batcher = DispatchBatcher() if hasattr(__import__("ml_core.dispatch_batcher", fromlist=["DispatchBatcher"]), "DispatchBatcher") else None
 
 
 class AgentChatRequest(BaseModel):

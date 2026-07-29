@@ -12,7 +12,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+except ModuleNotFoundError as e:
+    raise ImportError(
+        "google-generativeai is required for the AI Commerce Agent. "
+        "Install it with: pip install google-generativeai>=0.8.0"
+    ) from e
+
 from backend.api.utils import call_swiggy_mcp_sync
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
