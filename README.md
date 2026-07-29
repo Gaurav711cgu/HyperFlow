@@ -1,8 +1,13 @@
-
+---
+title: HyperFlow
+emoji: H
+colorFrom: pink
+colorTo: purple
+sdk: docker
+pinned: false
+---
 
 <div align="center">
-
-
 
 # HyperFlow 3.0
 ### Hyperlocal Commerce Intelligence Platform
