@@ -1,10 +1,16 @@
 {
-  "dataset": "M5 Forecasting Benchmark",
-  "n_samples": 10000,
-  "censoring_rate_pct": 57.71,
-  "ols_wmape_pct": 38.99,
-  "tobit_wmape_pct": 29.53,
-  "wmape_lift_pct": 24.28,
-  "training_time_seconds": 9.4,
-  "resume_line": "Tobit MLE Regressor achieves 29.53% WMAPE vs 38.99% OLS baseline (+24.28% WMAPE lift) under 57.7% stockout censoring."
+  "dataset": "M5 Forecasting Accuracy (Walmart Kaggle)",
+  "items_sampled": 500,
+  "train_rows": 942500,
+  "test_rows": 14000,
+  "test_days": 28,
+  "censoring_rate_pct": 64.13,
+  "ols_wmape": 1.5091,
+  "tobit_wmape": 1.5091,
+  "wmape_lift_pct": 0.0,
+  "tobit_fit_seconds": 345.1,
+  "psi_score": 0.0001,
+  "psi_status": "GREEN",
+  "total_runtime_seconds": 348.4,
+  "resume_line": "Heteroscedastic Tobit MLE achieves 0.0% WMAPE improvement over OLS on M5 Walmart demand dataset (500 item-store series) at 64.1% censoring rate; PSI drift score 0.000 [GREEN]"
 }
