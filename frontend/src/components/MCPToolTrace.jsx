@@ -1,96 +1,115 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 
-/**
- * MCPToolTrace — Live panel showing every Swiggy MCP tool call in real time.
- * Each event has: type (tool_call | tool_result), tool name, input, output, timing.
- */
-export default function MCPToolTrace({ events }) {
-  const bottomRef = useRef(null);
+const MCP_SERVERS = [
+  { id: 'food', name: 'Food MCP', icon: 'restaurant', count: 14, color: '#FF3366' },
+  { id: 'instamart', name: 'Instamart MCP', icon: 'local_convenience_store', count: 13, color: '#00E475' },
+  { id: 'dineout', name: 'Dineout MCP', icon: 'table_restaurant', count: 8, color: '#FFB300' },
+];
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [events]);
-
-  if (events.length === 0) {
-    return (
-      <div style={styles.empty}>
-        <span className="material-symbols-outlined" style={{ fontSize: 28, color: 'var(--on-surface-variant)', opacity: 0.4 }}>
-          electrical_services
-        </span>
-        <p style={styles.emptyText}>MCP tool calls will appear here</p>
-        <p style={styles.emptyHint}>Send a message to watch the agent call Swiggy's real APIs live</p>
-      </div>
-    );
-  }
+export default function MCPToolTrace({ events = [] }) {
+  const activeTool = events.length > 0 ? events[events.length - 1] : null;
+  const toolCalls = events.filter(e => e.type === 'tool_call');
+  const toolResults = events.filter(e => e.type === 'tool_result');
 
   return (
     <div style={styles.container}>
+      {/* Header */}
       <div style={styles.header}>
-        <span className="material-symbols-outlined" style={{ fontSize: 14, color: 'var(--accent)' }}>electrical_services</span>
-        <span style={styles.headerText}>Live MCP Tool Trace</span>
-        <span style={styles.count}>{events.filter(e => e.type === 'tool_call').length} calls</span>
+        <div>
+          <div style={styles.title}>Swiggy MCP Trace</div>
+          <div style={styles.subtitle}>Real-time tool execution pipeline</div>
+        </div>
+        <div style={styles.countBadge}>
+          {toolCalls.length} Executed
+        </div>
       </div>
+
+      {/* Server Category Cards */}
+      <div style={styles.serverGrid}>
+        {MCP_SERVERS.map(s => {
+          const serverCalls = toolCalls.filter(tc => tc.server === s.id || (tc.tool && tc.tool.includes(s.id)));
+          const isActive = activeTool?.server === s.id || (activeTool?.tool && activeTool.tool.includes(s.id));
+
+          return (
+            <div
+              key={s.id}
+              style={{
+                ...styles.serverCard,
+                borderColor: isActive ? s.color : 'var(--bg-border)',
+                boxShadow: isActive ? `0 4px 16px ${s.color}33` : 'none',
+              }}
+            >
+              <div style={styles.serverCardTop}>
+                <div style={{ ...styles.serverIcon, background: `${s.color}15`, borderColor: `${s.color}35` }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 16, color: s.color }}>
+                    {s.icon}
+                  </span>
+                </div>
+                <span style={{ ...styles.serverBadge, color: s.color, background: `${s.color}15` }}>
+                  {s.count} Tools
+                </span>
+              </div>
+              <div style={styles.serverName}>{s.name}</div>
+              <div style={styles.serverCallsText}>
+                {serverCalls.length} calls this session
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Real-time Execution Feed */}
+      <div style={styles.feedHeader}>
+        <span style={styles.feedTitle}>Execution Event Log</span>
+        {activeTool?.streaming && (
+          <span style={styles.livePulse}>
+            <span style={styles.pulseDot} /> Live
+          </span>
+        )}
+      </div>
+
       <div style={styles.feed}>
-        {events.map((event, i) => (
-          <TraceEvent key={i} event={event} />
-        ))}
-        <div ref={bottomRef} />
+        {events.length === 0 ? (
+          <div style={styles.emptyState}>
+            <span className="material-symbols-outlined" style={{ fontSize: 24, color: 'var(--text-muted)' }}>
+              sync
+            </span>
+            <span>Ask the AI Agent to trigger live Swiggy MCP tools</span>
+          </div>
+        ) : (
+          events.map((ev, i) => (
+            <div key={i} style={styles.eventRow}>
+              <div style={{
+                ...styles.statusDot,
+                background: ev.type === 'tool_call' ? 'var(--accent-amber)' : 'var(--accent-emerald)',
+                boxShadow: ev.type === 'tool_call' ? '0 0 6px var(--accent-amber)' : '0 0 6px var(--accent-emerald)',
+              }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={styles.eventTool}>
+                  {ev.tool || ev.name || 'MCP Execution'}
+                </div>
+                {ev.args && (
+                  <div style={styles.eventArgs}>
+                    {JSON.stringify(ev.args).slice(0, 70)}...
+                  </div>
+                )}
+              </div>
+              {ev.latency_ms && (
+                <span style={styles.latencyBadge}>{ev.latency_ms}ms</span>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={styles.footer}>
+        <span>Total Latency: {toolResults.reduce((acc, r) => acc + (r.latency_ms || 0), 0)}ms</span>
+        <span>•</span>
+        <span>{toolCalls.length} tool calls</span>
       </div>
     </div>
   );
-}
-
-function TraceEvent({ event }) {
-  const [expanded, setExpanded] = React.useState(false);
-  const ts = new Date().toTimeString().slice(0, 8);
-
-  if (event.type === 'tool_call') {
-    return (
-      <div style={styles.event}>
-        <div style={styles.eventHeader} onClick={() => setExpanded(p => !p)}>
-          <span style={{ ...styles.tag, ...styles.tagCall }}>CALL</span>
-          <span style={styles.toolName}>{event.tool}</span>
-          <span style={styles.ts}>{ts}</span>
-          <span style={{ ...styles.chevron, transform: expanded ? 'rotate(90deg)' : 'none' }}>›</span>
-        </div>
-        {expanded && (
-          <div style={styles.body}>
-            <div style={styles.bodyLabel}>INPUT</div>
-            <pre style={styles.pre}>{JSON.stringify(event.input, null, 2)}</pre>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (event.type === 'tool_result') {
-    const isError = event.is_error;
-    return (
-      <div style={{ ...styles.event, borderLeftColor: isError ? 'var(--danger)' : 'var(--accent)' }}>
-        <div style={styles.eventHeader} onClick={() => setExpanded(p => !p)}>
-          <span style={{ ...styles.tag, ...(isError ? styles.tagError : styles.tagResult) }}>
-            {isError ? 'ERR' : 'OK'}
-          </span>
-          <span style={styles.toolName}>{event.tool}</span>
-          <span style={{ ...styles.duration, color: isError ? 'var(--danger)' : 'var(--accent)' }}>
-            {event.duration_ms}ms
-          </span>
-          <span style={styles.ts}>{ts}</span>
-          <span style={{ ...styles.chevron, transform: expanded ? 'rotate(90deg)' : 'none' }}>›</span>
-        </div>
-        {expanded && (
-          <div style={styles.body}>
-            <div style={styles.bodyLabel}>OUTPUT</div>
-            <pre style={{ ...styles.pre, maxHeight: 180, overflow: 'auto' }}>
-              {JSON.stringify(event.output, null, 2)}
-            </pre>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  return null;
 }
 
 const styles = {
@@ -98,130 +117,179 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
-    overflow: 'hidden',
+    padding: 18,
+    gap: 14,
+    background: 'rgba(18, 16, 23, 0.75)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid var(--bg-border)',
+    borderRadius: 'var(--radius-lg)',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
-    gap: 6,
-    padding: '12px 14px',
-    borderBottom: '1px solid var(--border-glass)',
-    flexShrink: 0,
+    justifyContent: 'space-between',
   },
-  headerText: {
+  title: {
+    fontFamily: 'var(--font-serif)',
+    fontSize: 18,
+    fontWeight: 700,
+    color: '#FFF',
+  },
+  subtitle: {
+    fontFamily: 'var(--font-sans)',
+    fontSize: 11,
+    color: 'var(--text-secondary)',
+    marginTop: 2,
+  },
+  countBadge: {
+    padding: '4px 10px',
+    background: 'rgba(255, 51, 102, 0.1)',
+    border: '1px solid rgba(255, 51, 102, 0.25)',
+    borderRadius: 'var(--radius-pill)',
     fontSize: 11,
     fontWeight: 600,
+    color: 'var(--accent-coral-pink)',
+  },
+  serverGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: 10,
+  },
+  serverCard: {
+    background: 'rgba(255, 255, 255, 0.02)',
+    border: '1px solid var(--bg-border)',
+    borderRadius: 'var(--radius-md)',
+    padding: 10,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
+    transition: 'all 0.2s ease',
+  },
+  serverCardTop: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  serverIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    border: '1px solid',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  serverBadge: {
+    fontSize: 9,
+    fontWeight: 700,
+    padding: '2px 6px',
+    borderRadius: 4,
+  },
+  serverName: {
+    fontFamily: 'var(--font-sans)',
+    fontSize: 11,
+    fontWeight: 600,
+    color: '#FFF',
+  },
+  serverCallsText: {
+    fontSize: 10,
+    color: 'var(--text-muted)',
+  },
+  feedHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 6,
+  },
+  feedTitle: {
+    fontFamily: 'var(--font-sans)',
+    fontSize: 11,
+    fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: '0.06em',
-    color: 'var(--on-surface-variant)',
-    flex: 1,
+    color: 'var(--text-secondary)',
   },
-  count: {
+  livePulse: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 5,
     fontSize: 10,
-    fontFamily: 'var(--font-mono)',
-    color: 'var(--primary)',
-    background: 'rgba(255,0,119,0.1)',
-    padding: '2px 7px',
-    borderRadius: 4,
+    fontWeight: 600,
+    color: 'var(--accent-emerald)',
+  },
+  pulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    background: 'var(--accent-emerald)',
+    boxShadow: '0 0 6px var(--accent-emerald)',
   },
   feed: {
     flex: 1,
     overflowY: 'auto',
-    padding: '8px 10px',
     display: 'flex',
     flexDirection: 'column',
-    gap: 4,
+    gap: 8,
   },
-  event: {
-    background: 'rgba(255,255,255,0.02)',
-    border: '1px solid var(--border-glass)',
-    borderLeft: '2px solid var(--primary)',
-    borderRadius: 8,
-    overflow: 'hidden',
-    transition: 'border-color 0.15s',
-  },
-  eventHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 7,
-    padding: '7px 10px',
-    cursor: 'pointer',
-    userSelect: 'none',
-  },
-  tag: {
-    fontSize: 9,
-    fontFamily: 'var(--font-mono)',
-    fontWeight: 700,
-    padding: '2px 5px',
-    borderRadius: 3,
-    letterSpacing: '0.04em',
-  },
-  tagCall:   { background: 'rgba(255,0,119,0.2)',   color: 'var(--primary)' },
-  tagResult: { background: 'rgba(0,228,117,0.2)',   color: 'var(--accent)'  },
-  tagError:  { background: 'rgba(255,51,102,0.2)',  color: 'var(--danger)'  },
-  toolName: {
-    fontSize: 12,
-    fontFamily: 'var(--font-mono)',
-    fontWeight: 500,
-    color: 'var(--on-surface)',
-    flex: 1,
-  },
-  duration: {
-    fontSize: 10,
-    fontFamily: 'var(--font-mono)',
-  },
-  ts: {
-    fontSize: 10,
-    fontFamily: 'var(--font-mono)',
-    color: 'var(--on-surface-variant)',
-    opacity: 0.6,
-  },
-  chevron: {
-    fontSize: 14,
-    color: 'var(--on-surface-variant)',
-    transition: 'transform 0.15s',
-    lineHeight: 1,
-  },
-  body: {
-    borderTop: '1px solid var(--border-glass)',
-    padding: '8px 10px',
-  },
-  bodyLabel: {
-    fontSize: 9,
-    fontFamily: 'var(--font-mono)',
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    color: 'var(--on-surface-variant)',
-    marginBottom: 5,
-  },
-  pre: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: 11,
-    color: 'var(--on-surface)',
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-all',
-    lineHeight: 1.6,
-    margin: 0,
-  },
-  empty: {
+  emptyState: {
+    height: '100%',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100%',
-    gap: 10,
-    padding: 24,
+    gap: 8,
+    color: 'var(--text-muted)',
+    fontSize: 12,
     textAlign: 'center',
+    padding: 20,
   },
-  emptyText: {
-    fontSize: 13,
+  eventRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '8px 10px',
+    background: 'rgba(255, 255, 255, 0.02)',
+    border: '1px solid var(--bg-border)',
+    borderRadius: 10,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    flexShrink: 0,
+  },
+  eventTool: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: 12,
     fontWeight: 600,
-    color: 'var(--on-surface-variant)',
+    color: '#FFF',
   },
-  emptyHint: {
+  eventArgs: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: 10,
+    color: 'var(--text-muted)',
+    marginTop: 2,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  latencyBadge: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: 10,
+    color: 'var(--accent-coral-pink)',
+    background: 'rgba(255, 51, 102, 0.1)',
+    padding: '2px 6px',
+    borderRadius: 4,
+  },
+  footer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     fontSize: 11,
-    color: 'var(--on-surface-variant)',
-    opacity: 0.6,
-    lineHeight: 1.5,
+    color: 'var(--text-muted)',
+    borderTop: '1px solid var(--bg-border)',
+    paddingTop: 10,
   },
 };

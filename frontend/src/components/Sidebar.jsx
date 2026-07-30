@@ -2,30 +2,23 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const NAV_ITEMS = [
-  { to: '/agent',       label: 'AI Commerce Agent',   icon: 'smart_toy',    desc: 'LangGraph + Swiggy MCP' },
-  { to: '/dark-store',  label: 'Dark Store Intel',     icon: 'warehouse',    desc: 'Tobit Demand Forecasting' },
-  { to: '/route-intel', label: 'Route Intelligence',   icon: 'alt_route',    desc: 'Dispatch Optimization' },
-  { to: '/ml-guard',    label: 'ML Guard',             icon: 'security',     desc: 'Fraud Detection' },
-  { to: '/analytics',   label: 'Analytics',            icon: 'analytics',    desc: 'Command Center' },
+  { to: '/',                    icon: 'smart_toy',   label: 'AI Agent',        desc: 'LangGraph Agent' },
+  { to: '/dark-store-intel',    icon: 'warehouse',   label: 'Store Intel',     desc: 'Tobit Forecast' },
+  { to: '/route-intelligence',  icon: 'alt_route',   label: 'Route Intel',     desc: 'Kalman & Dispatch' },
+  { to: '/ml-guard',            icon: 'security',    label: 'ML Guard',        desc: 'Fraud Protection' },
+  { to: '/analytics',           icon: 'analytics',   label: 'Analytics',       desc: 'Command Center' },
 ];
 
 export default function Sidebar() {
   return (
     <aside style={styles.sidebar}>
-      {/* Logo */}
-      <div style={styles.logo}>
-        <div style={styles.logoIcon}>H</div>
+      {/* Brand Title */}
+      <div style={styles.brandBox}>
+        <div style={styles.logoBadge}>H</div>
         <div>
-          <div style={styles.logoText}>HyperFlow</div>
-          <div style={styles.logoSub}>AI Commerce Platform</div>
+          <div style={styles.brandName}>HyperFlow</div>
+          <div style={styles.brandSub}>Commerce Intelligence</div>
         </div>
-      </div>
-
-      {/* Swiggy MCP badge */}
-      <div style={styles.mcpBadge}>
-        <span style={styles.mcpDot} />
-        <span style={styles.mcpLabel}>Swiggy MCP Connected</span>
-        <span style={styles.mcpCount}>35 tools</span>
       </div>
 
       <div style={styles.divider} />
@@ -36,213 +29,140 @@ export default function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
+            end={item.to === '/'}
             style={({ isActive }) => ({
-              ...styles.navItem,
-              ...(isActive ? styles.navItemActive : {}),
+              ...styles.navCard,
+              ...(isActive ? styles.navCardActive : {}),
             })}
           >
             {({ isActive }) => (
               <>
-                <span
-                  className="material-symbols-outlined"
-                  style={{ ...styles.navIcon, color: isActive ? 'var(--primary)' : 'var(--on-surface-variant)', fontSize: 20 }}
-                >
-                  {item.icon}
-                </span>
+                <div style={{
+                  ...styles.iconBox,
+                  background: isActive ? 'var(--accent-gradient)' : 'rgba(255, 255, 255, 0.03)',
+                  borderColor: isActive ? 'transparent' : 'var(--bg-border)',
+                  boxShadow: isActive ? '0 4px 14px var(--accent-coral-glow)' : 'none',
+                }}>
+                  <span
+                    className="material-symbols-outlined"
+                    style={{ fontSize: 18, color: isActive ? '#FFF' : 'var(--text-secondary)' }}
+                  >
+                    {item.icon}
+                  </span>
+                </div>
                 <div style={styles.navText}>
-                  <div style={{ ...styles.navLabel, color: isActive ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}>
+                  <div style={{
+                    ...styles.navLabel,
+                    color: isActive ? '#FFF' : 'var(--text-secondary)',
+                    fontWeight: isActive ? 700 : 500,
+                  }}>
                     {item.label}
                   </div>
                   <div style={styles.navDesc}>{item.desc}</div>
                 </div>
-                {isActive && <div style={styles.activeBar} />}
               </>
             )}
           </NavLink>
         ))}
       </nav>
-
-      <div style={{ flex: 1 }} />
-
-      {/* Footer */}
-      <div style={styles.footer}>
-        <div style={styles.footerDot} />
-        <div>
-          <div style={styles.footerName}>Gaurav K.</div>
-          <div style={styles.footerRole}>ML Engineer</div>
-        </div>
-        <div style={styles.footerVersion}>v3.0</div>
-      </div>
     </aside>
   );
 }
 
 const styles = {
   sidebar: {
-    width: 240,
+    width: 220,
     flexShrink: 0,
-    height: '100vh',
-    background: 'var(--surface-panel)',
-    borderRight: '1px solid var(--border-glass)',
+    background: 'rgba(14, 12, 18, 0.7)',
+    backdropFilter: 'blur(20px)',
+    borderRight: '1px solid var(--bg-border)',
     display: 'flex',
     flexDirection: 'column',
-    padding: '20px 12px',
-    gap: 0,
-    overflow: 'hidden',
+    padding: '20px 14px',
+    gap: 16,
   },
-  logo: {
+  brandBox: {
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
-    padding: '0 4px 16px',
+    gap: 12,
+    padding: '4px 6px',
   },
-  logoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    background: 'var(--primary)',
+  logoBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    background: 'var(--accent-gradient)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    fontFamily: 'var(--font-serif)',
+    fontSize: 18,
     fontWeight: 700,
-    fontSize: 16,
-    color: '#fff',
-    boxShadow: '0 0 16px var(--primary-glow)',
-    flexShrink: 0,
+    color: '#FFF',
+    boxShadow: '0 4px 16px var(--accent-coral-glow)',
   },
-  logoText: {
+  brandName: {
+    fontFamily: 'var(--font-serif)',
+    fontSize: 18,
     fontWeight: 700,
-    fontSize: 15,
+    color: '#FFF',
     letterSpacing: '-0.01em',
-    color: 'var(--on-surface)',
   },
-  logoSub: {
+  brandSub: {
+    fontFamily: 'var(--font-sans)',
     fontSize: 10,
-    color: 'var(--on-surface-variant)',
+    color: 'var(--text-muted)',
     marginTop: 1,
-  },
-  mcpBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    background: 'rgba(0,228,117,0.08)',
-    border: '1px solid rgba(0,228,117,0.2)',
-    borderRadius: 8,
-    padding: '7px 10px',
-    marginBottom: 14,
-  },
-  mcpDot: {
-    width: 6,
-    height: 6,
-    borderRadius: '50%',
-    background: 'var(--accent)',
-    flexShrink: 0,
-    boxShadow: '0 0 6px var(--accent)',
-  },
-  mcpLabel: {
-    fontSize: 11,
-    color: 'var(--accent)',
-    fontWeight: 500,
-    flex: 1,
-  },
-  mcpCount: {
-    fontSize: 10,
-    color: 'rgba(0,228,117,0.6)',
-    fontFamily: 'var(--font-mono)',
   },
   divider: {
     height: 1,
-    background: 'var(--border-glass)',
-    margin: '0 0 12px',
+    background: 'var(--bg-border)',
+    margin: '0 4px',
   },
   nav: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 2,
+    gap: 8,
   },
-  navItem: {
+  navCard: {
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
-    padding: '10px 10px',
-    borderRadius: 10,
+    gap: 12,
+    padding: '10px 12px',
+    borderRadius: 'var(--radius-md)',
     textDecoration: 'none',
-    position: 'relative',
-    transition: 'background 0.15s',
-    cursor: 'pointer',
+    transition: 'all 0.2s ease',
     background: 'transparent',
+    border: '1px solid transparent',
   },
-  navItemActive: {
-    background: 'rgba(255,0,119,0.08)',
-    border: '1px solid rgba(255,0,119,0.15)',
+  navCardActive: {
+    background: 'rgba(255, 51, 102, 0.08)',
+    borderColor: 'rgba(255, 51, 102, 0.2)',
   },
-  navIcon: {
+  iconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    border: '1px solid var(--bg-border)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     flexShrink: 0,
+    transition: 'all 0.2s ease',
   },
   navText: {
     flex: 1,
     minWidth: 0,
   },
   navLabel: {
+    fontFamily: 'var(--font-sans)',
     fontSize: 13,
-    fontWeight: 600,
     letterSpacing: '-0.01em',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
   },
   navDesc: {
+    fontFamily: 'var(--font-sans)',
     fontSize: 10,
-    color: 'var(--on-surface-variant)',
+    color: 'var(--text-muted)',
     marginTop: 1,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  activeBar: {
-    position: 'absolute',
-    left: 0,
-    top: '20%',
-    height: '60%',
-    width: 3,
-    borderRadius: '0 2px 2px 0',
-    background: 'var(--primary)',
-  },
-  footer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: '12px 6px 0',
-    borderTop: '1px solid var(--border-glass)',
-    marginTop: 8,
-  },
-  footerDot: {
-    width: 32,
-    height: 32,
-    borderRadius: '50%',
-    background: 'var(--surface-high)',
-    border: '1px solid var(--border-glass)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 12,
-    fontWeight: 700,
-    color: 'var(--primary)',
-    flexShrink: 0,
-  },
-  footerName: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: 'var(--on-surface)',
-  },
-  footerRole: {
-    fontSize: 10,
-    color: 'var(--on-surface-variant)',
-  },
-  footerVersion: {
-    marginLeft: 'auto',
-    fontSize: 10,
-    fontFamily: 'var(--font-mono)',
-    color: 'var(--on-surface-variant)',
   },
 };

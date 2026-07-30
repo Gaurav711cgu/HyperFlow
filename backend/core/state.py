@@ -38,12 +38,7 @@ def _load_initial_stats() -> dict:
             "average_wastage_units": 4.2,
             "censoring_rate": 0.34
         },
-        "load_test": {
-            "total_requests": 1000,
-            "requests_per_sec": 8653.2,
-            "p99_latency_ms": 0.2,
-            "error_rate_pct": 0.0
-        }
+        "load_test": None
     }
     if M5_RESULTS_PATH.exists():
         try:
@@ -60,9 +55,11 @@ def _load_initial_stats() -> dict:
             with open(LOAD_RESULTS_PATH, "r") as f:
                 load_data = json.load(f)
                 stats["load_test"] = {
+                    "endpoint": load_data.get("endpoint", "/api/ml/demand-forecast"),
+                    "concurrency": load_data.get("concurrency", 10),
                     "total_requests": load_data.get("total_requests", 1000),
-                    "requests_per_sec": load_data.get("requests_per_sec", 8653.2),
-                    "p99_latency_ms": load_data.get("p99_latency_ms", 0.2),
+                    "requests_per_sec": load_data.get("requests_per_sec", load_data.get("req_per_sec", 0.0)),
+                    "p99_latency_ms": load_data.get("p99_latency_ms", 0.0),
                     "error_rate_pct": load_data.get("error_rate_pct", 0.0)
                 }
         except Exception as e:

@@ -58,39 +58,46 @@ def seed_database():
             session.add_all(inventory_items)
             session.commit()
         
-        if session.query(SalesEvent).first() is None:
-            print("Seeding SalesEvent historical records (30 days of data per SKU)...")
+        if session.query(SalesEvent).count() < 50:
+            print("Seeding 500+ SalesEvent historical records with weather & time features...")
             start_date = datetime.date.today() - datetime.timedelta(days=30)
             
             sales_events = []
+            random.seed(42)
             for i in range(30):
                 current_date = start_date + datetime.timedelta(days=i)
-                # Create data for store_01
-                for hour in [8, 12, 16, 20]:
-                    for sku in ["g1", "g2", "g3", "g4"]:
-                        # Create some random observed sales
-                        base_sales = 15.0 if sku in ["g1", "g2"] else 8.0
-                        observed = max(0, int(random.normalvariate(base_sales, 4.0)))
-                        
-                        # Randomly censor around 30% of sales events for g1/g2 (simulating OOS)
-                        censored = False
-                        oos_time = None
-                        if sku in ["g1", "g2"] and random.random() < 0.35:
-                            censored = True
-                            observed = min(observed, 10) # Truncated
-                            oos_time = datetime.datetime.combine(current_date, datetime.time(hour, random.randint(10, 50)))
-                        
-                        sales_events.append(SalesEvent(
-                            store_id="store_01",
-                            sku_id=sku,
-                            observed_sales=float(observed),
-                            censored=censored,
-                            oos_time=oos_time,
-                            event_date=current_date,
-                            hour_bucket=hour
-                        ))
+                for hour in [8, 10, 12, 14, 16, 18, 20]:
+                    for store in ["store_01", "store_02", "store_03"]:
+                        for sku in ["g1", "g2", "g3", "g4"]:
+                            base_sales = 15.0 if sku in ["g1", "g2"] else 8.0
+                            observed = max(0, float(random.normalvariate(base_sales, 4.0)))
+                            
+                            censored = False
+                            oos_time = None
+                            if sku in ["g1", "g2"] and random.random() < 0.35:
+                                censored = True
+                                observed = min(observed, 10.0)
+                                oos_time = datetime.datetime.combine(current_date, datetime.time(hour, random.randint(10, 50)))
+                            
+                            temp = float(random.uniform(15.0, 38.0))
+                            rain = float(random.exponential(2.0))
+                            elapsed_sec = float(random.normalvariate(900.0, 300.0))
+                            
+                            sales_events.append(SalesEvent(
+                                store_id=store,
+                                sku_id=sku,
+                                observed_sales=observed,
+                                censored=censored,
+                                oos_time=oos_time,
+                                event_date=current_date,
+                                hour_bucket=hour,
+                                weather_temp=temp,
+                                weather_rain=rain,
+                                time_elapsed_sec=elapsed_sec
+                            ))
             session.add_all(sales_events)
             session.commit()
+            print(f"Successfully seeded {len(sales_events)} SalesEvent records for PSI monitoring!")
 
         # Seed Restaurants
         if session.query(Restaurant).first() is None:
