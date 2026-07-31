@@ -42,11 +42,6 @@ pinned: false
 
 [**Live Demo**](https://hyperflow.vercel.app) · [**API Docs**](https://hyperflow-api.onrender.com/docs) · [**ML Benchmarks**](#-benchmark-results) · [**Architecture**](#-system-architecture)
 
-<br/>
-<br/>
-
-<img src="docs/assets/hyperflow_ui.png" alt="HyperFlow 3.0 Commerce Intelligence Operating System" width="100%" style="border-radius: 14px; border: 1px solid rgba(255,51,102,0.25);" />
-
 </div>
 
 ---
