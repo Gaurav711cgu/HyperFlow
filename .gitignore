@@ -35,6 +35,7 @@ AGENTS.md
 models/*.joblib
 *.joblib
 *.png
+!docs/assets/*.png
 
 # Large assets and zips
 *.zip
