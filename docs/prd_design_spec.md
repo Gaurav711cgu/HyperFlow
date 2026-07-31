@@ -48,15 +48,15 @@ This document provides the complete, production-grade specification for the **Hy
 
 ```mermaid
 graph TD
-    A[Login / Verification Screen] --> B[Multi-Cuisine Feed & Hub]
-    B --> C[Restaurant Details & Menu View]
-    B --> G[Quick Tab Grocery Console]
-    B --> J[Dineout Booking Calendar]
-    C --> D[Active Cart & Checkout Drawer]
-    D --> E[Live Delivery Tracker & Map]
-    B --> F[Admin Operations Dashboard]
-    F --> H[System Telemetry Panel]
-    F --> I[ML Guard & Dispute Triage]
+    A["Login and Verification Screen"] --> B["Multi-Cuisine Feed and Hub"]
+    B --> C["Restaurant Details and Menu View"]
+    B --> G["Quick Tab Grocery Console"]
+    B --> J["Dineout Booking Calendar"]
+    C --> D["Active Cart and Checkout Drawer"]
+    D --> E["Live Delivery Tracker and Map"]
+    B --> F["Admin Operations Dashboard"]
+    F --> H["System Telemetry Panel"]
+    F --> I["ML Guard and Dispute Triage"]
 ```
 
 ### 1. Splash & Onboarding Screen

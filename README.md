@@ -63,46 +63,40 @@ Four production ML gaps documented by Swiggy Bytes and Zomato Engineering, imple
 
 ```mermaid
 graph TD
-    %% Frontend Layer
-    subgraph Frontend [Client Applications]
-        Consumer[Consumer App <br/> React / Tailwind]
-        Ops[Operations Intel <br/> Live Dashboards]
-        Admin[Admin Panel <br/> Config / Logs]
+    subgraph Frontend["Client Applications"]
+        Consumer["Consumer App - React & Vite"]
+        Ops["Operations Intel - Live Dashboards"]
+        Admin["Admin Panel - Config & Logs"]
     end
 
-    %% Gateway Layer
-    Gateway[FastAPI API Gateway <br/> Async REST + WebSocket]
-    
-    %% ML Engine Layer
-    subgraph ML [ML Operations Engine]
-        Tobit[Tobit Regressor <br/> Censored Demand]
-        Cox[Cox PH Model <br/> Time-to-Profit]
-        ETA[Learned ETA Smoother <br/> Random Forest Gate]
-        PSI[PSI Drift Monitor <br/> Real-time Checks]
-        Dispatch[Dispatch Batcher <br/> Haversine Metrics]
-        Fraud[Semantic Fraud Guard]
-    end
-    
-    %% AI Agent Layer
-    subgraph Agent [AI Commerce Agent]
-        Gemini[Gemini 2.0 Flash <br/> ReAct Loop]
-        MCP[Live Swiggy MCP APIs <br/> Food / Instamart]
-    end
-    
-    %% Data Layer
-    subgraph Data [Data & State]
-        PG[(PostgreSQL <br/> ACID Transactions)]
-        Redis[(Redis <br/> Atomic Locking & Cache)]
+    Gateway["FastAPI API Gateway - Async REST + WebSocket"]
+
+    subgraph ML["ML Operations Engine"]
+        Tobit["Tobit Regressor - Censored Demand"]
+        Cox["Cox PH Model - Time-to-Profit"]
+        ETA["ETA Smoother - Random Forest Gate"]
+        PSI["PSI Drift Monitor - Real-time Checks"]
+        Dispatch["Dispatch Batcher - Haversine Metrics"]
+        Fraud["Semantic Fraud Guard"]
     end
 
-    %% Flow connections
+    subgraph Agent["AI Commerce Agent"]
+        Gemini["Gemini 2.0 Flash - ReAct Loop"]
+        MCP["Live Swiggy MCP APIs - Food & Instamart"]
+    end
+
+    subgraph Data["Data and State"]
+        PG["PostgreSQL - ACID Transactions"]
+        Redis["Redis - Atomic Locking and Cache"]
+    end
+
     Consumer --> Gateway
     Ops --> Gateway
     Admin --> Gateway
-    
+
     Gateway --> ML
     Gateway --> Agent
-    
+
     ML --> Data
     Agent --> Data
     Agent --> MCP
