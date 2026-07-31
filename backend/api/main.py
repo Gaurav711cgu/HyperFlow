@@ -378,6 +378,8 @@ from backend.api.routers.restaurants import router as restaurants_router
 from backend.api.routers.chat import router as chat_router
 from backend.api.routers.oracle import router as oracle_router
 
+from backend.api.routers.auth import router as auth_router
+app.include_router(auth_router)
 app.include_router(orders_router, prefix="/api/v1/orders", tags=["orders"])
 app.include_router(ml_router, prefix="/api/v1", tags=["ml"])
 app.include_router(restaurants_router, prefix="/api/v1", tags=["restaurants"])
