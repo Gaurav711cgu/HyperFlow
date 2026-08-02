@@ -12,6 +12,8 @@ from backend.db.session import get_db
 from backend.db.models import SalesEvent, PriceHistory, RefundPrediction, ETAEvent
 from backend.core.state import demand_forecaster, safeguards, GLOBAL_STATS, stats_lock
 from backend.services.weather import get_cached_weather
+from backend.api.utils import call_swiggy_mcp_sync
+from backend.ml.dark_store_site_selection import SiteProfile, evaluate_site
 try:
     from backend.ml.fraud_guard import FraudGuard
 except ImportError:
@@ -48,7 +50,7 @@ async def call_mcp_async(server: str, tool_name: str, arguments: dict, token: Op
         )
         return res
     except Exception as e:
-        logger.warn(f"[Swiggy MCP Call Warning] {server}/{tool_name} error: {e}")
+        logger.warning(f"[Swiggy MCP Call Warning] {server}/{tool_name} error: {e}")
         return {}
 
 # ─── Module 1: Demand Oracle (Instamart Intelligence) ─────────────────────────
@@ -140,6 +142,41 @@ async def get_demand_oracle(
         "predictions": predictions
     }
 
+# ─── Module 2: Swiggy Strategy — Dark Store Site Selection ────────────────────
+
+class DarkStoreSitePayload(BaseModel):
+    pincode: str = "560103"
+    latitude: float = 12.9352
+    longitude: float = 77.6245
+    city: str = "Bengaluru"
+    avg_daily_food_orders_zone: float = 210.0
+    avg_order_value_food: float = 385.0
+    cancellation_rate_food: float = 0.09
+    peak_hour_concentration: float = 0.55
+    zone_type: str = "tech_corridor"
+    existing_blinkit_stores_radius: int = 1
+    existing_zepto_stores_radius: int = 1
+    existing_swiggy_dark_stores_radius: int = 0
+    real_estate_cost_monthly: float = 150000.0
+    median_household_income_index: float = 1.1
+    college_or_office_density_index: float = 1.2
+
+
+@router.post("/strategy/dark-store/site-selection")
+async def evaluate_dark_store_site(payload: DarkStoreSitePayload):
+    """
+    Module 2 — Turns food-order catchment data into an Instamart dark-store
+    Go/Hold/No-Go decision with breakeven timing and launch SKU guidance.
+    """
+    decision = evaluate_site(SiteProfile(**payload.model_dump()))
+    return {
+        "status": "success",
+        "strategy_question": "Should Swiggy open an Instamart dark store in this pincode?",
+        "model": "HyperFlow Dark Store Site Selection v1",
+        **decision.model_dump(),
+    }
+
+
 # ─── Module 3: Refund Oracle (FraudGuard Triage) ───────────────────────────────
 
 class RefundPredictPayload(BaseModel):
@@ -171,12 +208,25 @@ async def predict_refund(
             if "total" in details:
                 order_value = details["total"]
 
-    # Run FraudGuard Triage
-    result = fraud_guard.triage_refund_request(
-        complaint_type=payload.complaint_type,
+    item_names = [
+        item.get("name", str(item)) if isinstance(item, dict) else str(item)
+        for item in order_items
+    ]
+    complaint_type = payload.complaint_type.lower().replace(" ", "_")
+
+    # Run FraudGuard Triage with demo-safe customer context defaults.
+    outcome, fraud_prob, explanation = fraud_guard.triage_refund_request(
+        merchant_id="demo_merchant",
+        user_refund_ratio=0.04,
+        user_tenure_days=120,
+        user_historical_orders=28,
+        user_auto_refunds_30d=0,
+        delivery_duration_min=32.0,
+        refund_amount_ratio=min(1.0, float(payload.item_price or 0) / max(1.0, float(order_value))),
+        has_duplicate_hash=False,
+        complaint_type=complaint_type,
         complaint_text=payload.complaint_text,
-        order_items=order_items,
-        order_value=order_value
+        items_list=item_names,
     )
 
     # Save prediction audit log to PostgreSQL DB
@@ -184,21 +234,21 @@ async def predict_refund(
         audit_entry = RefundPrediction(
             order_id=payload.order_id,
             complaint_type=payload.complaint_type,
-            predicted_outcome=result.outcome,
-            fraud_probability=float(result.fraud_prob)
+            predicted_outcome=outcome,
+            fraud_probability=float(fraud_prob)
         )
         db.add(audit_entry)
         db.commit()
     except Exception as e:
-        logger.warn(f"[Refund Audit Log Warning] DB write failed: {e}")
+        logger.warning(f"[Refund Audit Log Warning] DB write failed: {e}")
 
     return {
         "order_id": payload.order_id,
-        "predicted_outcome": result.outcome,
-        "fraud_probability": float(result.fraud_prob),
-        "confidence_score": round((1.0 - result.fraud_prob) if result.outcome == "AUTO_REFUND" else result.fraud_prob, 2),
-        "explanation": result.explanation,
-        "recommendation": "AUTO_REFUND_APPROVED" if result.fraud_prob < 0.2 else ("HUMAN_VERIFICATION_REQUIRED" if result.fraud_prob < 0.6 else "REJECTED_SUSPICIOUS")
+        "predicted_outcome": outcome,
+        "fraud_probability": float(fraud_prob),
+        "confidence_score": round((1.0 - fraud_prob) if outcome == "AUTO_REFUND" else fraud_prob, 2),
+        "explanation": explanation,
+        "recommendation": "AUTO_REFUND_APPROVED" if fraud_prob < 0.2 else ("HUMAN_VERIFICATION_REQUIRED" if fraud_prob < 0.6 else "REJECTED_SUSPICIOUS")
     }
 
 # ─── Module 4: Dineout Slot Sniper ─────────────────────────────────────────────
@@ -278,14 +328,15 @@ async def analyze_dispatch(
     Module 5 — Runs delivery route batching optimization across orders.
     """
     sample_deliveries = [
-        [20.3562, 85.8315], # Prasanti Vihar
-        [20.3585, 85.8288], # Lp 60
-        [20.3601, 85.8272], # Gaurav Home
-        [20.3540, 85.8360], # KIIT Campus 3
-        [20.3510, 85.8380]  # Damana Square
+        {"order_id": "IM-1001", "lat": 20.3562, "lng": 85.8315, "t_prep": 4},
+        {"order_id": "IM-1002", "lat": 20.3585, "lng": 85.8288, "t_prep": 5},
+        {"order_id": "IM-1003", "lat": 20.3601, "lng": 85.8272, "t_prep": 6},
+        {"order_id": "IM-1004", "lat": 20.3540, "lng": 85.8360, "t_prep": 3},
+        {"order_id": "IM-1005", "lat": 20.3510, "lng": 85.8380, "t_prep": 4},
     ]
 
-    batches = dispatch_batcher.optimize_batches(sample_deliveries, payload.store_location)
+    store_lat, store_lng = payload.store_location
+    batches = dispatch_batcher.optimize_batches(store_lat, store_lng, sample_deliveries)
     
     return {
         "status": "success",

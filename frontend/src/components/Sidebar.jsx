@@ -4,6 +4,7 @@ import { NavLink } from 'react-router-dom';
 const NAV_ITEMS = [
   { to: '/',                    icon: 'smart_toy',   label: 'AI Agent',        desc: 'LangGraph Agent' },
   { to: '/dark-store-intel',    icon: 'warehouse',   label: 'Store Intel',     desc: 'Tobit Forecast' },
+  { to: '/site-selection',      icon: 'domain',      label: 'Site Selection',  desc: 'Pincode Lab' },
   { to: '/route-intelligence',  icon: 'alt_route',   label: 'Route Intel',     desc: 'Kalman & Dispatch' },
   { to: '/ml-guard',            icon: 'security',    label: 'ML Guard',        desc: 'Fraud Protection' },
   { to: '/analytics',           icon: 'analytics',   label: 'Analytics',       desc: 'Command Center' },

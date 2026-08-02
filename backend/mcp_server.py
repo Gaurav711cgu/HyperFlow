@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, Any, Dict
 import httpx
 import os
+from backend.ml.dark_store_site_selection import SiteProfile, evaluate_site
 
 mcp_app = FastAPI(
     title="HyperFlow MCP Server",
@@ -42,6 +43,31 @@ class ReserveRequest(BaseModel):
     item_id: str
     quantity: int = Field(..., ge=1)
     idempotency_key: str = Field(..., description="UUID for atomic reservation")
+
+class DarkStoreSiteRequest(BaseModel):
+    pincode: str = Field(..., description="Target pincode for dark store evaluation")
+    latitude: float = Field(..., description="Latitude of candidate location")
+    longitude: float = Field(..., description="Longitude of candidate location")
+    city: str = Field(..., description="City name")
+    avg_daily_food_orders_zone: float = Field(
+        ..., ge=0, description="Average daily food orders within the catchment"
+    )
+    avg_order_value_food: float = Field(
+        ..., ge=0, description="Average food delivery order value in INR"
+    )
+    cancellation_rate_food: float = Field(
+        ..., ge=0.0, le=1.0, description="Food order cancellation rate"
+    )
+    peak_hour_concentration: float = Field(
+        ..., ge=0.0, le=1.0, description="Fraction of orders in the busiest two-hour window"
+    )
+    zone_type: str = Field("mixed_use", description="tech_corridor | office | college | residential | mixed_use | suburban")
+    existing_blinkit_stores_radius: int = Field(0, ge=0, description="Blinkit stores inside catchment")
+    existing_zepto_stores_radius: int = Field(0, ge=0, description="Zepto stores inside catchment")
+    existing_swiggy_dark_stores_radius: int = Field(0, ge=0, description="Swiggy dark stores inside catchment")
+    real_estate_cost_monthly: float = Field(120000.0, gt=0, description="Estimated monthly rent in INR")
+    median_household_income_index: float = Field(1.0, gt=0, description="Catchment income index vs city baseline")
+    college_or_office_density_index: float = Field(1.0, gt=0, description="Office/college density index vs city baseline")
 
 
 # ── MCP Tool endpoints ───────────────────────────────────────────
@@ -134,6 +160,25 @@ async def reserve_inventory(req: ReserveRequest) -> Dict[str, Any]:
             raise HTTPException(status_code=500, detail=f"HyperFlow backend error: {str(e)}")
 
 
+@mcp_app.post("/tools/evaluate_dark_store_site")
+async def mcp_evaluate_dark_store_site(req: DarkStoreSiteRequest) -> Dict[str, Any]:
+    """
+    MCP Tool: evaluate_dark_store_site
+
+    Answers the Swiggy Strategy question: should an Instamart dark store open
+    in this pincode, and when does it break even?
+    """
+    try:
+        decision = evaluate_site(SiteProfile(**req.model_dump()))
+        return {
+            "strategy_question": "Should Swiggy open an Instamart dark store in this pincode?",
+            "model": "HyperFlow Dark Store Site Selection v1",
+            **decision.model_dump(),
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+
 @mcp_app.get("/tools/get_store_context")
 async def get_store_context(store_id: int) -> Dict[str, Any]:
     """
@@ -183,7 +228,7 @@ async def mcp_manifest() -> Dict[str, Any]:
     return {
         "name": "hyperflow-ml",
         "version": "1.0.0",
-        "description": "HyperFlow dark store ML tools — demand forecasting, profitability scoring, PSI drift detection",
+        "description": "HyperFlow dark store ML tools — site selection, demand forecasting, profitability scoring, PSI drift detection",
         "transport": "http",
         "tools_endpoint": "/tools",
         "author": "HyperFlow",

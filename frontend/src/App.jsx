@@ -7,6 +7,7 @@ import DarkStoreIntel from './pages/DarkStoreIntel.jsx';
 import RouteIntelligence from './pages/RouteIntelligence.jsx';
 import MLGuard from './pages/MLGuard.jsx';
 import Analytics from './pages/Analytics.jsx';
+import SiteSelectionLab from './pages/SiteSelectionLab.jsx';
 import './index.css';
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
               <Route path="/agent" element={<AIAgent />} />
               <Route path="/dark-store-intel" element={<DarkStoreIntel />} />
               <Route path="/dark-store" element={<DarkStoreIntel />} />
+              <Route path="/site-selection" element={<SiteSelectionLab />} />
               <Route path="/route-intelligence" element={<RouteIntelligence />} />
               <Route path="/route-intel" element={<RouteIntelligence />} />
               <Route path="/ml-guard" element={<MLGuard />} />

@@ -12,7 +12,7 @@ pinned: false
 # HyperFlow 3.0
 ### Hyperlocal Commerce Intelligence Platform
 
-*Production-grade ML operations engine solving four documented engineering problems from Swiggy Bytes & Zomato Engineering blogs — with a live AI Commerce Agent powered by Gemini 2.0 Flash and real Swiggy MCP APIs.*
+*Production-grade ML strategy engine for Instamart dark-store expansion, q-commerce demand forecasting, dispatch stability, and real Swiggy MCP operations — powered by FastAPI, React, Gemini 2.0 Flash, Tobit demand modeling, and Cox PH breakeven analysis.*
 
 <br/>
 
@@ -32,7 +32,8 @@ pinned: false
 [![Tests](https://img.shields.io/badge/Tests-Passing-00D4AA?style=flat-square&logo=pytest&logoColor=white)]()
 [![License](https://img.shields.io/badge/License-MIT-6C63FF?style=flat-square)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-FF0077?style=flat-square)]()
-[![Demo](https://img.shields.io/badge/Live_Demo-Available-00D4AA?style=flat-square&logo=googlechrome&logoColor=white)](https://hyperflow.vercel.app)
+[![Vercel Demo](https://img.shields.io/badge/Vercel_Demo-Available-00D4AA?style=flat-square&logo=vercel&logoColor=white)](https://hyper-flow-chi.vercel.app/)
+[![Hugging Face Space](https://img.shields.io/badge/HuggingFace_Space-Live-FFB000?style=flat-square&logo=huggingface&logoColor=black)](https://huggingface.co/spaces/Gaurav711/HyperFlow)
 
 <br/>
 
@@ -40,7 +41,7 @@ pinned: false
 
 <br/>
 
-[**Live Demo**](https://hyperflow.vercel.app) · [**API Docs**](https://hyperflow-api.onrender.com/docs) · [**ML Benchmarks**](#-benchmark-results) · [**Architecture**](#-system-architecture)
+[**Vercel Demo**](https://hyper-flow-chi.vercel.app/) · [**Hugging Face Space**](https://huggingface.co/spaces/Gaurav711/HyperFlow) · [**API Docs**](https://hyperflow-api.onrender.com/docs) · [**ML Benchmarks**](#-benchmark-results) · [**Architecture**](#-system-architecture)
 
 </div>
 
@@ -48,16 +49,43 @@ pinned: false
 
 ## What Problem This Solves
 
-Four production ML gaps documented by Swiggy Bytes and Zomato Engineering, implemented from first principles:
+Five production ML and strategy gaps for Swiggy/Instamart-style q-commerce, implemented from first principles:
 
 | # | Problem | Industry Baseline | HyperFlow Solution | Lift |
 |---|---|---|---|---|
-| 1 | **Censored Demand** — stockouts hide true demand from forecasters | OLS Regression ignores censoring (WMAPE: 38.99%) | Heteroscedastic Tobit MLE + LightGBM Quantile | **+24.28% WMAPE** |
-| 2 | **ETA Display Jitter** — GPS noise causes erratic delivery time updates | Raw MIMO output (113 display bumps per session) | Velocity-normalized RF Classifier gate | **81.4% suppressed** |
-| 3 | **Cancelled Order Arbitrage** — resale pools exploited by co-located accounts | Static 50% off (50 arbitrage exploits per 500 cancels) | Thermal SQI solver + Sybil proximity guard | **100% blocked** |
-| 4 | **Refund Loop Fraud** — cloud-kitchen proximity triggers false fraud flags | Geo-IP proximity block (48% false positive rate) | Tenure-gated proximity bypass + semantic plausibility engine | **0% false positives** |
+| 1 | **Dark Store Site Selection** — where should Instamart open next? | Spreadsheet heuristics on density and rent | Food-order catchment proxy + competition/cannibalization scoring + breakeven CI | **Go/Hold/No-Go decision** |
+| 2 | **Censored Demand** — stockouts hide true demand from forecasters | OLS Regression ignores censoring (WMAPE: 38.99%) | Heteroscedastic Tobit MLE + LightGBM Quantile | **+24.28% WMAPE** |
+| 3 | **ETA Display Jitter** — GPS noise causes erratic delivery time updates | Raw MIMO output (113 display bumps per session) | Velocity-normalized RF Classifier gate | **81.4% suppressed** |
+| 4 | **Cancelled Order Arbitrage** — resale pools exploited by co-located accounts | Static 50% off (50 arbitrage exploits per 500 cancels) | Thermal SQI solver + Sybil proximity guard | **100% blocked** |
+| 5 | **Refund Loop Fraud** — cloud-kitchen proximity triggers false fraud flags | Geo-IP proximity block (48% false positive rate) | Tenure-gated proximity bypass + semantic plausibility engine | **0% false positives** |
 
 ---
+
+## Swiggy Strategy Decisions
+
+HyperFlow is framed around the questions an AI/ML strategy team actually answers:
+
+| Strategy Question | HyperFlow Module | Decision Output |
+|---|---|---|
+| Should we open a dark store in pincode X? | Dark Store Site Selection | `GO`, `HOLD`, or `NO-GO` with composite score |
+| When does this store break even? | Cox PH profitability model | Median months-to-profit plus confidence interval |
+| Which SKUs should we launch with? | Demand density + zone profile | Initial SKU count and category priorities |
+| Which items may stock out next? | Tobit censored demand forecaster | Point forecast, CI, safety stock, stockout risk |
+| Can agents use Swiggy commerce safely? | MCP-native API gateway | Food, Instamart, and Dineout tool routing |
+
+Example strategy response:
+
+```json
+{
+  "pincode": "560103",
+  "recommendation": "GO",
+  "composite_score": 84.6,
+  "projected_breakeven_months": 8.6,
+  "projected_monthly_contribution": 30307,
+  "recommended_initial_sku_count": 4608,
+  "priority_categories": ["milk-and-dairy", "fresh-produce", "ready-to-eat"]
+}
+```
 
 ## System Architecture
 
@@ -73,6 +101,7 @@ graph TD
 
     subgraph ML["ML Operations Engine"]
         Tobit["Tobit Regressor - Censored Demand"]
+        Site["Site Selection - Go/Hold/No-Go"]
         Cox["Cox PH Model - Time-to-Profit"]
         ETA["ETA Smoother - Random Forest Gate"]
         PSI["PSI Drift Monitor - Real-time Checks"]
@@ -150,7 +179,36 @@ Fraud Guard (50 cloud-kitchen geo-collision trials)
 
 ##  ML Components
 
-### 1. Heteroscedastic Tobit Demand Forecaster
+### 1. Dark Store Site Selection
+
+Answers the Swiggy Strategy question: **"Should we open an Instamart dark store in this pincode?"**
+
+The evaluator uses food-order density as a q-commerce demand proxy, then adjusts for AOV/rent economics, peak-hour concentration, competitor pressure, and existing Swiggy-store cannibalization.
+
+```python
+from backend.ml.dark_store_site_selection import SiteProfile, evaluate_site
+
+decision = evaluate_site(SiteProfile(
+    pincode="560103",
+    city="Bengaluru",
+    latitude=12.9352,
+    longitude=77.6245,
+    avg_daily_food_orders_zone=210,
+    avg_order_value_food=385,
+    cancellation_rate_food=0.09,
+    peak_hour_concentration=0.55,
+    zone_type="tech_corridor",
+    existing_blinkit_stores_radius=1,
+    existing_zepto_stores_radius=1,
+    real_estate_cost_monthly=150000,
+))
+```
+
+**Why this matters:** Dark stores can take months to reach profitability. HyperFlow turns raw catchment signals into an explicit launch/no-launch decision, breakeven timing, and category-level SKU guidance a strategy manager can use.
+
+---
+
+### 2. Heteroscedastic Tobit Demand Forecaster
 
 Solves the censored demand problem where stockouts prevent observation of true consumer demand. Standard OLS regression on censored data is biased — it underestimates latent demand proportionally to the censoring rate.
 
@@ -170,7 +228,7 @@ safety_stock = upper * 1.15  # 15% buffer above 95th percentile
 
 ---
 
-### 2. Learned ETA Smoother (Velocity-Normalized RF Gate)
+### 3. Learned ETA Smoother (Velocity-Normalized RF Gate)
 
 GPS pings during delivery generate raw ETA updates from a MIMO network. Problem: traffic spikes, tunnel passes, and GPS drift cause "phantom bumps" — ETA jumps 5 minutes when the rider hasn't actually slowed down.
 
@@ -190,7 +248,7 @@ Real delay (rider velocity: 0.8 m/s, normalized: 0.1):
 
 ---
 
-### 3. Cox Proportional Hazards — Dark Store Profitability
+### 4. Cox Proportional Hazards — Dark Store Profitability
 
 Predicts time-to-profitability for new dark store locations using survival analysis. Custom Cox PH implementation (no external dependency) with Nelson-Aalen baseline hazard estimator.
 
@@ -200,7 +258,7 @@ Predicts time-to-profitability for new dark store locations using survival analy
 
 ---
 
-### 4. Atomic Inventory Reservation (Dual-Mode Locking)
+### 5. Atomic Inventory Reservation (Dual-Mode Locking)
 
 Solves the race condition where two concurrent checkouts attempt to reserve the last unit of a SKU.
 
@@ -223,7 +281,7 @@ FOR UPDATE NOWAIT;
 
 ---
 
-### 5. Production Safeguards (PSI Drift Detection)
+### 6. Production Safeguards (PSI Drift Detection)
 
 Real-time Population Stability Index monitoring with automated retraining trigger.
 
@@ -258,6 +316,20 @@ Total tool calls: 2  |  Latency: ~1.1s
 ```
 
 **Live MCP Integration:** When Swiggy access token is configured, tool calls route to live Swiggy Food/Instamart/Dineout MCP APIs. Demo mode uses seeded PostgreSQL data.
+
+### HyperFlow MCP Tools
+
+HyperFlow also exposes its own MCP-compatible tool server for AI agents:
+
+| Tool | Strategy / Ops Use Case |
+|---|---|
+| `evaluate_dark_store_site` | Score a pincode for Instamart dark-store launch, breakeven, and SKU mix |
+| `forecast_demand` | Forecast dark-store demand with Tobit confidence intervals |
+| `score_profitability` | Estimate dark-store months-to-breakeven with Cox PH survival curves |
+| `get_psi_status` | Check production drift before trusting a model output |
+| `reserve_inventory` | Test atomic inventory reservation under concurrent checkout |
+
+MCP server entrypoint: `backend/mcp_server.py`
 
 ---
 
@@ -365,7 +437,9 @@ No OTP, no email verification in demo mode — correct UX for a portfolio demo. 
 
 ### Option 1 — Demo (No setup required)
 
-Visit **[hyperflow.vercel.app](https://hyperflow.vercel.app)** → Click **"Demo Access"** → Full platform loads instantly.
+Visit **[hyper-flow-chi.vercel.app](https://hyper-flow-chi.vercel.app/)** → Click **"Demo Access"** → Full platform loads instantly.
+
+Hosted ML/API demo: **[huggingface.co/spaces/Gaurav711/HyperFlow](https://huggingface.co/spaces/Gaurav711/HyperFlow)**
 
 ### Option 2 — Local with Live Swiggy Data
 
@@ -430,6 +504,7 @@ hyperflow/
 │   │   ├── seed.py              # Realistic seed data
 │   │   └── migrations/          # Alembic migration scripts
 │   ├── ml/
+│   │   ├── dark_store_site_selection.py # Instamart pincode Go/Hold/No-Go evaluator
 │   │   ├── censored_demand.py   # Tobit + LightGBM forecaster
 │   │   ├── store_profitability.py # Cox PH survival model
 │   │   └── production_safeguards.py # PSI drift detection
@@ -477,6 +552,7 @@ Full interactive docs: **[hyperflow-api.onrender.com/docs](https://hyperflow-api
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/api/v1/auth/demo` | Issue demo JWT (signed HS256, 24hr TTL) |
+| `POST` | `/api/v2/strategy/dark-store/site-selection` | Instamart pincode Go/Hold/No-Go with breakeven CI |
 | `GET` | `/api/v1/restaurants` | List restaurants (MCP live or DB fallback) |
 | `GET` | `/api/v1/restaurants/{id}/menu` | Menu items with protein/calorie data |
 | `POST` | `/api/v1/orders/reserve` | Atomic inventory reservation (dual-lock) |
@@ -508,6 +584,16 @@ python3 -m pytest tests/ -v
 
 ---
 
+## Design Decisions & Rejected Alternatives
+
+| Decision | Chosen | Rejected | Why |
+|---|---|---|---|
+| Site selection signal | Food-order catchment proxy | Generic census-only demand estimate | Swiggy food demand captures local commerce intensity and impatience better than static demographics alone |
+| Demand under stockout | Heteroscedastic Tobit + quantile model | OLS on observed sales | OLS treats sold-out demand as true demand and under-forecasts high-velocity SKUs |
+| Breakeven timing | Cox PH survival model | Fixed payback-period formula | Survival modeling handles right-censoring when stores have not yet reached profitability |
+| Locking | Redis lock + PostgreSQL `NOWAIT` fallback | Blocking DB row locks only | Fast failure protects checkout latency and keeps the demo runnable without Redis |
+| MCP integration | Swiggy MCP proxy + HyperFlow MCP server | REST-only demo | MCP-native tools match the agent-commerce direction of Food, Instamart, and Dineout workflows |
+
 ## Key Design Decisions
 
 **Why not a real auth system?**
@@ -522,12 +608,32 @@ Redis Redlock is faster (4ms P50) but requires a running Redis instance. Postgre
 **Why heteroscedastic Tobit instead of standard Tobit?**
 Standard Tobit assumes constant variance (σ is a scalar). In demand forecasting, variance is heteroscedastic — weekend demand is more volatile than weekday demand. Modeling `log(σᵢ) = Xᵢγ` captures this, reduces bias under high-censoring conditions, and avoids the homoscedasticity misspecification that inflates standard errors.
 
+## 10 Questions This Project Answers
+
+**Q: Why is this more than a Swiggy clone?**  
+A: Swiggy MCP provides commerce actions. HyperFlow adds predictions on top: where to open a dark store, when it breaks even, which SKUs to stock, which ETA bumps are noise, and which refund claims need review.
+
+**Q: Why use food-order data for Instamart site selection?**  
+A: Food orders reveal hyperlocal order density, AOV, cancellation impatience, and time-of-day spread. Those are strong proxies for q-commerce readiness before a dark store exists.
+
+**Q: Why Cox PH for profitability?**  
+A: Store profitability is a time-to-event problem. Cox PH can use stores that have not yet broken even without throwing away censored examples.
+
+**Q: What happens when there is not enough real PSI data?**  
+A: The API returns an explicit data-source/status message instead of pretending synthetic PSI is production truth. Demo mode remains visible, but it is labeled.
+
+**Q: What would you upgrade next at Swiggy scale?**  
+A: Replace the LightGBM demand backbone with a foundation time-series model such as TimesFM, keep the Tobit availability de-biasing layer, and retrain hierarchical SKU-store forecasts by city/category.
+
+See: [`docs/timesfm_upgrade_note.md`](docs/timesfm_upgrade_note.md)
+
 ---
 
 ## Roadmap
 
-- [ ] Run offline benchmarks → replace all hardcoded metric values with simulation output
-- [ ] Wire `/api/v1/forecast/` and `/api/v1/metrics/` to real seeded training data
+- [x] Add dark-store site selection module for Swiggy Strategy decisions
+- [x] Expose site selection through REST and MCP tools
+- [ ] Add frontend map/control for pincode site-selection scenarios
 - [ ] Prometheus `/metrics` endpoint for Grafana dashboard
 - [ ] BEIR evaluation for Swiggy Skill Agent search component
 - [ ] Colbert late-interaction reranker for dish semantic search

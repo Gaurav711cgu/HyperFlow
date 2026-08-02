@@ -220,6 +220,13 @@ export async function fetchDemandOracle(addressId = 'default_address', lat = 20.
   return apiFetch(`/api/v2/oracle/demand?addressId=${addressId}&lat=${lat}&lng=${lng}`);
 }
 
+export async function evaluateDarkStoreSite(payload) {
+  return apiFetch('/api/v2/strategy/dark-store/site-selection', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function predictRefund({ order_id, complaint_type, complaint_text, item_name, item_price }) {
   return apiFetch('/api/v2/refund/predict', {
     method: 'POST',
@@ -253,4 +260,3 @@ export function connectETALive(orderId, onMessage) {
   ws.onerror = (e) => console.warn('[WS] eta-live error', e);
   return ws;
 }
-
