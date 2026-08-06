@@ -224,8 +224,8 @@ async def main():
     parser = argparse.ArgumentParser(description="HyperFlow FastAPI Load Test")
     parser.add_argument("--url", type=str, default="http://localhost:8000",
                         help="Base URL of the FastAPI server (default: http://localhost:8000)")
-    parser.add_argument("--endpoint", type=str, default="/health",
-                        help="Endpoint to hit (default: /health)")
+    parser.add_argument("--endpoint", type=str, default="/api/ml/demand-forecast",
+                        help="Endpoint to hit (default: /api/ml/demand-forecast)")
     parser.add_argument("--requests", type=int, default=1000,
                         help="Total number of requests (default: 1000)")
     parser.add_argument("--concurrency", type=int, default=50,

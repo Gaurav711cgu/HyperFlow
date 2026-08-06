@@ -11,11 +11,22 @@ class ProductionSafeguards:
         self.reference_data = reference_data
         self.feature_stats = {}
         
-        # Initialize default reference limits if no data is provided
         if reference_data is not None:
             self._fit_reference(reference_data)
         else:
-            self._fit_mock_reference()
+            self._load_or_fit_reference()
+
+    def _load_or_fit_reference(self):
+        from pathlib import Path
+        ref_csv = Path(__file__).parent.parent.parent / "data" / "m5" / "psi_reference_baseline.csv"
+        if ref_csv.exists():
+            try:
+                df = pd.read_csv(ref_csv)
+                self._fit_reference(df)
+                return
+            except Exception:
+                pass
+        self._fit_mock_reference()
 
     def _fit_reference(self, df: pd.DataFrame):
         for col in df.columns:

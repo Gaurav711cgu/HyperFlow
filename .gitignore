@@ -33,6 +33,7 @@ AGENTS.md
 
 # ML Models and binary assets
 models/*.joblib
+models/*.json
 *.joblib
 *.png
 !docs/assets/*.png
