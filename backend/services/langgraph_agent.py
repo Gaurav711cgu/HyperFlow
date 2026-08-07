@@ -7,10 +7,14 @@ import os
 import json
 import asyncio
 import time
+import warnings
 from typing import AsyncIterator, List, Dict, Any, Optional
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Suppress google.generativeai package end-of-life warning until migration to google-genai SDK
+warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
 
 try:
     import google.generativeai as genai
