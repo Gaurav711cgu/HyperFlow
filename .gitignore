@@ -43,3 +43,4 @@ models/*.json
 swiggy_svg_extracted/
 stitch_district_obsidian_ui_spec/
 stitch_hyperflow_operations_engine/
+.vercel/
