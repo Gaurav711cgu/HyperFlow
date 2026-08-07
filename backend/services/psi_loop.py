@@ -35,9 +35,10 @@ class PSIMonitorLoop:
     INTERVAL_SECONDS = 60
     MAX_CONSECUTIVE_RED = 3
 
-    def __init__(self, db_session_factory, safeguards, event_bus=None):
+    def __init__(self, db_session_factory, safeguards, retrain_orchestrator=None, event_bus=None):
         self.db_factory = db_session_factory
         self.safeguards = safeguards
+        self.retrain_orchestrator = retrain_orchestrator
         self.event_bus = event_bus
         self.state = LoopState()
 
@@ -58,8 +59,14 @@ class PSIMonitorLoop:
                     self.state.consecutive_amber += 1
                     logger.warning(f"[PSI Loop] High drift detected (PSI={psi_result.score:.4f}, RED status #{self.state.consecutive_amber})")
                     if self.state.consecutive_amber >= self.MAX_CONSECUTIVE_RED:
-                        logger.warn("[PSI Loop] Triggering retrain signal due to 3 consecutive RED readings.")
-                        if self.event_bus:
+                        logger.warning("[PSI Loop] Triggering retrain execution due to 3 consecutive RED readings.")
+                        if self.retrain_orchestrator:
+                            retrain_res = await self.retrain_orchestrator.trigger(
+                                psi_score=psi_result.score,
+                                drift_features=psi_result.feature_drifts
+                            )
+                            logger.info(f"[PSI Loop] Autonomous retrain result: {retrain_res}")
+                        elif self.event_bus:
                             await self.event_bus.publish("retrain_requested", {
                                 "reason": "3 consecutive RED PSI readings",
                                 "psi": psi_result.score,

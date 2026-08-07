@@ -162,9 +162,11 @@ class CensoredDemandForecaster:
 
         # Log to MLflow if active
         if HAS_MLFLOW:
+            should_end = False
             try:
                 if not mlflow.active_run():
                     mlflow.start_run(run_name="CensoredDemandForecaster_Train")
+                    should_end = True
                 mlflow.log_params({
                     "num_leaves": 63,
                     "learning_rate": 0.05,
@@ -173,10 +175,13 @@ class CensoredDemandForecaster:
                     "has_lightgbm": HAS_LIGHTGBM
                 })
                 mlflow.log_metric("train_wmape", wmape_score)
-                # Register model mock in development run
+                # Register model status in development run
                 mlflow.log_dict({"status": "converged"}, "model_status.json")
             except Exception as e:
                 logger.warning(f"MLflow logging bypassed: {e}")
+            finally:
+                if HAS_MLFLOW and should_end and mlflow.active_run():
+                    mlflow.end_run()
                 
         return self
 

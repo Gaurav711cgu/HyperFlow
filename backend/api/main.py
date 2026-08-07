@@ -389,6 +389,9 @@ app.include_router(oracle_router, prefix="/api/v2/oracle", tags=["oracle"])
 from backend.api.routers.v2_router import router as v2_router
 app.include_router(v2_router)
 
+from backend.api.routers.analytics_dw import router as analytics_dw_router
+app.include_router(analytics_dw_router)
+
 # ---------------------------------------------------------------------------
 # HyperFlow 3.0 — AI Commerce Agent + ML Surface Endpoints
 # ---------------------------------------------------------------------------

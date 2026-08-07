@@ -140,14 +140,15 @@ graph TD
 ### ML Model Performance
 
 ```
-Censored Demand Forecasting (Kaggle M5 Walmart Dataset, 1,941 days, 63.85% censoring)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  OLS Baseline      WMAPE: 38.99%   ████████████████░░░░░░░░  (biased under censoring)
-  Tobit/LGBM        WMAPE: 29.53%   ████████░░░░░░░░░░░░░░░░  (+24.28% lift)
+Censored Demand Forecasting (M5-Equivalent Parametric Simulation, 64.7% stockout censoring)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  OLS Censored Rows WMAPE:   20.26%   ████████████████░░░░░░░░  (biased under censoring)
+  Tobit Censored Rows WMAPE: 13.90%   ███████████░░░░░░░░░░░░░  (+31.41% WMAPE lift)
   
-  Wasserstein distance (predicted vs true demand distribution):
-  OLS:   0.847  ──  high divergence under stockout conditions
-  Tobit: 0.142  ──  distribution preserved even at 63.85% censoring rate
+  Censored WMAPE Lift:      +31.41%  ──  Imputes latent demand via Inverse Mills Ratio
+  Uncensored WMAPE:          12.75%  ──  Preserves true demand distribution on uncensored rows
+
+*Data Provenance: Evaluated on M5-equivalent synthetic parametric dataset (calibrated from Makridakis et al. 2022) with stockout-capped holdout validation.*
 
 ETA Jitter Suppression (500-trial monsoon storm surge simulation)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
