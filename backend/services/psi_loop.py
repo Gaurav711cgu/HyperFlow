@@ -83,49 +83,45 @@ class PSIMonitorLoop:
 
     async def _compute_psi(self) -> PSIComputeResult:
         if not self.db_factory:
-            return PSIComputeResult(score=0.0412, feature_drifts={}, data_source="synthetic")
+            return PSIComputeResult(score=0.0, feature_drifts={}, data_source="uninitialized")
 
         db = self.db_factory()
         try:
             from backend.db.models import SalesEvent
-            sales_events = db.query(SalesEvent).order_by(SalesEvent.created_at.desc()).limit(200).all()
+            sales_events = db.query(SalesEvent)\
+                .filter(SalesEvent.weather_temp.isnot(None))\
+                .order_by(SalesEvent.created_at.desc())\
+                .limit(200)\
+                .all()
             
             if len(sales_events) < 30:
-                from ml_core.demand_simulation import generate_training_data
-                X, _, _, _, _ = generate_training_data(n_samples=100)
-                prod_df = pd.DataFrame({
-                    'weather_temp': X[:, 0],
-                    'weather_rain': X[:, 1],
-                    'time_elapsed_sec': X[:, 2]
-                })
-                data_source = "synthetic"
-            else:
-                prod_df = pd.DataFrame([{
-                    'weather_temp': getattr(e, 'weather_temp', None),
-                    'weather_rain': getattr(e, 'weather_rain', None),
-                    'time_elapsed_sec': getattr(e, 'time_elapsed_sec', None)
-                } for e in sales_events if getattr(e, 'weather_temp', None) is not None])
-                if len(prod_df) < 30:
-                    from ml_core.demand_simulation import generate_training_data
-                    X, _, _, _, _ = generate_training_data(n_samples=100)
-                    prod_df = pd.DataFrame({
-                        'weather_temp': X[:, 0],
-                        'weather_rain': X[:, 1],
-                        'time_elapsed_sec': X[:, 2]
-                    })
-                    data_source = "synthetic"
-                else:
-                    data_source = "real"
+                logger.info(f"[PSI Loop] Insufficient empirical events for drift check ({len(sales_events)}/30 records). Skipping drift computation.")
+                return PSIComputeResult(
+                    score=0.0,
+                    feature_drifts={},
+                    data_source="insufficient_real_events"
+                )
 
-            drifts = self.safeguards.calculate_drift_metrics(prod_df)
-            max_score = max([v.get("psi", 0.0) for v in drifts.values()]) if drifts else 0.04
-            return PSIComputeResult(score=max_score, feature_drifts=drifts, data_source=data_source)
+            prod_df = pd.DataFrame([{
+                'weather_temp': e.weather_temp,
+                'weather_rain': e.weather_rain,
+                'time_elapsed_sec': e.time_elapsed_sec
+            } for e in sales_events])
+
+            drift_metrics = self.safeguards.calculate_drift_metrics(prod_df)
+            psi_values = [v.get("psi", 0.0) for v in drift_metrics.values() if isinstance(v, dict) and "psi" in v]
+            overall_psi = float(max(psi_values)) if psi_values else 0.0
+            
+            return PSIComputeResult(score=overall_psi, feature_drifts=drift_metrics, data_source="postgresql_sales_events")
         finally:
             db.close()
 
     def _verify(self, result: PSIComputeResult) -> str:
+        if result.data_source == "insufficient_real_events" or result.score == 0.0:
+            return "GREEN"
         if result.score < 0.10:
             return "GREEN"
         elif result.score < 0.20:
             return "AMBER"
-        return "RED"
+        else:
+            return "RED"

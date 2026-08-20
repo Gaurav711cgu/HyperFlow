@@ -85,9 +85,9 @@ jobs:
       - name: Install Frontend Dependencies
         run: |
           cd frontend
-          npm ci || npm install
+          npm ci
 
       - name: Build Frontend Production Assets
         run: |
           cd frontend
-          npm run build || true
+          npm run build

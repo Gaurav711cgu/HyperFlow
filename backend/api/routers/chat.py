@@ -1,7 +1,6 @@
 import os
 import json
-import urllib.request
-import urllib.error
+import httpx
 from typing import List
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
@@ -103,14 +102,19 @@ async def ai_agent_chat(req: ChatRequest, db: Session = Depends(get_db)):
         }
 
         try:
-            req_data = json.dumps(req_body).encode("utf-8")
-            url_req = urllib.request.Request(
-                api_url,
-                data=req_data,
-                headers={"Content-Type": "application/json"}
-            )
-            with urllib.request.urlopen(url_req, timeout=8) as response:
-                res_body = json.loads(response.read().decode("utf-8"))
+            async with httpx.AsyncClient(timeout=10.0) as http_client:
+                response = await http_client.post(
+                    api_url,
+                    json=req_body,
+                    headers={"Content-Type": "application/json"}
+                )
+                if response.status_code != 200:
+                    logger.error(f"Gemini API returned status {response.status_code}: {response.text}")
+                    return {
+                        "reply": "I encountered an error communicating with my Gemini brain. Please check your network connection or API key.",
+                        "tools": tools_called
+                    }
+                res_body = response.json()
         except Exception as err:
             logger.error(f"Gemini API invocation failed: {err}")
             return {

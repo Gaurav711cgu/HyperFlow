@@ -124,7 +124,7 @@ async def exchange_token(payload: ExchangePayload, request: Request, db: Session
     redirect_uri = resolve_redirect_uri(request)
     
     try:
-        import urllib.request
+        import httpx
         exchange_data = {
             "grant_type": "authorization_code",
             "code": payload.code,
@@ -132,17 +132,19 @@ async def exchange_token(payload: ExchangePayload, request: Request, db: Session
             "client_id": client_id,
             "redirect_uri": redirect_uri
         }
-        req = urllib.request.Request(
-            "https://mcp.swiggy.com/auth/token",
-            data=json.dumps(exchange_data).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=5) as response:
-            res = json.loads(response.read().decode("utf-8"))
-            return res
+        async with httpx.AsyncClient(timeout=10.0) as http_client:
+            response = await http_client.post(
+                "https://mcp.swiggy.com/auth/token",
+                json=exchange_data,
+                headers={"Content-Type": "application/json"}
+            )
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail=f"Swiggy OAuth returned error: {response.text}")
+            return response.json()
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"[OAuth] Token exchange failed: {e}")
+        logger.error(f"[OAuth] Token exchange failed: {e}")
         raise HTTPException(status_code=500, detail=f"OAuth exchange failed: {e}")
 
 @router.get("/auth/callback")

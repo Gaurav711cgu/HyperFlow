@@ -20,11 +20,9 @@ def get_demand_summary(db: Session = Depends(get_db)) -> Dict[str, Any]:
     - Retrain history from Outbox log
     """
     try:
-        # Create DB and DW tables if missing
         from backend.db.models import Base
-        Base.metadata.create_all(bind=db.get_bind())
-        WarehouseBase.metadata.create_all(bind=db.get_bind())
-
+        Base.metadata.create_all(bind=db.get_bind(), checkfirst=True)
+        WarehouseBase.metadata.create_all(bind=db.get_bind(), checkfirst=True)
         # 1. Censoring rate by store
         store_stats = db.query(
             DimStore.store_id,

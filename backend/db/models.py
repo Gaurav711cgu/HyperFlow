@@ -1,5 +1,5 @@
-from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, Date, ForeignKey, CheckConstraint, Enum
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, Date, ForeignKey, CheckConstraint, Enum, Index
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 import enum
 
@@ -15,44 +15,50 @@ class DarkStore(Base):
     
     id = Column(String(50), primary_key=True)
     name = Column(String(100), nullable=False)
-    city = Column(String(100), nullable=False)
+    city = Column(String(100), nullable=False, index=True)
     lat = Column(Float, nullable=False)
     lng = Column(Float, nullable=False)
 
 class Inventory(Base):
     __tablename__ = 'inventory'
     
-    store_id = Column(String(50), ForeignKey('dark_stores.id'), primary_key=True)
-    sku_id = Column(String(50), primary_key=True)
+    store_id = Column(String(50), ForeignKey('dark_stores.id'), primary_key=True, index=True)
+    sku_id = Column(String(50), primary_key=True, index=True)
     sku_name = Column(String(100), nullable=False)
-    qty_available = Column(Integer, nullable=False)
+    qty_available = Column(Integer, nullable=False, index=True)
     
     __table_args__ = (
         CheckConstraint('qty_available >= 0', name='check_qty_positive'),
+        Index('idx_inventory_store_sku', 'store_id', 'sku_id'),
     )
 
 class SalesEvent(Base):
     __tablename__ = 'sales_events'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    store_id = Column(String(50), ForeignKey('dark_stores.id'), nullable=False)
-    sku_id = Column(String(50), nullable=False)
+    store_id = Column(String(50), ForeignKey('dark_stores.id'), nullable=False, index=True)
+    sku_id = Column(String(50), nullable=False, index=True)
     observed_sales = Column(Float, nullable=False)
-    censored = Column(Boolean, default=False, nullable=False)
+    censored = Column(Boolean, default=False, nullable=False, index=True)
     oos_time = Column(DateTime(timezone=True), nullable=True)
-    event_date = Column(Date, nullable=False)
-    hour_bucket = Column(Integer, nullable=False)
+    event_date = Column(Date, nullable=False, index=True)
+    hour_bucket = Column(Integer, nullable=False, index=True)
     weather_temp = Column(Float, nullable=True)
     weather_rain = Column(Float, nullable=True)
     time_elapsed_sec = Column(Float, nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+
+    __table_args__ = (
+        Index('idx_sales_store_sku_date', 'store_id', 'sku_id', 'event_date'),
+        Index('idx_sales_created_at', 'created_at'),
+    )
 
 class ForecastResult(Base):
     __tablename__ = 'forecast_results'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    store_id = Column(String(50), ForeignKey('dark_stores.id'), nullable=False)
-    sku_id = Column(String(50), nullable=False)
+    store_id = Column(String(50), ForeignKey('dark_stores.id'), nullable=False, index=True)
+    sku_id = Column(String(50), nullable=False, index=True)
     horizon_hours = Column(Integer, nullable=False)
     point_forecast = Column(Float, nullable=False)
     ci_lower = Column(Float, nullable=False)
@@ -65,22 +71,26 @@ class InventoryReservation(Base):
     __tablename__ = 'inventory_reservations'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    order_id = Column(String(100), nullable=False)
-    store_id = Column(String(50), ForeignKey('dark_stores.id'), nullable=False)
-    sku_id = Column(String(50), nullable=False)
+    order_id = Column(String(100), nullable=False, index=True)
+    store_id = Column(String(50), ForeignKey('dark_stores.id'), nullable=False, index=True)
+    sku_id = Column(String(50), nullable=False, index=True)
     qty_requested = Column(Integer, nullable=False)
     outcome = Column(Enum(ReservationOutcome), nullable=False)
     latency_ms = Column(Float, nullable=False)
-    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
 class OutboxEvent(Base):
     __tablename__ = 'outbox_events'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    event_type = Column(String(50), nullable=False)
+    event_type = Column(String(50), nullable=False, index=True)
     payload = Column(String(1000), nullable=False)
-    processed = Column(Boolean, default=False, nullable=False)
-    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    processed = Column(Boolean, default=False, nullable=False, index=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+
+    __table_args__ = (
+        Index('idx_outbox_unprocessed', 'processed', 'timestamp'),
+    )
 
 
 class Restaurant(Base):
