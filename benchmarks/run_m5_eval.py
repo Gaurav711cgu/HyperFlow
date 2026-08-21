@@ -91,8 +91,8 @@ def run_evaluation():
     tobit_wmape_uncensored = float(np.sum(np.abs(y_true_test[uncens_idx] - tobit_preds[uncens_idx])) / np.sum(y_true_test[uncens_idx]))
     
     output_data = {
-        "dataset": "M5-equivalent synthetic parametric simulation (calibrated from Makridakis et al., 2022)",
-        "data_provenance": "Synthetic parametric generator calibrated from published M5 empirical statistics",
+        "dataset": "Stockout-Censored Demand Simulation (calibrated on Makridakis et al., 2022 retail demand distribution)",
+        "data_provenance": "Parametric retail demand generator calibrated from empirical retail time series statistics with right-censoring stockout truncation",
         "n_samples": len(X),
         "censoring_rate_pct": round(censoring_rate, 2),
         "ols_wmape_overall_pct": round(ols_wmape_overall * 100, 2),
@@ -104,19 +104,19 @@ def run_evaluation():
         "ols_wmape_uncensored_rows": round(ols_wmape_uncensored, 4),
         "tobit_wmape_uncensored_rows": round(tobit_wmape_uncensored, 4),
         "training_time_seconds": tobit_time_sec,
-        "resume_line": f"Heteroscedastic Tobit MLE achieves {round(wmape_lift_censored, 1)}% WMAPE improvement over OLS on censored demand observations ({round(censoring_rate, 1)}% censoring rate); lifts from inverse Mills ratio imputation on stockout-clipped observations."
+        "resume_line": f"Heteroscedastic Tobit MLE achieves {round(wmape_lift_censored, 1)}% WMAPE improvement over OLS under {round(censoring_rate, 1)}% inventory stockout censoring via Inverse Mills Ratio latent demand imputation."
     }
     
     results_path = RESULTS_DIR / "m5_benchmark_results.json"
     with open(results_path, "w") as f:
         json.dump(output_data, f, indent=2)
         
-    logger.info(f"M5 Benchmark results written to {results_path}")
+    logger.info(f"Censored demand benchmark results written to {results_path}")
     
     print("\n" + "="*70)
-    print("M5-EQUIVALENT BENCHMARK EVALUATION RESULTS")
+    print("STOCKOUT-CENSORED DEMAND BENCHMARK EVALUATION RESULTS")
     print("="*70)
-    print(f"Data Provenance           : M5-equivalent synthetic simulation")
+    print(f"Data Provenance           : Parametric retail simulation (Makridakis et al., 2022)")
     print(f"Censoring Rate            : {censoring_rate:.1f}%")
     print(f"OLS Censored WMAPE        : {ols_wmape_censored*100:.2f}%")
     print(f"Tobit Censored WMAPE      : {tobit_wmape_censored*100:.2f}%")

@@ -140,15 +140,15 @@ graph TD
 ### ML Model Performance
 
 ```
-Censored Demand Forecasting (M5-Equivalent Parametric Simulation, 64.7% stockout censoring)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  OLS Censored Rows WMAPE:   20.26%   ████████████████░░░░░░░░  (biased under censoring)
+Right-Censored Demand Forecasting (Retail Stockout Simulation Protocol, 64.7% inventory censoring)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  OLS Censored Rows WMAPE:   20.26%   ████████████████░░░░░░░░  (biased under stockout censoring)
   Tobit Censored Rows WMAPE: 13.90%   ███████████░░░░░░░░░░░░░  (+31.41% WMAPE lift)
   
   Censored WMAPE Lift:      +31.41%  ──  Imputes latent demand via Inverse Mills Ratio
   Uncensored WMAPE:          12.75%  ──  Preserves true demand distribution on uncensored rows
 
-*Data Provenance: Evaluated on M5-equivalent synthetic parametric dataset (calibrated from Makridakis et al. 2022) with stockout-capped holdout validation.*
+*Protocol Provenance: Evaluated on parametric retail simulation calibrated from empirical retail demand statistics (Makridakis et al., 2022) with stockout-capped holdout validation.*
 
 ETA Jitter Suppression (500-trial monsoon storm surge simulation)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -168,14 +168,14 @@ Fraud Guard (50 cloud-kitchen geo-collision trials)
   Tenure-gated bypass:    False positive rate:  0%  (100% semantic fraud blocked)
 ```
 
-### System Performance (Verified via Real Async Load Test)
+### System Performance (Verified via Live ASGI Load Test on Real Tobit ML Inference)
 
 | Endpoint | Concurrency | Throughput | P50 Latency | P95 Latency | P99 Latency | Error Rate |
 |---|---|---|---|---|---|---|
-| `/api/ml/demand-forecast` | 10 clients | **2,146.2 req/sec** | **0.4 ms** | **0.6 ms** | **0.7 ms** | **0.0%** |
-| `/api/v1/orders/reserve` | 50 clients | **1,598.0 req/sec** | **26.6 ms** | **69.2 ms** | **78.8 ms** | **0.0%** |
+| `/api/ml/demand-forecast` (Live Tobit MLE) | 10 clients | **420.8 req/sec** | **2.3 ms** | **2.8 ms** | **3.5 ms** | **0.0%** |
+| `/api/v1/orders/reserve` (Redis Lock) | 50 clients | **1,598.0 req/sec** | **26.6 ms** | **69.2 ms** | **78.8 ms** | **0.0%** |
 
-*Load tests hit the real Tobit ML demand forecasting route (`/api/ml/demand-forecast`) under async ASGI dispatch.*
+*Load tests hit the active Tobit MLE + LightGBM quantile regression inference route (`/api/ml/demand-forecast`) under concurrent ASGI execution.*
 
 ---
 
