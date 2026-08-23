@@ -46,7 +46,11 @@ class ProductionSafeguards:
                     }
 
     def _fit_mock_reference(self):
-        # Setup stats for expected feature inputs to prevent empty runs
+        """
+        Development fallback using synthetic feature distributions.
+        Production deployments should ensure data/m5/psi_reference_baseline.csv is present.
+        """
+        logger.warning("PSI SafeGuard initializing with synthetic baseline distribution. Load real reference CSV for production drift monitoring.")
         np.random.seed(42)
         mock_features = {
             'weather_temp': np.random.uniform(15, 38, 500),

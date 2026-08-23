@@ -17,6 +17,9 @@ class ForecastDemandInput(BaseModel):
     store_id: int
     horizon_hours: int = 24
     include_intervals: bool = True
+    weather_temp: Optional[float] = Field(None, description="Current or forecast ambient temperature (Celsius)")
+    weather_rain: Optional[float] = Field(None, description="Precipitation rate (mm/h)")
+    time_elapsed_sec: Optional[float] = Field(None, description="Elapsed dispatch duration in seconds")
 
 class ScoreProfitabilityInput(BaseModel):
     pop_density: float
@@ -35,12 +38,12 @@ class ReserveInventoryInput(BaseModel):
 
 @router.post("/forecast/demand")
 async def api_v1_forecast_demand(payload: ForecastDemandInput) -> Dict[str, Any]:
-    temp = float(random.uniform(22.0, 32.0))
-    rain = float(np.random.exponential(1.2))
-    elapsed = float(random.normalvariate(900.0, 150.0))
+    temp = payload.weather_temp if payload.weather_temp is not None else 28.0
+    rain = payload.weather_rain if payload.weather_rain is not None else 0.0
+    elapsed = payload.time_elapsed_sec if payload.time_elapsed_sec is not None else 900.0
     
     test_df = pd.DataFrame([{"weather_temp": temp, "weather_rain": rain, "time_elapsed_sec": elapsed}])
-    clipped_df, _ = safeguards.validate_and_clip(test_df)
+    clipped_df, alerts = safeguards.validate_and_clip(test_df)
     
     point, lower, upper = demand_forecaster.predict_with_intervals(clipped_df.values)
     multiplier = max(1.0, payload.horizon_hours / 24.0)
@@ -49,13 +52,18 @@ async def api_v1_forecast_demand(payload: ForecastDemandInput) -> Dict[str, Any]
     lw = round(float(lower[0]) * multiplier, 1)
     up = round(float(upper[0]) * multiplier, 1)
     
+    # Estimate confidence from prediction interval spread relative to point estimate
+    interval_spread = max(1.0, up - lw)
+    relative_confidence = round(max(50.0, min(95.0, 100.0 - (interval_spread / max(1.0, pt)) * 10.0)), 2)
+    
     return {
         "store_id": payload.store_id,
         "horizon_hours": payload.horizon_hours,
         "point_forecast": pt,
         "lower_90": lw,
         "upper_90": up,
-        "wmape_confidence": 70.47,
+        "prediction_confidence_pct": relative_confidence,
+        "safeguard_clipping_alerts": len(alerts),
         "model_version": "Tobit-LGBM-v2.0"
     }
 

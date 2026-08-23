@@ -19,11 +19,9 @@ router = APIRouter()
 @router.get("/forecast/{store_id}/{sku_id}")
 async def get_forecast(store_id: str, sku_id: str, db: Session = Depends(get_db)):
     inv_item = db.query(Inventory).filter(Inventory.store_id == store_id, Inventory.sku_id == sku_id).first()
-    recent_sale = db.query(SalesEvent).filter(SalesEvent.sku_id == sku_id).order_by(SalesEvent.created_at.desc()).first()
-    
-    temp = recent_sale.weather_temp if recent_sale and recent_sale.weather_temp else float(random.uniform(20.0, 35.0))
-    rain = recent_sale.weather_rain if recent_sale and recent_sale.weather_rain else float(random.exponential(1.5))
-    elapsed_time = recent_sale.time_elapsed_sec if recent_sale and recent_sale.time_elapsed_sec else float(random.normalvariate(900.0, 200.0))
+    temp = recent_sale.weather_temp if (recent_sale and recent_sale.weather_temp is not None) else 28.0
+    rain = recent_sale.weather_rain if (recent_sale and recent_sale.weather_rain is not None) else 0.0
+    elapsed_time = recent_sale.time_elapsed_sec if (recent_sale and recent_sale.time_elapsed_sec is not None) else 900.0
     
     test_df = pd.DataFrame([{"weather_temp": temp, "weather_rain": rain, "time_elapsed_sec": elapsed_time}])
     clipped_df, clip_alerts = safeguards.validate_and_clip(test_df)

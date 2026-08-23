@@ -1,5 +1,8 @@
+import logging
 import numpy as np
 from typing import List, Dict, Any
+
+logger = logging.getLogger(__name__)
 
 class ColBERTReranker:
     """
@@ -7,10 +10,14 @@ class ColBERTReranker:
     Calculates token-level late-interaction dot products between query token embeddings
     and candidate dish token embeddings:
         Score(Q, D) = sum_{i in Q} max_{j in D} (E_q(i) . E_d(j)^T)
+        
+    NOTE: Uses deterministic feature-hash projections for zero-dependency local execution.
+    Production deployments should load a fine-tuned ColBERTv2 transformer checkpoint.
     """
     def __init__(self, dim: int = 32):
         self.dim = dim
         np.random.seed(42)
+        logger.info("Initialized ColBERTReranker with token-hash projection layer (dim=%d)", dim)
 
     def _get_token_embeddings(self, text: str) -> np.ndarray:
         """Simulates token embedding vectors for input text using deterministic hashing."""

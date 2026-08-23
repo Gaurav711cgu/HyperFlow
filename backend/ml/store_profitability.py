@@ -191,7 +191,11 @@ class DarkStoreProfitabilityScorer:
         return 12.0 # default fallback
 
     def _fit_mock(self):
-        # Create synthetic data to fit the model dynamically if database isn't fully loaded
+        """
+        Generates synthetic store features for development/testing initialization.
+        Production deployments should fit on historical store expansion datasets.
+        """
+        logger.warning("StoreProfitabilityScorer initializing with development synthetic cohort. Fit on historical store data for production.")
         np.random.seed(42)
         n_samples = 100
         

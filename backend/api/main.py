@@ -179,7 +179,10 @@ async def calculate_ml_robustness_task():
                     logger.info(f"[MLOPS PIPELINE] Triggering automated model retraining container on rolling 30-day window features...")
                     await asyncio.sleep(2)
                     logger.info(f"[MLOPS PIPELINE] Retraining successful. Compiled new LightGBM trees. Reference distributions for '{feature}' updated.")
-                    drift_metrics[feature] = {"psi": random.uniform(0.03, 0.07), "status": "green", "message": "Stable (Retrained)"}
+                    # NOTE: PSI after retraining is not re-evaluated in this development loop.
+                    # In production, the retraining pipeline callback would recalculate real PSI
+                    # against the new reference distribution. Placeholder post-retrain target: < 0.10.
+                    drift_metrics[feature] = {"psi": 0.0, "status": "green", "message": "Stable (Post-Retrain PSI pending recalculation)"}
             
             state.update_robustness_metrics({
                 "status": "nominal",
@@ -188,7 +191,9 @@ async def calculate_ml_robustness_task():
                 "last_audit_timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "features_drift": drift_metrics,
                 "clipping_guard": {
-                    "total_clipped_observations_today": random.randint(12, 45),
+                    # NOTE: clipped observation count comes from safeguards.clipped_count if available.
+                    # Returns 0 when the safeguards log has not been populated (development mode).
+                    "total_clipped_observations_today": getattr(safeguards, "clipped_count", 0),
                     "active_ranges": {
                         "temp": f"{safeguards.feature_stats['weather_temp']['p1']:.1f}°C to {safeguards.feature_stats['weather_temp']['p99']:.1f}°C",
                         "rain": f"{safeguards.feature_stats['weather_rain']['p1']:.1f}mm to {safeguards.feature_stats['weather_rain']['p99']:.1f}mm",
@@ -265,33 +270,57 @@ async def startup_event():
 
     # Warm up cache and state
     try:
-        asyncio.create_task(init_simulations())
-        prod_temp = np.random.uniform(16, 40, 100)
-        prod_rain = np.random.exponential(2.5, 100)
-        prod_time = np.random.normal(950.0, 320.0, 100)
-        prod_df = pd.DataFrame({
-            'weather_temp': prod_temp,
-            'weather_rain': prod_rain,
-            'time_elapsed_sec': prod_time
-        })
-        drift_metrics = safeguards.calculate_drift_metrics(prod_df)
-        import backend.core.state as state
-        state.CACHED_ROBUSTNESS_METRICS = {
-            "status": "nominal",
-            "last_audit_timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "features_drift": drift_metrics,
-            "clipping_guard": {
-                "total_clipped_observations_today": random.randint(12, 45),
-                "active_ranges": {
-                    "temp": f"{safeguards.feature_stats['weather_temp']['p1']:.1f}°C to {safeguards.feature_stats['weather_temp']['p99']:.1f}°C",
-                    "rain": f"{safeguards.feature_stats['weather_rain']['p1']:.1f}mm to {safeguards.feature_stats['weather_rain']['p99']:.1f}mm",
-                    "time_sec": f"{safeguards.feature_stats['time_elapsed_sec']['p1']:.1f}s to {safeguards.feature_stats['time_elapsed_sec']['p99']:.1f}s"
-                }
-            },
-            "unit_warnings": [
-                "TIME_FIELD_CLIP: Evaluated time_elapsed_sec. 0 anomalies detected."
-            ]
-        }
+        # Gate simulations behind environment variable for production readiness
+        import os
+        if os.getenv("HYPERFLOW_ENV") != "production":
+            logger.info("Starting simulation generators (non-production mode)...")
+            asyncio.create_task(init_simulations())
+            
+            # Synthetic warm-up reference data: fixed-seed Gaussian/Exponential distributions
+            # matching the feature engineering domain (temp 16-40C, rain Exp(2.5), time N(950,320)).
+            # These are representative priors for the PSI reference baseline, not real observations.
+            # Production: replace with a query against the last N days of SalesEvent records.
+            rng = np.random.default_rng(seed=42)
+            prod_temp = rng.uniform(16, 40, 100)
+            prod_rain = rng.exponential(2.5, 100)
+            prod_time = rng.normal(950.0, 320.0, 100)
+            prod_df = pd.DataFrame({
+                'weather_temp': prod_temp,
+                'weather_rain': prod_rain,
+                'time_elapsed_sec': prod_time
+            })
+            drift_metrics = safeguards.calculate_drift_metrics(prod_df)
+            import backend.core.state as state
+            state.CACHED_ROBUSTNESS_METRICS = {
+                "status": "nominal",
+                "last_audit_timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "features_drift": drift_metrics,
+                "clipping_guard": {
+                    # Clipped count starts at 0; incremented by safeguards at inference time.
+                    "total_clipped_observations_today": getattr(safeguards, "clipped_count", 0),
+                    "active_ranges": {
+                        "temp": f"{safeguards.feature_stats['weather_temp']['p1']:.1f}°C to {safeguards.feature_stats['weather_temp']['p99']:.1f}°C",
+                        "rain": f"{safeguards.feature_stats['weather_rain']['p1']:.1f}mm to {safeguards.feature_stats['weather_rain']['p99']:.1f}mm",
+                        "time_sec": f"{safeguards.feature_stats['time_elapsed_sec']['p1']:.1f}s to {safeguards.feature_stats['time_elapsed_sec']['p99']:.1f}s"
+                    }
+                },
+                "unit_warnings": [
+                    "TIME_FIELD_CLIP: Evaluated time_elapsed_sec. 0 anomalies detected."
+                ]
+            }
+        else:
+            logger.info("Running in production mode. Skipping synthetic simulations.")
+            import backend.core.state as state
+            state.CACHED_ROBUSTNESS_METRICS = {
+                "status": "nominal",
+                "last_audit_timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "features_drift": {},
+                "clipping_guard": {
+                    "total_clipped_observations_today": 0,
+                    "active_ranges": {}
+                },
+                "unit_warnings": []
+            }
     except Exception:
         pass
 
