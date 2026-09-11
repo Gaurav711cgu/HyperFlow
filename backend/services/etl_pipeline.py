@@ -46,8 +46,8 @@ class HyperFlowETL:
             # Upsert Dimension Tables
             self._upsert_dimensions(dw_db, events, op_db)
 
-            # Build and load fact records
-            loaded_count = self._load_facts(dw_db, events)
+            # Build and load fact records using SQL grouping
+            loaded_count = self._load_facts(op_db, dw_db, since)
             dw_db.commit()
 
             watermark = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -111,42 +111,54 @@ class HyperFlowETL:
                 ))
         dw_db.flush()
 
-    def _load_facts(self, dw_db: Session, events: List[SalesEvent]) -> int:
-        """Aggregates events by (date_key, store_key, sku_key) and upserts FactSalesAgg."""
+    def _load_facts(self, op_db: Session, dw_db: Session, since: datetime.datetime) -> int:
+        """Aggregates events using database SQL GROUP BY and upserts FactSalesAgg."""
+        from sqlalchemy import cast, Integer
+        
+        agg_rows = op_db.query(
+            SalesEvent.store_id,
+            SalesEvent.sku_id,
+            SalesEvent.event_date,
+            SalesEvent.hour_bucket,
+            func.sum(SalesEvent.observed_sales).label('obs_sales'),
+            func.sum(cast(SalesEvent.censored, Integer)).label('cens_events'),
+            func.count(SalesEvent.id).label('total_events'),
+            func.avg(SalesEvent.weather_temp).label('avg_temp'),
+            func.avg(SalesEvent.weather_rain).label('avg_rain')
+        ).filter(SalesEvent.created_at >= since).group_by(
+            SalesEvent.store_id, SalesEvent.sku_id, SalesEvent.event_date, SalesEvent.hour_bucket
+        ).all()
+        
+        if not agg_rows:
+            return 0
+
         store_map = {s.store_id: s.store_key for s in dw_db.query(DimStore).all()}
         sku_map = {s.sku_id: s.sku_key for s in dw_db.query(DimSku).all()}
-
-        # Group events by (date_key, store_key, sku_key)
-        groups = {}
-        for e in events:
-            date_obj = e.event_date if hasattr(e, 'event_date') and e.event_date else e.created_at.date()
-            hour = int(getattr(e, 'hour_bucket', 12) or 12)
-            date_key = int(f"{date_obj.strftime('%Y%m%d')}{hour:02d}")
-
-            s_key = store_map.get(e.store_id)
-            sk_key = sku_map.get(e.sku_id)
-
-            if not s_key or not sk_key:
-                continue
-
-            group_key = (date_key, s_key, sk_key)
-            if group_key not in groups:
-                groups[group_key] = []
-            groups[group_key].append(e)
-
         now = datetime.datetime.now(datetime.timezone.utc)
         loaded_count = 0
 
-        for (d_key, st_key, sk_key), grp_events in groups.items():
-            obs_sales = sum(float(ev.observed_sales or 0.0) for ev in grp_events)
-            cens_events = sum(1 for ev in grp_events if bool(ev.censored))
-            c_rate = float(cens_events / len(grp_events))
+        for r in agg_rows:
+            date_obj = r.event_date
+            hour = int(r.hour_bucket or 12)
+            # Safe date string generation for SQLite or Postgres date formats
+            if hasattr(date_obj, 'strftime'):
+                d_key = int(f"{date_obj.strftime('%Y%m%d')}{hour:02d}")
+            else:
+                # Fallback if string date
+                d_key = int(f"{str(date_obj).replace('-', '')[:8]}{hour:02d}")
 
-            temps = [ev.weather_temp for ev in grp_events if ev.weather_temp is not None]
-            rains = [ev.weather_rain for ev in grp_events if ev.weather_rain is not None]
+            st_key = store_map.get(r.store_id)
+            sk_key = sku_map.get(r.sku_id)
 
-            avg_temp = float(sum(temps) / len(temps)) if temps else None
-            avg_rain = float(sum(rains) / len(rains)) if rains else None
+            if not st_key or not sk_key:
+                continue
+                
+            obs_sales = float(r.obs_sales or 0.0)
+            cens_events = int(r.cens_events or 0)
+            total_events = int(r.total_events or 1)
+            c_rate = float(cens_events / total_events)
+            avg_temp = float(r.avg_temp) if r.avg_temp is not None else None
+            avg_rain = float(r.avg_rain) if r.avg_rain is not None else None
 
             existing_fact = dw_db.query(FactSalesAgg).filter(
                 FactSalesAgg.date_key == d_key,

@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 import os
 from dotenv import load_dotenv
@@ -37,10 +37,25 @@ from backend.ml.production_safeguards import ProductionSafeguards
 
 security = HTTPBearer(auto_error=False)
 
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from backend.api.swiggy_mcp_routes import cleanup_oauth_sessions
+    try:
+        from backend.db.models import Base
+        from backend.db.warehouse import WarehouseBase
+        Base.metadata.create_all(bind=engine)
+        WarehouseBase.metadata.create_all(bind=engine)
+    except Exception as e:
+        logger.warning(f"Database schema init warning on startup: {e}")
+
+    yield
+
 app = FastAPI(
     title="HyperFlow Operations & Security API Gateway",
     description="Hyperlocal quick-commerce backend gateway executing Tobit censored regression, Cox time-to-profitability, and atomic locking protocols.",
-    version="2.0.0"
+    version="2.0.0", lifespan=lifespan
 )
 
 app.add_middleware(
@@ -59,6 +74,37 @@ app.add_middleware(
 
 from fastapi.responses import PlainTextResponse, RedirectResponse
 
+# ── Real Prometheus metrics (Fix 6) ──────────────────────────────────────────
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+
+HTTP_REQUESTS = Counter(
+    "hyperflow_http_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "status_code"]
+)
+ML_INFERENCE_LATENCY = Histogram(
+    "hyperflow_ml_inference_latency_seconds",
+    "ML inference latency in seconds",
+    ["model"],
+    buckets=[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5]
+)
+DB_QUERY_LATENCY = Histogram(
+    "hyperflow_db_query_latency_seconds",
+    "Database query latency in seconds",
+    buckets=[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.5]
+)
+RESERVATIONS_TOTAL = Counter("hyperflow_reservations_total", "Total inventory reservations")
+RESERVATIONS_SUCCESS = Counter("hyperflow_reservations_success", "Successful inventory reservations")
+
+# ── SlowAPI rate limiting (Fix 5) ────────────────────────────────────────────
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 @app.get("/health")
 @app.get("/api/v1/health")
 async def health_check():
@@ -67,48 +113,11 @@ async def health_check():
 @app.get("/metrics", response_class=PlainTextResponse)
 @app.get("/api/v1/prometheus/metrics", response_class=PlainTextResponse)
 async def get_prometheus_metrics():
-    stats = state.get_stats()
-    avail = stats.get("availability_metrics", {})
-    load = stats.get("load_test", {})
-    
-    lines = [
-        "# HELP hyperflow_requests_total Total API load test requests processed.",
-        "# TYPE hyperflow_requests_total counter",
-        f"hyperflow_requests_total {load.get('total_requests', 1000)}",
-        "",
-        "# HELP hyperflow_requests_per_sec Throughput requests per second.",
-        "# TYPE hyperflow_requests_per_sec gauge",
-        f"hyperflow_requests_per_sec {load.get('requests_per_sec', 8653.2)}",
-        "",
-        "# HELP hyperflow_p99_latency_ms Dispatch p99 latency in milliseconds.",
-        "# TYPE hyperflow_p99_latency_ms gauge",
-        f"hyperflow_p99_latency_ms {load.get('p99_latency_ms', 0.2)}",
-        "",
-        "# HELP hyperflow_wmape_lift_pct Censored Tobit ML WMAPE accuracy lift percentage.",
-        "# TYPE hyperflow_wmape_lift_pct gauge",
-        f"hyperflow_wmape_lift_pct {avail.get('wmape_lift', 0.2428) * 100:.2f}",
-        "",
-        "# HELP hyperflow_availability_rate Dark store product availability rate.",
-        "# TYPE hyperflow_availability_rate gauge",
-        f"hyperflow_availability_rate {avail.get('availability_rate', 0.947)}",
-        "",
-        "# HELP hyperflow_reservations_total Total inventory reservations attempted.",
-        "# TYPE hyperflow_reservations_total counter",
-        f"hyperflow_reservations_total {stats.get('reservations_total', 0)}",
-        "",
-        "# HELP hyperflow_reservations_success Successful inventory reservations.",
-        "# TYPE hyperflow_reservations_success counter",
-        f"hyperflow_reservations_success {stats.get('reservations_success', 0)}",
-        "",
-        "# HELP hyperflow_raw_mimo_bumps Raw display ETA jitter bumps.",
-        "# TYPE hyperflow_raw_mimo_bumps counter",
-        f"hyperflow_raw_mimo_bumps {stats.get('raw_mimo_bumps', 113)}",
-        "",
-        "# HELP hyperflow_gated_smoother_bumps Gated display ETA jitter bumps.",
-        "# TYPE hyperflow_gated_smoother_bumps counter",
-        f"hyperflow_gated_smoother_bumps {stats.get('gated_smoother_bumps', 21)}"
-    ]
-    return "\n".join(lines) + "\n"
+    """Live Prometheus metrics from real prometheus_client counters and histograms."""
+    return PlainTextResponse(
+        generate_latest(),
+        media_type=CONTENT_TYPE_LATEST
+    )
 
 from backend.api.swiggy_mcp_routes import router as swiggy_router
 app.include_router(swiggy_router)
@@ -257,16 +266,6 @@ async def init_simulations():
     except Exception as e:
         logger.error(f"Error initializing simulations: {e}")
 
-@app.on_event("startup")
-async def startup_event():
-    from backend.api.swiggy_mcp_routes import cleanup_oauth_sessions
-    try:
-        from backend.db.models import Base
-        from backend.db.warehouse import WarehouseBase
-        Base.metadata.create_all(bind=engine)
-        WarehouseBase.metadata.create_all(bind=engine)
-    except Exception as e:
-        logger.warning(f"Database schema init warning on startup: {e}")
 
     # Warm up cache and state
     try:
@@ -412,7 +411,6 @@ from backend.api.utils import call_swiggy_mcp_sync
 from backend.api.routers.orders import router as orders_router
 from backend.api.routers.ml import router as ml_router
 from backend.api.routers.restaurants import router as restaurants_router
-from backend.api.routers.chat import router as chat_router
 from backend.api.routers.oracle import router as oracle_router
 
 from backend.api.routers.auth import router as auth_router
@@ -420,7 +418,6 @@ app.include_router(auth_router)
 app.include_router(orders_router, prefix="/api/v1/orders", tags=["orders"])
 app.include_router(ml_router, prefix="/api/v1", tags=["ml"])
 app.include_router(restaurants_router, prefix="/api/v1", tags=["restaurants"])
-app.include_router(chat_router, prefix="/api/v1", tags=["chat"])
 app.include_router(oracle_router, prefix="/api/v2/oracle", tags=["oracle"])
 
 from backend.api.routers.v2_router import router as v2_router
@@ -489,11 +486,18 @@ async def agent_chat(req: AgentChatRequest):
 
 
 @app.get("/api/ml/demand-forecast")
-async def demand_forecast(store_id: str = "store_001", horizon_hours: int = 24):
+@limiter.limit("60/minute")
+async def demand_forecast(
+    request: Request,
+    store_id: str = Query("store_001", min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_\-]+$"),
+    horizon_hours: int = Query(24, ge=1, le=168)
+):
     """
     Run Heteroscedastic Tobit ML demand forecasting for a dark store.
     Predicts true latent demand correcting for right-censored stockout bias.
     """
+    import time
+    start = time.perf_counter()
     try:
         hours = np.arange(horizon_hours)
         # Construct realistic Quick-Commerce hourly feature matrix: [weather_temp, weather_rain, time_elapsed_sec]
@@ -506,6 +510,9 @@ async def demand_forecast(store_id: str = "store_001", horizon_hours: int = 24):
         
         point_preds, lower_cis, upper_cis = demand_forecaster.predict_with_intervals(feature_matrix)
         
+        ML_INFERENCE_LATENCY.labels(model="tobit_lgbm").observe(time.perf_counter() - start)
+        HTTP_REQUESTS.labels(method="GET", endpoint="/api/ml/demand-forecast", status_code="200").inc()
+
         return {
             "store_id": store_id,
             "model": "Heteroscedastic Tobit MLE + LightGBM (Right-Censored Inverse Mills Ratio)",
@@ -526,8 +533,10 @@ async def demand_forecast(store_id: str = "store_001", horizon_hours: int = 24):
             "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         }
     except Exception as e:
+        HTTP_REQUESTS.labels(method="GET", endpoint="/api/ml/demand-forecast", status_code="500").inc()
         logger.error(f"Demand forecast failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.get("/api/ml/store-health")
@@ -580,21 +589,29 @@ async def store_health(db: Session = Depends(get_db)):
 
 
 @app.get("/api/ml/fraud-score")
+@limiter.limit("60/minute")
 async def fraud_score(
-    order_id: str = "HF-00001",
-    cancel_rate: float = 0.05,
-    rating: float = 4.6,
-    order_value: float = 380.0,
-    hour: Optional[int] = None
+    request: Request,
+    order_id: str = Query("HF-00001", min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_\-]+$"),
+    cancel_rate: float = Query(0.05, ge=0.0, le=1.0),
+    rating: float = Query(4.6, ge=1.0, le=5.0),
+    order_value: float = Query(380.0, ge=0.0),
+    hour: Optional[int] = Query(None, ge=0, le=23)
 ):
     """
     Run FraudGuard scoring on an order using logistic risk gatekeeper.
     """
+    import time
+    start = time.perf_counter()
     try:
         eval_hour = hour if hour is not None else datetime.datetime.now().hour
         cod_risk, is_cod_allowed = _fraud_guard.predict_cod_rejection_risk(
             cancel_rate, rating, order_value, eval_hour
         )
+        
+        ML_INFERENCE_LATENCY.labels(model="fraud_guard_cod").observe(time.perf_counter() - start)
+        HTTP_REQUESTS.labels(method="GET", endpoint="/api/ml/fraud-score", status_code="200").inc()
+        
         return {
             "order_id": order_id,
             "cod_risk_score": round(cod_risk, 3),
@@ -610,21 +627,26 @@ async def fraud_score(
             }
         }
     except Exception as e:
+        HTTP_REQUESTS.labels(method="GET", endpoint="/api/ml/fraud-score", status_code="500").inc()
         logger.error(f"Fraud score failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/ml/refund-triage")
+@limiter.limit("60/minute")
 async def refund_triage(
-    order_id: str = "HF-00001",
-    complaint_type: str = "cold_food",
-    complaint_text: str = "The biryani arrived cold and soggy after delivery delay.",
-    order_value: float = 420.0,
-    item_price: float = 280.0
+    request: Request,
+    order_id: str = Query("HF-00001", min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_\-]+$"),
+    complaint_type: str = Query("cold_food", min_length=1, max_length=50),
+    complaint_text: str = Query("The biryani arrived cold and soggy after delivery delay.", max_length=1000),
+    order_value: float = Query(420.0, ge=0.0),
+    item_price: float = Query(280.0, ge=0.0)
 ):
     """
     Triage a refund claim using FraudGuard semantic plausibility and SLA penalty engine.
     """
+    import time
+    start = time.perf_counter()
     try:
         items = ["Dum Gosht Biryani", "Mirchi Ka Salan"]
         outcome, fraud_prob, explanation = _fraud_guard.triage_refund_request(
@@ -640,6 +662,10 @@ async def refund_triage(
             complaint_text=complaint_text,
             items_list=items
         )
+        
+        ML_INFERENCE_LATENCY.labels(model="fraud_guard_refund").observe(time.perf_counter() - start)
+        HTTP_REQUESTS.labels(method="GET", endpoint="/api/ml/refund-triage", status_code="200").inc()
+        
         return {
             "order_id": order_id,
             "decision": outcome,
@@ -649,6 +675,7 @@ async def refund_triage(
             "model": "FraudGuard v2 — Semantic Plausibility + SLA Penalty Engine",
         }
     except Exception as e:
+        HTTP_REQUESTS.labels(method="GET", endpoint="/api/ml/refund-triage", status_code="500").inc()
         logger.error(f"Refund triage failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -1,672 +1,199 @@
----
-title: HyperFlow ML Platform
-emoji: 🚀
-colorFrom: indigo
-colorTo: pink
-sdk: docker
-pinned: false
----
+# HyperFlow 3.0: Hyperlocal Commerce Intelligence Platform
 
-<div align="center">
-
-# HyperFlow 3.0
-### Hyperlocal Commerce Intelligence Platform
-
-*Production-grade ML strategy engine for Instamart dark-store expansion, q-commerce demand forecasting, dispatch stability, and real Swiggy MCP operations — powered by FastAPI, React, Gemini 2.0 Flash, Tobit demand modeling, and Cox PH breakeven analysis.*
-
-<br/>
-
-[![Python](https://img.shields.io/badge/Python_3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React_18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://postgresql.org)
-[![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io)
-[![Google Gemini](https://img.shields.io/badge/Gemini_2.0_Flash-8E75B2?style=flat-square&logo=googlegemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=flat-square&logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
-[![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://docker.com)
-[![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
-
-<br/>
-
-[![Tests](https://img.shields.io/badge/Tests-Passing-00D4AA?style=flat-square&logo=pytest&logoColor=white)]()
-[![License](https://img.shields.io/badge/License-MIT-6C63FF?style=flat-square)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-FF0077?style=flat-square)]()
-[![Vercel Demo](https://img.shields.io/badge/Vercel_Demo-Available-00D4AA?style=flat-square&logo=vercel&logoColor=white)](https://hyper-flow-chi.vercel.app/)
-[![Hugging Face Space](https://img.shields.io/badge/HuggingFace_Space-Live-FFB000?style=flat-square&logo=huggingface&logoColor=black)](https://huggingface.co/spaces/Gaurav711/HyperFlow)
-
-<br/>
+Production-grade ML strategy engine built for Instamart dark-store expansion, quick-commerce demand forecasting, and real-time dispatch stability. It integrates directly with Swiggy MCP APIs. Powered by FastAPI, React, Gemini 2.0 Flash, Tobit demand modeling, and Cox PH breakeven analysis.
 
 > **"Not a Swiggy clone. A platform that solves the problems Swiggy's own engineering blog says are unsolved."**
 
-<br/>
-
-[**Vercel Demo**](https://hyper-flow-chi.vercel.app/) · [**Hugging Face Space**](https://huggingface.co/spaces/Gaurav711/HyperFlow) · [**API Docs**](https://hyperflow-api.onrender.com/docs) · [**ML Benchmarks**](#-benchmark-results) · [**Architecture**](#-system-architecture)
-
-</div>
-
----
-
-## What Problem This Solves
-
-Five production ML and strategy gaps for Swiggy/Instamart-style q-commerce, implemented from first principles:
-
-| # | Problem | Industry Baseline | HyperFlow Solution | Lift |
-|---|---|---|---|---|
-| 1 | **Dark Store Site Selection** — where should Instamart open next? | Spreadsheet heuristics on density and rent | Food-order catchment proxy + competition/cannibalization scoring + breakeven CI | **Go/Hold/No-Go decision** |
-| 2 | **Censored Demand** — stockouts hide true demand from forecasters | OLS Regression ignores censoring (WMAPE: 38.99%) | Heteroscedastic Tobit MLE + LightGBM Quantile | **+24.28% WMAPE** |
-| 3 | **ETA Display Jitter** — GPS noise causes erratic delivery time updates | Raw MIMO output (113 display bumps per session) | Velocity-normalized RF Classifier gate | **81.4% suppressed** |
-| 4 | **Cancelled Order Arbitrage** — resale pools exploited by co-located accounts | Static 50% off (50 arbitrage exploits per 500 cancels) | Thermal SQI solver + Sybil proximity guard | **100% blocked** |
-| 5 | **Refund Loop Fraud** — cloud-kitchen proximity triggers false fraud flags | Geo-IP proximity block (48% false positive rate) | Tenure-gated proximity bypass + semantic plausibility engine | **0% false positives** |
-
----
-
-## Swiggy Strategy Decisions
-
-HyperFlow is framed around the questions an AI/ML strategy team actually answers:
-
-| Strategy Question | HyperFlow Module | Decision Output |
-|---|---|---|
-| Should we open a dark store in pincode X? | Dark Store Site Selection | `GO`, `HOLD`, or `NO-GO` with composite score |
-| When does this store break even? | Cox PH profitability model | Median months-to-profit plus confidence interval |
-| Which SKUs should we launch with? | Demand density + zone profile | Initial SKU count and category priorities |
-| Which items may stock out next? | Tobit censored demand forecaster | Point forecast, CI, safety stock, stockout risk |
-| Can agents use Swiggy commerce safely? | MCP-native API gateway | Food, Instamart, and Dineout tool routing |
-
-Example strategy response:
-
-```json
-{
-  "pincode": "560103",
-  "recommendation": "GO",
-  "composite_score": 84.6,
-  "projected_breakeven_months": 8.6,
-  "projected_monthly_contribution": 30307,
-  "recommended_initial_sku_count": 4608,
-  "priority_categories": ["milk-and-dairy", "fresh-produce", "ready-to-eat"]
-}
-```
-
-## System Architecture
-
-```mermaid
-graph TD
-    subgraph Frontend["Client Applications"]
-        Consumer["Consumer App - React & Vite"]
-        Ops["Operations Intel - Live Dashboards"]
-        Admin["Admin Panel - Config & Logs"]
-    end
-
-    Gateway["FastAPI API Gateway - Async REST + WebSocket"]
-
-    subgraph ML["ML Operations Engine"]
-        Tobit["Tobit Regressor - Censored Demand"]
-        Site["Site Selection - Go/Hold/No-Go"]
-        Cox["Cox PH Model - Time-to-Profit"]
-        ETA["ETA Smoother - Random Forest Gate"]
-        PSI["PSI Drift Monitor - Real-time Checks"]
-        Dispatch["Dispatch Batcher - Haversine Metrics"]
-        Fraud["Semantic Fraud Guard"]
-    end
-
-    subgraph Agent["AI Commerce Agent"]
-        Gemini["Gemini 2.0 Flash - ReAct Loop"]
-        MCP["Live Swiggy MCP APIs - Food & Instamart"]
-    end
-
-    subgraph Data["Data and State"]
-        PG["PostgreSQL - ACID Transactions"]
-        Redis["Redis - Atomic Locking and Cache"]
-    end
-
-    Consumer --> Gateway
-    Ops --> Gateway
-    Admin --> Gateway
-
-    Gateway --> ML
-    Gateway --> Agent
-
-    ML --> Data
-    Agent --> Data
-    Agent --> MCP
-```
-
----
-
-##  Benchmark Results
-
-> All metrics produced by Monte Carlo simulation engines in `ml_core/`. Run `python3 -m ml_core.demand_simulation` to reproduce.
-
-### ML Model Performance
-
-```
-Right-Censored Demand Forecasting (Retail Stockout Simulation Protocol, 64.7% inventory censoring)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  OLS Censored Rows WMAPE:   20.26%   ████████████████░░░░░░░░  (biased under stockout censoring)
-  Tobit Censored Rows WMAPE: 13.90%   ███████████░░░░░░░░░░░░░  (+31.41% WMAPE lift)
-  
-  Censored WMAPE Lift:      +31.41%  ──  Imputes latent demand via Inverse Mills Ratio
-  Uncensored WMAPE:          12.75%  ──  Preserves true demand distribution on uncensored rows
-
-*Protocol Provenance: Evaluated on parametric retail simulation calibrated from empirical retail demand statistics (Makridakis et al., 2022) with stockout-capped holdout validation.*
-
-ETA Jitter Suppression (500-trial monsoon storm surge simulation)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Raw MIMO bumps:         113   ████████████████████████████
-  Gated smoother bumps:    21   █████░░░░░░░░░░░░░░░░░░░░░░
-  Suppression rate:      81.4%  (zone velocity drop: 8 m/s → 3 m/s)
-
-Cancelled Order Resale (500 cancellation events, 50 co-located exploit attempts)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Baseline (static 50% off):  Conversion 62.4%  |  Arbitrage exploits: 50
-  HyperFlow solver:           Conversion 73.6%  |  Arbitrage exploits:  0
-  Lift: +11.2% conversion, 100% arbitrage blocked
-
-Fraud Guard (50 cloud-kitchen geo-collision trials)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Geo-IP baseline:        False positive rate: 48%  (blocks legit nearby buyers)
-  Tenure-gated bypass:    False positive rate:  0%  (100% semantic fraud blocked)
-```
-
-### System Performance (Verified via Live ASGI Load Test on Real Tobit ML Inference)
-
-| Endpoint | Concurrency | Throughput | P50 Latency | P95 Latency | P99 Latency | Error Rate |
-|---|---|---|---|---|---|---|
-| `/api/ml/demand-forecast` (Live Tobit MLE) | 10 clients | **420.8 req/sec** | **2.3 ms** | **2.8 ms** | **3.5 ms** | **0.0%** |
-| `/api/v1/orders/reserve` (Redis Lock) | 50 clients | **1,598.0 req/sec** | **26.6 ms** | **69.2 ms** | **78.8 ms** | **0.0%** |
-
-*Load tests hit the active Tobit MLE + LightGBM quantile regression inference route (`/api/ml/demand-forecast`) under concurrent ASGI execution.*
-
----
-
-##  ML Components
-
-### 1. Dark Store Site Selection
-
-Answers the Swiggy Strategy question: **"Should we open an Instamart dark store in this pincode?"**
-
-The evaluator uses food-order density as a q-commerce demand proxy, then adjusts for AOV/rent economics, peak-hour concentration, competitor pressure, and existing Swiggy-store cannibalization.
-
-```python
-from backend.ml.dark_store_site_selection import SiteProfile, evaluate_site
-
-decision = evaluate_site(SiteProfile(
-    pincode="560103",
-    city="Bengaluru",
-    latitude=12.9352,
-    longitude=77.6245,
-    avg_daily_food_orders_zone=210,
-    avg_order_value_food=385,
-    cancellation_rate_food=0.09,
-    peak_hour_concentration=0.55,
-    zone_type="tech_corridor",
-    existing_blinkit_stores_radius=1,
-    existing_zepto_stores_radius=1,
-    real_estate_cost_monthly=150000,
-))
-```
-
-**Why this matters:** Dark stores can take months to reach profitability. HyperFlow turns raw catchment signals into an explicit launch/no-launch decision, breakeven timing, and category-level SKU guidance a strategy manager can use.
-
----
-
-### 2. Heteroscedastic Tobit Demand Forecaster
-
-Solves the censored demand problem where stockouts prevent observation of true consumer demand. Standard OLS regression on censored data is biased — it underestimates latent demand proportionally to the censoring rate.
-
-**Two-stage pipeline:**
-- **Stage 1 — Tobit MLE:** Models the latent demand distribution with heteroscedastic variance: `log(σᵢ) = Xᵢγ`. Optimized via L-BFGS-B. Imputes demand on censored (stockout) days using the Inverse Mills Ratio.
-- **Stage 2 — LightGBM Quantile:** Trains on Tobit-imputed demand targets. Outputs point forecast + 90% confidence interval for safety stock calculation.
-
-```python
-# Two-stage fit
-forecaster = CensoredDemandForecaster()
-forecaster.fit(X_features, y_observed_sales, censored_mask)
-point, lower, upper = forecaster.predict_with_intervals(X_new)
-safety_stock = upper * 1.15  # 15% buffer above 95th percentile
-```
-
-**Why this matters:** At 40% censoring rate (typical for fast-moving Instamart SKUs during surge hours), OLS WMAPE degrades to 26.5%. Tobit holds at 13.9% by correctly modeling the truncated distribution.
-
----
-
-### 3. Learned ETA Smoother (Velocity-Normalized RF Gate)
-
-GPS pings during delivery generate raw ETA updates from a MIMO network. Problem: traffic spikes, tunnel passes, and GPS drift cause "phantom bumps" — ETA jumps 5 minutes when the rider hasn't actually slowed down.
-
-**Architecture:**
-- Extracts 7 delta features between sequential GPS pings
-- Key feature: `normalized_velocity = v_rider / v_zone` — shields the classifier from global weather/traffic drift
-- RandomForest binary classifier: `0 = GPS noise, 1 = real delay`
-- Smoothing gate: applies `α_noise = 0.15` (suppress) or `α_real = 0.80` (accept) based on prediction
-
-```
-Noise spike (rider velocity: 9.6 m/s, normalized: 1.2):
-  RF probability of real delay: 0.12 → SUPPRESSED (α=0.15)
-  
-Real delay (rider velocity: 0.8 m/s, normalized: 0.1):
-  RF probability of real delay: 0.89 → ACCEPTED (α=0.80)
-```
-
----
-
-### 4. Cox Proportional Hazards — Dark Store Profitability
-
-Predicts time-to-profitability for new dark store locations using survival analysis. Custom Cox PH implementation (no external dependency) with Nelson-Aalen baseline hazard estimator.
-
-**Feature set:** population density, competitor density in 2km radius, distance to nearest profitable store, initial SKU count, average AOV, non-grocery GMV share.
-
-**Output:** Survival curve (probability of NOT reaching profitability at each month) + median months-to-profit for allocation decisions.
-
----
-
-### 5. Atomic Inventory Reservation (Dual-Mode Locking)
-
-Solves the race condition where two concurrent checkouts attempt to reserve the last unit of a SKU.
-
-**Mode A — Redis Redlock:**
-```
-SET lock:inv:{store}:{sku} {owner_id} NX PX 1000
-→ Atomic. Fails fast. Auto-expires on crash.
-```
-
-**Mode B — PostgreSQL SELECT FOR UPDATE NOWAIT:**
-```sql
-SELECT * FROM inventory
-WHERE store_id = $1 AND sku_id = $2
-FOR UPDATE NOWAIT;
--- Immediately raises OperationalError if row locked
--- No connection pool starvation
-```
-
-**Transactional Outbox:** Every successful reservation writes an `outbox_events` row in the same DB transaction. Background worker polls and forwards to Kafka. Guarantees at-least-once delivery without distributed transaction.
-
----
-
-### 6. Production Safeguards (PSI Drift Detection)
-
-Real-time Population Stability Index monitoring with automated retraining trigger.
-
-```
-PSI = Σ (Actual% - Expected%) × ln(Actual% / Expected%)
-
-PSI < 0.10  →  GREEN   — Stable
-PSI < 0.20  →  YELLOW  — Moderate drift, monitor
-PSI > 0.20  →  RED     — Retraining triggered
-```
-
-Background thread recalculates PSI every 15 seconds against reference distribution. Auto-retraining fires on threshold breach.
-
----
-
-## AI Commerce Agent
-
-Gemini 2.0 Flash running a ReAct (Reason + Act) loop with 4 registered tools:
-
-```
-User: "Show me high protein meals near Patia under ₹300"
-
-[Step 1] Gemini reasons: need restaurant list + filter by protein
-[Step 2] Tool call: list_restaurants()
-         → Returns: Behrouz Biryani (4.6★), Carbon Grill (4.3★)...
-[Step 3] Gemini reasons: need menu items with protein data
-[Step 4] Tool call: get_menu(restaurant_id="rest_behrouz")
-         → Returns: Dum Gosht Biryani (36g protein, ₹349)...
-[Step 5] Final answer: structured response with filtered results
-
-Total tool calls: 2  |  Latency: ~1.1s
-```
-
-**Live MCP Integration:** When Swiggy access token is configured, tool calls route to live Swiggy Food/Instamart/Dineout MCP APIs. Demo mode uses seeded PostgreSQL data.
-
-### HyperFlow MCP Tools
-
-HyperFlow also exposes its own MCP-compatible tool server for AI agents:
-
-| Tool | Strategy / Ops Use Case |
-|---|---|
-| `evaluate_dark_store_site` | Score a pincode for Instamart dark-store launch, breakeven, and SKU mix |
-| `forecast_demand` | Forecast dark-store demand with Tobit confidence intervals |
-| `score_profitability` | Estimate dark-store months-to-breakeven with Cox PH survival curves |
-| `get_psi_status` | Check production drift before trusting a model output |
-| `reserve_inventory` | Test atomic inventory reservation under concurrent checkout |
-
-MCP server entrypoint: `backend/mcp_server.py`
-
----
-
-## Authentication
-
-| Mode | Trigger | Data Source | Use Case |
-|---|---|---|---|
-| **Demo Access** | 1-click | Seeded PostgreSQL | Portfolio demo, recruiter review |
-| **Live Mode** | Swiggy OAuth 2.1 + PKCE | Real Swiggy MCP APIs | Local development, real order flow |
-
-Demo login issues a properly signed JWT (HS256, 24hr TTL, scoped claims):
-```json
-{
-  "sub": "demo_user_001",
-  "role": "demo",
-  "scope": ["read:restaurants", "read:inventory", "write:reservations"],
-  "exp": 1234567890
-}
-```
-
-No OTP, no email verification in demo mode — correct UX for a portfolio demo. Production would use OAuth 2.1 with PKCE (already implemented for Swiggy MCP).
-
----
+## Key Features
+- **AI Commerce Agent:** LangGraph multi-agent chat integrating Swiggy Food, Instamart, and Dineout MCP tools.
+- **Dark Store Intel:** Tobit-LGBM pipeline for stockout-censored demand forecasting and Cox Proportional Hazards for expansion profitability scoring.
+- **Route Intelligence & Dispatch:** Real-time optimization with ETA jitter suppression.
+- **ML Guardrails:** LLM semantic fraud detection, real-time feature drift (PSI) monitoring, and safe API clipping.
+- **Zero-Trust Auth:** Enterprise-grade asymmetric RS256 JWTs with JWKS discovery and Redis-backed JTI revocation blacklists.
 
 ## Tech Stack
 
-<table>
-<tr>
-<td><strong>Layer</strong></td>
-<td><strong>Technology</strong></td>
-<td><strong>Why</strong></td>
-</tr>
-<tr>
-<td>Frontend</td>
-<td>
-
-![React](https://img.shields.io/badge/React_18-61DAFB?style=flat-square&logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
-
-</td>
-<td>Responsive dark-mode dashboard + mobile consumer app in one codebase</td>
-</tr>
-<tr>
-<td>Backend</td>
-<td>
-
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
-![Uvicorn](https://img.shields.io/badge/Uvicorn-499848?style=flat-square&logo=gunicorn&logoColor=white)
-
-</td>
-<td>Async REST + WebSocket, auto-generated OpenAPI docs</td>
-</tr>
-<tr>
-<td>ML/AI</td>
-<td>
-
-![Google Gemini](https://img.shields.io/badge/Gemini_2.0-8E75B2?style=flat-square&logo=googlegemini&logoColor=white)
-![LangChain](https://img.shields.io/badge/LangGraph-1C3C3C?style=flat-square&logo=langchain&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
-![LightGBM](https://img.shields.io/badge/LightGBM-00875A?style=flat-square)
-
-</td>
-<td>ReAct agent loop, Tobit MLE, RF classifier, quantile regression</td>
-</tr>
-<tr>
-<td>Database</td>
-<td>
-
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?style=flat-square&logo=sqlalchemy&logoColor=white)
-
-</td>
-<td>ACID transactions, atomic locking, sub-5ms feature cache</td>
-</tr>
-<tr>
-<td>Infra</td>
-<td>
-
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)
-![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white)
-
-</td>
-<td>Containerized backend, CDN-served frontend</td>
-</tr>
-<tr>
-<td>Integrations</td>
-<td>
-
-![Swiggy](https://img.shields.io/badge/Swiggy_MCP-FF6900?style=flat-square)
-![Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?style=flat-square&logo=apachekafka&logoColor=white)
-![MLflow](https://img.shields.io/badge/MLflow-0194E2?style=flat-square&logo=mlflow&logoColor=white)
-
-</td>
-<td>Live Swiggy Food/Instamart/Dineout APIs, outbox event streaming, experiment tracking</td>
-</tr>
-</table>
+- **Backend Framework:** FastAPI (Python 3.10+)
+- **Frontend:** React 19 + Vite (Framer Motion, Tailwind CSS / UI Components)
+- **Database:** PostgreSQL 15, SQLAlchemy 2.0
+- **Cache/Locks:** Redis 7 (In-memory failover supported)
+- **Machine Learning:** Scikit-learn, LightGBM, SciPy, Pandas
+- **AI/LLM:** LangGraph, Google Gemini 2.0 Flash SDK
+- **Security:** RS256 JWT via Cryptography, PyJWT
+- **Deployment:** Docker (multi-stage), Docker Compose, Vercel (frontend)
 
 ---
 
-##  Quick Start
+## Prerequisites
 
-### Option 1 — Demo (No setup required)
+- **Python:** 3.10 or higher
+- **Node.js:** 20 or higher (for frontend)
+- **Docker & Docker Compose:** (Optional, but recommended for Redis/Postgres)
+- **Gemini API Key:** from Google AI Studio (Free Tier)
+- **Swiggy MCP Token:** `SWIGGY_ACCESS_TOKEN` from Swiggy Builders Club OAuth flow
 
-Visit **[hyper-flow-chi.vercel.app](https://hyper-flow-chi.vercel.app/)** → Click **"Demo Access"** → Full platform loads instantly.
+---
 
-Hosted ML/API demo: **[huggingface.co/spaces/Gaurav711/HyperFlow](https://huggingface.co/spaces/Gaurav711/HyperFlow)**
+## Getting Started
 
-### Option 2 — Local with Live Swiggy Data
-
+### 1. Clone the Repository
 ```bash
-# 1. Clone
-git clone https://github.com/gauravnayak/hyperflow
-cd hyperflow
+git clone https://github.com/Gaurav711cgu/HyperFlow.git
+cd HyperFlow
+```
 
-# 2. Configure environment
+### 2. Environment Setup
+Copy the example environment file:
+```bash
 cp .env.example .env
-# Add your keys:
-# GEMINI_API_KEY=your_gemini_key
-# SWIGGY_ACCESS_TOKEN=your_swiggy_token  (optional — enables live mode)
-# DATABASE_URL=postgresql://...
-# REDIS_URL=redis://localhost:6379
-
-# 3. Start services
-docker-compose up -d  # PostgreSQL + Redis
-
-# 4. Seed database + run migrations
-alembic upgrade head
-python3 -m backend.db.seed
-
-# 5. Start backend
-pip install -r requirements.txt
-python3 app.py
-# → API running at http://localhost:7860
-# → Swagger docs at http://localhost:7860/docs
-
-# 6. Start frontend
-cd frontend
-npm install
-npm run dev
-# → App running at http://localhost:5173
 ```
+Configure your `.env` variables:
 
-### Option 3 — Run ML Benchmarks Only
+| Variable | Description | Example |
+| -------- | ----------- | ------- |
+| `GEMINI_API_KEY` | Your Google Gemini API Key | `AIzaSy...` |
+| `SWIGGY_ACCESS_TOKEN` | OAuth token for Swiggy MCP | `ey...` |
+| `POSTGRES_URL` | PostgreSQL connection string | `postgresql://hyperflow_admin:hyperflow_secure_pass@localhost:5432/hyperflow_db` |
+| `REDIS_URL` | Redis connection for lock manager | `redis://localhost:6379` |
+| `PORT` | API Server port | `7860` |
 
+### 3. Start Database & Redis (Docker)
+Start the required external services using Docker Compose:
 ```bash
-# Reproduce all benchmark numbers
-python3 -m ml_core.demand_simulation   # Tobit vs OLS, 400 trials
-python3 -m ml_core.eta_simulation      # Jitter suppression, storm surge
-python3 -m ml_core.rescue_simulation   # CORO resale + arbitrage guard
-python3 -m ml_core.fraud_simulation    # Fraud triage + tenure bypass
+docker-compose up -d postgres redis
 ```
+
+### 4. Install Backend Dependencies
+It's recommended to use a virtual environment:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 5. Install Frontend Dependencies
+```bash
+cd frontend
+npm install  # or yarn install / pnpm install
+cd ..
+```
+
+### 6. Run the Application
+
+**Terminal 1: FastAPI Backend Server**
+```bash
+# In the root directory with virtual environment activated
+uvicorn backend.api.main:app --reload --port 7860
+```
+
+**Terminal 2: React Frontend (Vite)**
+```bash
+cd frontend
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173) in your browser. API docs are available at [http://localhost:7860/docs](http://localhost:7860/docs).
 
 ---
 
-##  Project Structure
+## Architecture
 
+### Directory Structure
 ```
-hyperflow/
-│
 ├── backend/
 │   ├── api/
-│   │   ├── main.py              # FastAPI gateway — all endpoints
-│   │   ├── swiggy_mcp_routes.py # Live Swiggy MCP proxy routes
-│   │   └── utils.py             # MCP call helpers
-│   ├── db/
-│   │   ├── models.py            # SQLAlchemy ORM models
-│   │   ├── session.py           # DB connection pool
-│   │   ├── seed.py              # Realistic seed data
-│   │   └── migrations/          # Alembic migration scripts
-│   ├── ml/
-│   │   ├── dark_store_site_selection.py # Instamart pincode Go/Hold/No-Go evaluator
-│   │   ├── censored_demand.py   # Tobit + LightGBM forecaster
-│   │   ├── store_profitability.py # Cox PH survival model
-│   │   └── production_safeguards.py # PSI drift detection
-│   └── services/
-│       └── redis_lock.py        # Redlock atomic locking
-│
-├── ml_core/                     # Standalone simulation engines
-│   ├── demand_forecaster.py     # Tobit MLE implementation
-│   ├── eta_smoother.py          # MIMO + RF smoother
-│   ├── dispatch_batcher.py      # Haversine spatial batcher
-│   ├── fraud_guard.py           # Semantic plausibility engine
-│   ├── rescue_optimizer.py      # CORO dynamic pricing
-│   ├── demand_simulation.py     # 400-trial Monte Carlo
-│   ├── eta_simulation.py        # Storm surge benchmark
-│   ├── fraud_simulation.py      # Fraud triage benchmark
-│   └── rescue_simulation.py     # Arbitrage guard benchmark
-│
+│   │   ├── deps/          # FastAPI dependencies (auth guards)
+│   │   ├── routers/       # REST API endpoints (v1, v2, auth)
+│   │   └── main.py        # FastAPI application entrypoint
+│   ├── core/              # Global state and security
+│   ├── db/                # SQLAlchemy models and warehouse
+│   ├── ml/                # Core ML models (Tobit, Cox PH, PSI)
+│   └── services/          # Business logic (LangGraph, Auth, ETL)
 ├── frontend/
-│   └── src/
-│       ├── App.jsx              # Root — routing + state management
-│       ├── api.js               # Backend + MCP API client
-│       └── components/
-│           ├── AuthPortal.jsx       # Demo access + OAuth flow
-│           ├── DiscoveryHub.jsx     # Consumer food/grocery app
-│           ├── AICommerceAgent.jsx  # Gemini ReAct chat interface
-│           ├── RealTimeTracking.jsx # Leaflet map + ETA smoother
-│           ├── OpsControlPanel.jsx  # ML metrics dashboard
-│           ├── FleetLogisticsAdmin.jsx
-│           ├── MerchantStockAdmin.jsx
-│           └── ...
-│
-├── tests/
-│   └── test_ml_core.py          # Unit + integration tests
-├── docker-compose.yml
-├── Dockerfile
-└── requirements.txt
+│   ├── src/               # React application source code
+│   ├── package.json       # Node dependencies
+│   └── vite.config.js     # Vite builder configuration
+├── ml_core/               # Shared ML algorithms and safeguards
+├── tests/                 # Comprehensive pytest suite
+├── scripts/               # Maintenance and seeding scripts
+├── Dockerfile             # Multi-stage container build
+├── docker-compose.yml     # Local services orchestration
+└── requirements.txt       # Python dependencies
 ```
 
----
+### Request Lifecycle
+1. Request hits FastAPI router (`backend/api/routers/`).
+2. Authentication middleware (`get_current_user`) verifies RS256 JWT using JWKS public keys.
+3. ML endpoints (`/forecast/demand`, `/profitability/score`) offload Scipy/LightGBM inference to an `asyncio.to_thread` pool to prevent blocking the async event loop.
+4. LangGraph agent (`/api/agent/chat`) processes LLM queries via Gemini, applying a strict `history[-5:]` context-pruning strategy to minimize token bloat.
+5. ETL batch tasks execute natively on Postgres via SQLAlchemy `func.sum()` groupings for memory-safe OLAP aggregations.
 
-## API Reference
+### Key Components
 
-Full interactive docs: **[hyperflow-api.onrender.com/docs](https://hyperflow-api.onrender.com/docs)**
+**Zero-Trust Authentication (`backend/services/token_manager.py`)**
+- Dynamically generates a 2048-bit RSA Private/Public keypair on startup.
+- Serves the Public Key via a standard `/.well-known/jwks.json` endpoint for decoupled downstream verification.
+- Enforces O(1) JTI revocation lookups in Redis to immediately ban compromised Refresh Tokens.
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/v1/auth/demo` | Issue demo JWT (signed HS256, 24hr TTL) |
-| `POST` | `/api/v2/strategy/dark-store/site-selection` | Instamart pincode Go/Hold/No-Go with breakeven CI |
-| `GET` | `/api/v1/restaurants` | List restaurants (MCP live or DB fallback) |
-| `GET` | `/api/v1/restaurants/{id}/menu` | Menu items with protein/calorie data |
-| `POST` | `/api/v1/orders/reserve` | Atomic inventory reservation (dual-lock) |
-| `GET` | `/api/v1/forecast/{store}/{sku}` | Tobit demand forecast + CI |
-| `GET` | `/api/v1/metrics/availability/{store}` | WMAPE lift, availability rate |
-| `GET` | `/api/v1/metrics/bump-rate` | ETA jitter suppression metrics |
-| `GET` | `/api/v1/metrics/robustness` | PSI drift scores per feature |
-| `POST` | `/api/v1/ml/retrain` | Trigger manual retraining |
-| `GET` | `/api/v1/profitability/{store}` | Cox PH survival curve + months-to-profit |
-| `POST` | `/api/v1/chat` | Gemini ReAct agent (tool-calling) |
-| `WS` | `/ws/live-metrics` | WebSocket live telemetry stream |
-| `GET` | `/api/v1/system/mode` | DEMO vs LIVE mode indicator |
+**Demand Forecasting & Safeguards (`backend/ml/`)**
+- **Tobit-LGBM:** Handles right-censored quick-commerce demand where true demand exceeds historical stockouts.
+- **Cox Proportional Hazards:** Calculates dark store breakeven timelines (Survival Probabilities).
+- **PSI Drift Monitor:** Tracks Kullback-Leibler divergence on incoming ML feature distributions and falls back to heuristics if drift exceeds 0.2 threshold.
 
 ---
 
 ## Testing
 
-```bash
-# Run full test suite
-python3 -m pytest tests/ -v
+The project uses `pytest` for the backend testing suite, ensuring all ML logic, token revocation, and safe thread-pooling is completely covered.
 
-# Key test cases:
-# ✓ TobitRegressor: imputed demand ≥ observed sales on censored days
-# ✓ LearnedETASmoother: noise spike suppressed, real delay accepted
-# ✓ RescueOptimizer: co-located buy-back correctly flagged as arbitrage
-# ✓ FraudGuard: semantic mismatch (cold complaint on cold items) blocked
-# ✓ DispatchBatcher: SLA constraints respected across all batch sizes
+```bash
+# Run all tests
+PYTHONPATH=. python3 -m pytest tests/ -v
+
+# Run only authentication tests
+PYTHONPATH=. python3 -m pytest tests/test_dual_token_auth.py -v
 ```
 
 ---
 
-## Design Decisions & Rejected Alternatives
+## Deployment
 
-| Decision | Chosen | Rejected | Why |
-|---|---|---|---|
-| Site selection signal | Food-order catchment proxy | Generic census-only demand estimate | Swiggy food demand captures local commerce intensity and impatience better than static demographics alone |
-| Demand under stockout | Heteroscedastic Tobit + quantile model | OLS on observed sales | OLS treats sold-out demand as true demand and under-forecasts high-velocity SKUs |
-| Breakeven timing | Cox PH survival model | Fixed payback-period formula | Survival modeling handles right-censoring when stores have not yet reached profitability |
-| Locking | Redis lock + PostgreSQL `NOWAIT` fallback | Blocking DB row locks only | Fast failure protects checkout latency and keeps the demo runnable without Redis |
-| MCP integration | Swiggy MCP proxy + HyperFlow MCP server | REST-only demo | MCP-native tools match the agent-commerce direction of Food, Instamart, and Dineout workflows |
+### Docker (Production Image)
+The project includes a multi-stage `Dockerfile` creating a hardened, non-root runner environment.
 
-## Key Design Decisions
+```bash
+# Build the production image
+docker build -t hyperflow-api .
 
-**Why not a real auth system?**
-The ML pipeline and agent are the technical depth. OTP auth would cost 3 weeks for zero resume signal. Demo JWT is correct UX for portfolio demos — every serious SaaS product (Vercel, Linear, Notion) has a demo login. Production auth would use OAuth 2.1 with PKCE (already implemented for Swiggy MCP).
+# Run the container (Ensure .env is provided or passed as -e)
+docker run -p 7860:7860 --env-file .env hyperflow-api
+```
 
-**Why dual-mode locking (Redis + PostgreSQL)?**
-Redis Redlock is faster (4ms P50) but requires a running Redis instance. PostgreSQL `SELECT FOR UPDATE NOWAIT` is available everywhere and uses `NOWAIT` specifically to fail fast and preserve connection pool — not the typical blocking `FOR UPDATE`. Both are production patterns; switchable via `LOCK_BACKEND` env var.
+### Docker Compose
+For a full localized production deployment including Postgres and Redis:
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
 
-**Why custom Cox PH instead of lifelines?**
-`lifelines` has Cython compilation requirements that break on some deployment environments. The custom implementation uses BFGS optimization of Cox's partial log-likelihood with Nelson-Aalen baseline hazard — mathematically identical, zero compilation dependencies.
+### Vercel (Frontend)
+The React application is pre-configured for Vercel deployment. Connect the GitHub repository to Vercel and set the Build command to `npm run build` targeting the `frontend` root directory.
 
-**Why heteroscedastic Tobit instead of standard Tobit?**
-Standard Tobit assumes constant variance (σ is a scalar). In demand forecasting, variance is heteroscedastic — weekend demand is more volatile than weekday demand. Modeling `log(σᵢ) = Xᵢγ` captures this, reduces bias under high-censoring conditions, and avoids the homoscedasticity misspecification that inflates standard errors.
-
-## 10 Questions This Project Answers
-
-**Q: Why is this more than a Swiggy clone?**  
-A: Swiggy MCP provides commerce actions. HyperFlow adds predictions on top: where to open a dark store, when it breaks even, which SKUs to stock, which ETA bumps are noise, and which refund claims need review.
-
-**Q: Why use food-order data for Instamart site selection?**  
-A: Food orders reveal hyperlocal order density, AOV, cancellation impatience, and time-of-day spread. Those are strong proxies for q-commerce readiness before a dark store exists.
-
-**Q: Why Cox PH for profitability?**  
-A: Store profitability is a time-to-event problem. Cox PH can use stores that have not yet broken even without throwing away censored examples.
-
-**Q: What happens when there is not enough real PSI data?**  
-A: The API returns an explicit data-source/status message instead of pretending synthetic PSI is production truth. Demo mode remains visible, but it is labeled.
-
-**Q: What would you upgrade next at Swiggy scale?**  
-A: Replace the LightGBM demand backbone with a foundation time-series model such as TimesFM, keep the Tobit availability de-biasing layer, and retrain hierarchical SKU-store forecasts by city/category.
-
-See: [`docs/timesfm_upgrade_note.md`](docs/timesfm_upgrade_note.md)
+### Render / Hugging Face Spaces (Backend)
+The FastAPI backend runs securely on platforms like Hugging Face Spaces or Render. 
+1. Expose port `7860`.
+2. Provide `GEMINI_API_KEY` and `SWIGGY_ACCESS_TOKEN` as environment secrets.
 
 ---
 
-## Roadmap
+## Troubleshooting
 
-- [x] Add dark-store site selection module for Swiggy Strategy decisions
-- [x] Expose site selection through REST and MCP tools
-- [x] Add frontend Site Selection Lab UI (`/site-selection`) with pincode economics & breakeven CI
-- [x] Prometheus `/metrics` endpoint for Grafana telemetry monitoring
-- [x] Verified ML Load Test (`2,146 req/sec` on `/api/ml/demand-forecast`)
-- [x] Seeded empirical baseline reference data for PSI drift monitoring (`data/m5/psi_reference_baseline.csv`)
-- [ ] BEIR evaluation for Swiggy Skill Agent search component
-- [ ] Colbert late-interaction reranker for dish semantic search
+### JWT Auth / Login Failures
+**Error:** `401 Unauthorized` or `Signature verification failed`
+**Solution:** Check that the application wasn't restarted recently. Because the RSA keypair is generated *in-memory* on startup (for demo purposes), old tokens instantly invalidate when the server restarts. Log in again to get a new token signed by the new key.
 
----
+### Redis Lock Failures
+**Error:** Exceptions from `RedisLockManager`
+**Solution:** The system gracefully falls back to an in-memory `threading.Lock()` if Redis is unreachable. However, ensure `REDIS_URL` is correct or run `docker-compose up -d redis` for clustered environments.
 
-##  Author
-
-**Gaurav Nayak**
-B.Tech CS + Data Science · C.V. Raman Global University, Bhubaneswar
-
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/gauravnayak)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://linkedin.com/in/gauravnayak)
-[![Portfolio](https://img.shields.io/badge/Portfolio-FF0077?style=flat-square&logo=vercel&logoColor=white)](https://gauravnayak.dev)
-
----
-
-## License
-
-MIT License · See [LICENSE](LICENSE) for details.
-
----
-
-<div align="center">
-
-**Built to solve real problems. Benchmarked with real math. Not a tutorial clone.**
-
-<br/>
-
-[![Star this repo](https://img.shields.io/github/stars/gauravnayak/hyperflow?style=social)](https://github.com/gauravnayak/hyperflow)
-
-</div>
+### Asyncio Blocking Warnings in Server Logs
+**Error:** `Executing <Task...> took 0.XXX seconds`
+**Solution:** This implies an ML task is blocking the async event loop. Ensure all heavy endpoints (like `/profitability/score`) correctly utilize `await asyncio.to_thread(...)`. This was patched in recent L5 audits.

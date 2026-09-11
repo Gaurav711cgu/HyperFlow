@@ -324,7 +324,8 @@ async def run_agent_stream(
 
         # Build conversation history for Gemini
         gemini_history = []
-        for msg in history[-10:]:  # keep last 10 turns for context
+        # Pruning Context: Keep only last 5 turns to prevent token explosion and lower API costs (L5 requirement)
+        for msg in history[-5:]:
             role = "user" if msg["role"] == "user" else "model"
             gemini_history.append({"role": role, "parts": [msg["content"]]})
 

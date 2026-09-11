@@ -1,3 +1,7 @@
+import base64
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
 import os
 import time
 import uuid
@@ -8,8 +12,42 @@ from threading import Lock
 
 from backend.services.redis_lock import RedisLockManager
 
-JWT_SECRET = os.getenv("JWT_SECRET", "hyperflow_enterprise_jwt_secret_key_2026")
-JWT_ALGORITHM = "HS256"
+JWT_ALGORITHM = "RS256"
+
+# Generate RSA keypair on module load
+private_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=2048,
+    backend=default_backend()
+)
+public_key = private_key.public_key()
+
+PRIVATE_KEY_PEM = private_key.private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.PKCS8,
+    encryption_algorithm=serialization.NoEncryption()
+)
+PUBLIC_KEY_PEM = public_key.public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo
+)
+
+def _int_to_base64url(n: int) -> str:
+    b = n.to_bytes((n.bit_length() + 7) // 8, byteorder='big')
+    return base64.urlsafe_b64encode(b).rstrip(b'=').decode('ascii')
+
+JWKS_JSON = {
+    "keys": [
+        {
+            "kty": "RSA",
+            "kid": "hyperflow-auth-key-1",
+            "use": "sig",
+            "alg": "RS256",
+            "n": _int_to_base64url(public_key.public_numbers().n),
+            "e": _int_to_base64url(public_key.public_numbers().e)
+        }
+    ]
+}
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
@@ -23,7 +61,8 @@ class TokenManager:
     """
 
     def __init__(self, redis_client=None):
-        self.secret_key = JWT_SECRET
+        self.private_key = PRIVATE_KEY_PEM
+        self.public_key = PUBLIC_KEY_PEM
         self.algorithm = JWT_ALGORITHM
         self.lock_manager = RedisLockManager(redis_client=redis_client)
         self.redis = getattr(self.lock_manager, 'client', None)
@@ -59,7 +98,7 @@ class TokenManager:
             "exp": int(exp)
         }
 
-        token = jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
+        token = jwt.encode(payload, self.private_key, algorithm=self.algorithm, headers={"kid": "hyperflow-auth-key-1"})
         self.track_user_jti(sub, jti, exp)
         return token, jti, exp
 
@@ -85,7 +124,7 @@ class TokenManager:
             "exp": int(exp)
         }
 
-        token = jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
+        token = jwt.encode(payload, self.private_key, algorithm=self.algorithm, headers={"kid": "hyperflow-auth-key-1"})
         self.track_user_jti(sub, jti, exp)
         return token, jti, exp
 
@@ -116,7 +155,7 @@ class TokenManager:
     def decode_token(self, token_str: str) -> Dict[str, Any]:
         """Decodes and validates token signature and expiration."""
         try:
-            payload = jwt.decode(token_str, self.secret_key, algorithms=[self.algorithm])
+            payload = jwt.decode(token_str, self.public_key, algorithms=[self.algorithm])
             return payload
         except jwt.ExpiredSignatureError:
             raise ValueError("Token signature has expired")
@@ -296,3 +335,7 @@ class TokenManager:
         expired = [jti for jti, exp in self._memory_blacklist.items() if exp <= now]
         for jti in expired:
             del self._memory_blacklist[jti]
+
+    def get_jwks(self) -> Dict[str, Any]:
+        """Return the JSON Web Key Set containing the public key."""
+        return JWKS_JSON

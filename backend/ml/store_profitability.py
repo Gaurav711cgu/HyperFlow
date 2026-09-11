@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
+from backend.core.logger import get_logger
+
+logger = get_logger(__name__)
 
 try:
     from lifelines import CoxPHFitter

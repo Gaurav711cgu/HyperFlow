@@ -12,12 +12,12 @@ router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 # Pydantic Request / Response Schemas
 # ---------------------------------------------------------------------------
 class LoginRequest(BaseModel):
-    username: str = Field(..., example="demo_user")
-    password: str = Field(..., example="hyperflow2026")
-    role: Optional[str] = Field("recruiter_evaluator", example="recruiter_evaluator")
+    username: str = Field(..., json_schema_extra={"example": "demo_user"})
+    password: str = Field(..., json_schema_extra={"example": "hyperflow2026"})
+    role: Optional[str] = Field("recruiter_evaluator", json_schema_extra={"example": "recruiter_evaluator"})
     scopes: Optional[List[str]] = Field(
         default=["orders:read", "orders:write", "inventory:read", "ml:view"],
-        example=["orders:read", "orders:write", "inventory:read", "ml:view"]
+        json_schema_extra={"example": ["orders:read", "orders:write", "inventory:read", "ml:view"]}
     )
 
 
@@ -43,6 +43,15 @@ class TokenResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Auth Endpoints
 # ---------------------------------------------------------------------------
+@router.get("/.well-known/jwks.json")
+async def get_jwks(tm: TokenManager = Depends(get_token_manager)):
+    """
+    Public JWKS endpoint for microservices to discover the RSA Public Key
+    used to sign the access and refresh tokens.
+    """
+    return tm.get_jwks()
+
+
 @router.post("/login", response_model=TokenResponse)
 async def login(
     req: LoginRequest,
@@ -209,10 +218,20 @@ async def get_jti_status(
 # Retain legacy demo login endpoint for backward compatibility
 @router.post("/demo")
 async def demo_login(token_mgr: TokenManager = Depends(get_token_manager)):
+    """
+    Issues a read-only demo token for portfolio/recruiter evaluation.
+    Disabled in production environments (HYPERFLOW_ENV=production).
+    """
+    import os
+    if os.getenv("HYPERFLOW_ENV", "development").lower() == "production":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Demo access is disabled in production. Use /api/v1/auth/login with valid credentials."
+        )
     pair = token_mgr.issue_token_pair(
         sub="demo_user",
         role="recruiter_evaluator",
-        scopes=["orders:read", "orders:write", "inventory:read", "ml:view"]
+        scopes=["orders:read", "inventory:read", "ml:view"]
     )
     return {
         "status": "success",
@@ -221,5 +240,5 @@ async def demo_login(token_mgr: TokenManager = Depends(get_token_manager)):
         "refresh_token": pair["refresh_token"],
         "access_jti": pair["access_jti"],
         "refresh_jti": pair["refresh_jti"],
-        "message": "Enterprise dual token demo access granted."
+        "message": "Demo read-only token issued. Set HYPERFLOW_ENV=production to disable this endpoint."
     }

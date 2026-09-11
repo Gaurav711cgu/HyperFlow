@@ -25,9 +25,15 @@ except ImportError:
     HAS_MLFLOW = False
 
 
+from sqlalchemy.pool import StaticPool
+
 @pytest.fixture
 def in_memory_db():
-    engine = create_engine("sqlite:///:memory:")
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool
+    )
     Base.metadata.create_all(bind=engine)
     WarehouseBase.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)

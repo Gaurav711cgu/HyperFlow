@@ -1,3 +1,4 @@
+import asyncio
 import time
 import random
 import datetime
@@ -43,9 +44,11 @@ async def api_v1_forecast_demand(payload: ForecastDemandInput) -> Dict[str, Any]
     elapsed = payload.time_elapsed_sec if payload.time_elapsed_sec is not None else 900.0
     
     test_df = pd.DataFrame([{"weather_temp": temp, "weather_rain": rain, "time_elapsed_sec": elapsed}])
-    clipped_df, alerts = safeguards.validate_and_clip(test_df)
+    # Offload pandas operations to thread pool
+    clipped_df, alerts = await asyncio.to_thread(safeguards.validate_and_clip, test_df)
     
-    point, lower, upper = demand_forecaster.predict_with_intervals(clipped_df.values)
+    # Offload ML inference to thread pool
+    point, lower, upper = await asyncio.to_thread(demand_forecaster.predict_with_intervals, clipped_df.values)
     multiplier = max(1.0, payload.horizon_hours / 24.0)
     
     pt = round(float(point[0]) * multiplier, 1)
@@ -114,8 +117,9 @@ async def api_v1_score_profitability(payload: ScoreProfitabilityInput) -> Dict[s
         payload.non_grocery_share
     ]])
     
-    months = profitability_scorer.predict_time_to_profit(X_arr)
-    curve = profitability_scorer.predict_survival_curve(X_arr)
+    # Offload Scipy/pandas compute to thread pool
+    months = await asyncio.to_thread(profitability_scorer.predict_time_to_profit, X_arr)
+    curve = await asyncio.to_thread(profitability_scorer.predict_survival_curve, X_arr)
     
     def extract_prob(val):
         if isinstance(val, dict):
