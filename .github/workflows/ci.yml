@@ -28,6 +28,7 @@ jobs:
 
       - name: Run Backend Pytest Test Suite
         run: |
+          PYTHONPATH=. python scripts/seed_psi_reference.py
           PYTHONPATH=. python -m pytest tests/ -v
 
   ml-benchmark:
