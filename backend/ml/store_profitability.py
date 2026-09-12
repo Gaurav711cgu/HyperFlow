@@ -159,8 +159,7 @@ class DarkStoreProfitabilityScorer:
         at each month up to months_horizon.
         """
         if not self.fitted:
-            # Seed default coefficients if called before fit
-            self._fit_mock()
+            raise ValueError("StoreProfitabilityScorer is not fitted. Load a pre-trained model from disk.")
             
         probs = []
         for m in range(1, months_horizon + 1):
@@ -180,7 +179,7 @@ class DarkStoreProfitabilityScorer:
         Calculates median expected time to reach store-level profitability.
         """
         if not self.fitted:
-            self._fit_mock()
+            raise ValueError("StoreProfitabilityScorer is not fitted. Load a pre-trained model from disk.")
             
         # Median time is when survival probability S(t) <= 0.5
         for m in range(1, 24):
@@ -193,35 +192,3 @@ class DarkStoreProfitabilityScorer:
                 return float(m)
         return 12.0 # default fallback
 
-    def _fit_mock(self):
-        """
-        Generates synthetic store features for development/testing initialization.
-        Production deployments should fit on historical store expansion datasets.
-        """
-        logger.warning("StoreProfitabilityScorer initializing with development synthetic cohort. Fit on historical store data for production.")
-        np.random.seed(42)
-        n_samples = 100
-        
-        pop = np.random.uniform(1.0, 10.0, n_samples)
-        comp = np.random.randint(0, 5, n_samples)
-        dist = np.random.uniform(0.5, 8.0, n_samples)
-        skus = np.random.uniform(1.0, 5.0, n_samples)
-        aov = np.random.uniform(2.5, 7.5, n_samples)
-        non_g = np.random.uniform(0.05, 0.40, n_samples)
-        
-        # Months to profit is smaller for high pop, high skus, high AOV, and larger for high competitors
-        hazard = 0.3 * pop - 0.4 * comp - 0.2 * dist + 0.3 * skus + 0.2 * aov + 0.5 * non_g
-        months = np.clip(np.random.geometric(p=expit(hazard), size=n_samples), 1, 18)
-        profitable = np.random.choice([0, 1], p=[0.1, 0.9], size=n_samples) # mostly completed events
-        
-        df_mock = pd.DataFrame({
-            'pop_density': pop,
-            'competitor_density': comp.astype(float),
-            'dist_to_profitable': dist,
-            'initial_sku_count': skus,
-            'avg_aov_in_zone': aov,
-            'non_grocery_share': non_g,
-            'months_to_profit': months,
-            'profitable': profitable
-        })
-        self.fit(df_mock)
