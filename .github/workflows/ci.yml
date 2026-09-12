@@ -26,9 +26,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest pytest-asyncio httpx lightgbm opentelemetry-api opentelemetry-sdk
 
-      - name: Run Backend Pytest Test Suite
+      - name: Train Production Models from Real Data
+        run: |
+          PYTHONPATH=. python scripts/train_production_models.py
+
+      - name: Seed PSI Reference Stats
         run: |
           PYTHONPATH=. python scripts/seed_psi_reference.py
+
+      - name: Run Backend Pytest Test Suite
+        run: |
           PYTHONPATH=. python -m pytest tests/ -v
 
   ml-benchmark:
